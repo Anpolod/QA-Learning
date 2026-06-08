@@ -77,6 +77,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          clean: false
 
       - name: Deploy with Docker Compose
         run: docker compose up --build -d
