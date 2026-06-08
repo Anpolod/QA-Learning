@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 
@@ -10,7 +11,10 @@ from app.database.session import Base, engine
 Path("uploads/ai-images").mkdir(parents=True, exist_ok=True)
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="QA Learning Platform API", version="0.1.0")
+# Disable the built-in docs pages so we can serve Swagger UI / ReDoc from self-hosted
+# assets instead of cdn.jsdelivr.net, which is unreliable on some networks (the embedded
+# /api-testing explorer needs them to load anywhere).
+app = FastAPI(title="QA Learning Platform API", version="0.1.0", docs_url=None, redoc_url=None)
 
 app.add_middleware(
     CORSMiddleware,
@@ -21,6 +25,26 @@ app.add_middleware(
 )
 
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
+
+
+@app.get("/docs", include_in_schema=False)
+def custom_swagger_ui() -> object:
+    return get_swagger_ui_html(
+        openapi_url=app.openapi_url,
+        title=f"{app.title} - Swagger UI",
+        swagger_js_url="/static/swagger/swagger-ui-bundle.js",
+        swagger_css_url="/static/swagger/swagger-ui.css",
+    )
+
+
+@app.get("/redoc", include_in_schema=False)
+def custom_redoc() -> object:
+    return get_redoc_html(
+        openapi_url=app.openapi_url,
+        title=f"{app.title} - ReDoc",
+        redoc_js_url="/static/swagger/redoc.standalone.js",
+    )
 
 app.include_router(courses.router, prefix="/api/courses", tags=["courses"])
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
