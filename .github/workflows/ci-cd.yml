@@ -73,7 +73,7 @@ jobs:
     env:
       BACKEND_HOST_PORT: "8000"
       FRONTEND_HOST_PORT: "3001"
-      NEXT_PUBLIC_API_URL: "http://89.167.105.129:8000"
+      NEXT_PUBLIC_API_URL: "https://qa.flow-ai.work"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
