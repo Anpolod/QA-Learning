@@ -18,10 +18,12 @@ from sqlalchemy.orm import Session
 
 from app.database.session import SessionLocal
 from app.models.entities import (
+    Course,
     Homework,
     Lesson,
     LessonExample,
     LessonInteractiveTask,
+    Module,
     Quiz,
     QuizAnswer,
     QuizQuestion,
@@ -42,15 +44,14 @@ TEXT_FIELDS = [
 ]
 
 
-def _load_content() -> dict[str, dict]:
-    by_title: dict[str, dict] = {}
+def _load_content() -> list[dict]:
+    lessons: list[dict] = []
     if not CONTENT_DIR.exists():
         raise SystemExit(f"Content dir not found: {CONTENT_DIR}")
     for path in sorted(CONTENT_DIR.glob("*.json")):
         data = json.loads(path.read_text(encoding="utf-8"))
-        for lesson in data:
-            by_title[lesson["title"]] = lesson
-    return by_title
+        lessons.extend(data)
+    return lessons
 
 
 def _replace_quiz(db: Session, quiz: Quiz, questions: list[dict]) -> None:
@@ -79,8 +80,20 @@ def apply_lesson_content() -> None:
     updated = 0
     missing: list[str] = []
     try:
-        for title, c in content.items():
-            lesson = db.scalar(select(Lesson).where(Lesson.title == title))
+        for c in content:
+            title = c["title"]
+            # A "section" key scopes the match to one course, avoiding title collisions
+            # across courses (e.g. ISTQB "Boundary Value Analysis" vs Manual QA's).
+            section = c.get("section")
+            if section:
+                lesson = db.scalar(
+                    select(Lesson)
+                    .join(Module, Module.id == Lesson.module_id)
+                    .join(Course, Course.id == Module.course_id)
+                    .where(Course.section == section, Lesson.title == title)
+                )
+            else:
+                lesson = db.scalar(select(Lesson).where(Lesson.title == title))
             if not lesson:
                 missing.append(title)
                 continue

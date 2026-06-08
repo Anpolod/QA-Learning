@@ -1,0 +1,213 @@
+[
+  {
+    "section": "istqb",
+    "title": "Static testing basics",
+    "short_description": "Static testing examines work products such as requirements, code, and test cases without executing the software, finding defects early at their source.",
+    "learning_goals": "(K1) Recognize types of products that can be examined by static testing.\n(K2) Explain the value of static testing and how it differs from dynamic testing.\n(K2) Compare and contrast static and dynamic testing in terms of their objectives and the kinds of defects they detect.\n(K2) Describe how static testing supports the principle of early defect detection (shift left).",
+    "theory": "Static testing is the examination of work products without executing the code under test. The work product being examined is the test object. In static testing, the test object is reviewed or analyzed but never run. This contrasts with dynamic testing, where software is executed with input data and its behavior is observed. Many work products can be examined statically: requirement specifications, source code, test plans, test cases, product backlog items, contracts, models, and user stories. Almost any document or model that can be read and reviewed, or formally parsed by a tool, is a candidate for static testing.\n\nThere are two general kinds of static testing. The first relies on human examination of work products: these are reviews (informal reviews, walkthroughs, technical reviews, and inspections). The second uses tools to perform static analysis, such as static code analysis that checks source code against coding standards and detects data-flow and control-flow anomalies, and analysis tools that evaluate the quality of code or other text-based work products like requirements written in a formal notation.\n\nThe greatest value of static testing comes from early defect detection. Because reviews and static analysis can be applied to work products before any code exists or before code is executed, they detect and remove defects far earlier than dynamic testing, when they are cheaper to fix. This directly supports the early-testing principle (shift left): the earlier a defect is found and removed, the lower the cost of removing it.\n\nStatic and dynamic testing are complementary; they pursue similar objectives (finding defects and improving quality) but detect different defect types. Static testing finds defects directly, in the work product itself, rather than through failures. It is especially good at finding defects that dynamic testing cannot easily reveal: unreachable or dead code, design and architecture defects, deviations from coding standards, security vulnerabilities, gaps and inaccuracies in requirements (ambiguities, inconsistencies, omissions, contradictions), and untestable or incorrectly specified requirements. Dynamic testing, by contrast, can reveal failures caused by defects that are hard to spot by reading, such as performance issues, memory leaks, and incorrect runtime behavior.\n\nStatic testing also yields benefits beyond defect detection. By involving stakeholders in reviews it builds shared understanding and communication, improves the consistency and quality of requirements, and increases development productivity by avoiding rework later. Detecting and correcting a requirements defect during a review prevents the propagation of that defect into design, code, and tests, where it would be far more expensive to remove. It is important to remember that a requirement or design defect found by review is a defect found directly, not a failure observed at runtime.",
+    "key_terms": "static testing, dynamic testing, review, static analysis, test object, work product, defect, anomaly, shift left (early testing)",
+    "real_world_example": "On an e-commerce checkout project, the team holds a review of the requirements document for a new discount feature before any code is written. During the review, a tester notices that the requirement says 'apply the highest available discount' in one section and 'apply all stacked discounts' in another. This is a contradiction (a requirements defect). Because it was caught statically, in the document, the product owner clarifies the rule immediately. Had it slipped through to dynamic testing, the team would have built and tested the wrong behavior, then reworked the code, test cases, and documentation, at much higher cost.",
+    "step_by_step": "1. Identify the work products that can be examined statically (requirements, user stories, design models, code, test cases, contracts).\n2. Decide whether human examination (a review) or tool-based static analysis (or both) fits each work product.\n3. Apply static analysis tools to source code to detect coding-standard violations and control-flow/data-flow anomalies.\n4. Schedule reviews of requirements and design as early as possible, before code is written, to remove defects at the source.\n5. Record each defect found in the work product itself, noting that it is a defect found directly, not a failure observed by execution.\n6. Feed results back to authors so defects are corrected before they propagate to later phases.\n7. Combine static and dynamic testing so each covers the defect types the other misses.",
+    "common_mistakes": "Believing static testing means 'running the code without inputs' — by definition no code is executed in static testing.\nThinking static testing replaces dynamic testing; they are complementary and find different defect types.\nAssuming only source code can be statically tested, when requirements, user stories, contracts, and test cases are all valid test objects.\nConfusing the defect found in a review (a defect found directly) with a failure (which only dynamic execution can produce).\nUnderestimating early reviews and relying on late dynamic testing, which makes defects far more expensive to fix.",
+    "practical_use_case": "On the job, static testing appears as requirement reviews during refinement, peer code reviews in pull requests, and automated static analysis gates in the CI pipeline. On the CTFL exam, expect questions asking which work products can be statically tested, why static testing finds defects earlier and cheaper than dynamic testing, which defect types static testing detects (dead code, requirement ambiguities, coding-standard violations), and how static and dynamic testing differ and complement each other.",
+    "summary": "Static testing examines a work product (the test object) without executing it, using human reviews and tool-based static analysis. It finds defects directly and early, where they are cheapest to fix, and detects defect types (requirement ambiguities, dead code, standard violations) that dynamic testing struggles to reveal. Static and dynamic testing are complementary, not interchangeable.",
+    "example": "Static vs dynamic testing applied to one work product:\n\n```\nWork product: 'Login' requirements document and its implementation\n\nStatic testing (no execution):\n  - Review the requirement: 'Lock the account after 3 failed attempts.'\n  - Finds: the spec never defines how long the lock lasts (omission)\n           and says '3 attempts' in one place, '5' in another (inconsistency).\n  - Static code analysis of login.py flags an unreachable branch (dead code)\n    and a hard-coded credential (security defect).\n  -> All found directly, before running anything.\n\nDynamic testing (execution):\n  - Run the login feature with valid/invalid passwords.\n  - Observe a failure: after a lockout the user is never unlocked.\n  -> Found via a failure at runtime.\n```\n\nResult: the contradiction, omission, dead code, and hard-coded credential were caught statically and cheaply; the runtime unlock failure required dynamic execution. The two approaches together cover defect types neither finds alone.",
+    "interactive": "You are given this requirement: 'The system shall send a confirmation email quickly after registration. Retired users cannot register.' Without executing anything, perform a static review of this single requirement and list every defect you can find, classifying each as ambiguity, omission, inconsistency, or untestability.",
+    "expected_answer": "A strong answer identifies: (1) 'quickly' is ambiguous and untestable — there is no measurable acceptance criterion (e.g., within 60 seconds), so the requirement cannot be objectively verified; (2) 'Retired users cannot register' introduces an omission/ambiguity — 'retired' is undefined and there is no rule for how the system determines or rejects such users, nor what error is shown; (3) there is a potential inconsistency between allowing registration (which triggers the email) and forbidding it for some users, with no defined precedence. The reviewer notes these are defects found directly in the work product, not failures, and recommends rewording to add measurable, complete, unambiguous criteria before the requirement is implemented.",
+    "homework": "Choose one real feature from an app you use (e.g., password reset, search, file upload). Find or write a short requirements snippet for it. Perform a static review and produce a defect list of at least five issues, each classified as ambiguity, inconsistency, omission, contradiction, or untestability. Then write one sentence explaining, for each defect, how much more expensive it would have been to fix if it had reached dynamic testing or production.",
+    "expected_result": "A document containing the requirements snippet, a table of at least five distinct defects each correctly classified (not all the same type), each tied concretely to the chosen feature, and a clear statement that these are defects found directly by review. The cost commentary should reference the early-testing/shift-left principle.",
+    "quiz": [
+      {
+        "question": "Which statement best describes static testing?",
+        "answers": [
+          "Executing software with no input data",
+          "Examining work products without executing the code under test",
+          "Running the application only in a test environment",
+          "Testing only after the software has been deployed"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Which of the following is a typical defect that static testing detects more effectively than dynamic testing?",
+        "answers": [
+          "A memory leak that appears only after hours of use",
+          "Slow response time under heavy load",
+          "Ambiguities and inconsistencies in a requirements specification",
+          "A crash that occurs with a specific runtime input"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "Why does static testing support the principle of early defect detection?",
+        "answers": [
+          "It runs faster than dynamic tests on the build server",
+          "It can be applied to work products before code is executed, so defects are removed when they are cheapest to fix",
+          "It guarantees the absence of defects in the final product",
+          "It replaces the need for any dynamic testing"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Which of these is NOT a valid test object for static testing?",
+        "answers": [
+          "A requirements specification",
+          "A test case document",
+          "The runtime behavior observed while executing the program",
+          "Source code"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "How are static and dynamic testing related?",
+        "answers": [
+          "They are interchangeable and find the same defects",
+          "Dynamic testing always makes static testing unnecessary",
+          "They are complementary, pursuing similar objectives but detecting different types of defects",
+          "Static testing can only be done after dynamic testing"
+        ],
+        "correct_index": 2
+      }
+    ]
+  },
+  {
+    "section": "istqb",
+    "title": "Feedback and the review process",
+    "short_description": "Early stakeholder feedback and a structured review process help build the right product and remove defects in work products before they propagate.",
+    "learning_goals": "(K1) Identify the benefits of early and frequent stakeholder feedback.\n(K2) Summarize the activities of the review process.\n(K2) Explain the different roles and responsibilities in a formal review.\n(K2) Compare and contrast the different review types (informal review, walkthrough, technical review, inspection).",
+    "theory": "Early and frequent stakeholder feedback is essential to building the right product. Feedback communicates potential problems early so the team can react. When stakeholders are not involved early, they may misunderstand requirements and the team may build features that do not meet their needs, only discovering this late and at high cost. Frequent feedback throughout the lifecycle lets the team understand stakeholder needs, build a shared understanding, and adapt the product, reducing project risk.\n\nThe ISTQB review process consists of well-defined activities. They are: Planning (define scope, purpose, work products to review, quality characteristics, effort, criteria), Review initiation (ensure everyone and everything is prepared — distributing the work product and explaining objectives), Individual review (each reviewer examines the work product, often guided by review techniques, and records anomalies, recommendations, and questions), Communication and analysis (anomalies are discussed and analyzed, their status decided, e.g., defect, false positive, or improvement; a decision on quality and necessary actions is made), and Fixing and reporting (defects are reported, fixed by the author, anomaly status is updated, and exit criteria are checked). Not every review performs all activities formally — the formality scales with the review type.\n\nA formal review has defined roles. The manager is responsible for review planning and decides on the execution of reviews, assigns staff, and decides resources. The author creates and fixes the work product under review. The moderator (also called the facilitator) ensures the effective running of review meetings, mediates between people, and keeps the meeting on track and free from personal attacks. The scribe (recorder) collates and records anomalies and documents decisions. The reviewer (also called checker or inspector) performs the review, identifying potential defects (anomalies) — reviewers may be subject-matter experts, peers, or people with a stake in the work product. The review leader takes overall responsibility for the review, decides who is involved, and organizes when and where it takes place. One person may take on several roles, and roles may be combined depending on the review type.\n\nReview types differ in their level of formality and objectives. An informal review has no defined process and no formal documented output; its main objective is to detect potential defects cheaply. A walkthrough is led by the author, who guides participants through the work product; objectives include finding defects, improving quality, evaluating alternatives, and educating participants — preparation by reviewers is often optional. A technical review is performed by technically qualified reviewers and led by a moderator; its objectives include gaining consensus and making decisions about technical content, as well as detecting defects. An inspection is the most formal review type; it follows the full defined process, uses defined roles, collects metrics, and has the main objective of finding the maximum number of defects (it also evaluates quality, builds confidence, and prevents future similar defects through learning). Defects found in any review should be communicated and handled in an objective way, focusing on the work product and not on its author.\n\nSeveral success factors make reviews effective: choosing the right review type for the product and people, dividing large work products so reviews are manageable, giving feedback constructively, providing adequate time, training participants (especially for formal reviews like inspections), supporting management without imposing unrealistic time pressure, and fostering a culture of learning and process improvement. Reviews catch defects in any work product, while building shared understanding among stakeholders.",
+    "key_terms": "review, formal review, informal review, walkthrough, technical review, inspection, moderator (facilitator), author, scribe (recorder), reviewer, review leader, anomaly, stakeholder feedback",
+    "real_world_example": "A team preparing a payments microservice schedules a technical review of the architecture design before implementation. The review leader invites the lead developer (author), two senior engineers and a security specialist (reviewers), and a moderator to keep discussion objective. During individual review, the security specialist records that the design stores card data unencrypted (a defect). In the communication-and-analysis meeting, the group reaches consensus on encrypting at rest. Because feedback came early and from the right qualified stakeholders, the team avoids building an insecure service that would have been expensive and risky to retrofit.",
+    "step_by_step": "1. Plan the review: define scope, the work product, quality characteristics, effort, and exit criteria.\n2. Initiate the review: distribute the work product, explain objectives, and confirm everyone and everything is prepared.\n3. Assign roles: manager, review leader, author, moderator, scribe, and reviewers (one person may hold several roles).\n4. Perform individual review: each reviewer examines the product and records anomalies, questions, and recommendations.\n5. Communicate and analyze: discuss anomalies, decide each one's status (defect, false positive, improvement), and decide on quality and actions.\n6. Fix and report: the author fixes confirmed defects, the scribe updates anomaly status, and exit criteria are checked.\n7. Keep feedback objective and constructive, focused on the work product, never on the author.",
+    "common_mistakes": "Confusing the roles: thinking the author leads an inspection (the moderator/facilitator leads it; the author leads a walkthrough).\nAssuming every review follows all process activities formally — formality scales with the review type, from informal review to inspection.\nBelieving the main objective of an inspection is consensus; its main objective is finding the maximum number of defects, while a technical review aims at consensus and decisions.\nMaking review feedback personal instead of focusing objectively on the work product.\nThinking only code is reviewed; any work product (requirements, plans, test cases, contracts) can be reviewed.",
+    "practical_use_case": "On the job, this is pull-request review, design reviews, requirement refinement sessions, and formal inspections in regulated industries. On the CTFL exam, expect questions matching roles to responsibilities (who leads a walkthrough vs an inspection, what the scribe and moderator do), ordering the review process activities, identifying the main objective of each review type, and recognizing the benefits of early stakeholder feedback.",
+    "summary": "Early, frequent stakeholder feedback helps build the right product and reduces risk. The review process runs through planning, initiation, individual review, communication and analysis, and fixing and reporting, with defined roles (manager, review leader, author, moderator, scribe, reviewers). Review types range from the informal review to the most formal inspection, each with its own objective.",
+    "example": "Mapping roles and objectives across the four review types:\n\n| Review type        | Who leads it          | Main objective                                    | Preparation/Process formality |\n|--------------------|-----------------------|---------------------------------------------------|-------------------------------|\n| Informal review    | No defined leader     | Detect potential defects cheaply                  | None / no documented output   |\n| Walkthrough        | The author            | Find defects, improve quality, educate, evaluate alternatives | Optional preparation  |\n| Technical review   | A moderator (not the author) | Reach consensus and decisions on technical content; detect defects | Reviewers are technical experts |\n| Inspection         | A moderator/facilitator | Find the maximum number of defects; collect metrics; prevent future defects | Full defined process, defined roles, metrics |\n\nWorked decision: For a critical safety requirements document where every defect matters, choose an INSPECTION — its defined process and roles maximize defect detection. For an architecture choice needing team agreement, choose a TECHNICAL REVIEW to reach consensus. For the author to explain a new design and gather quick input, choose a WALKTHROUGH. For a quick peer check of a small change, an INFORMAL REVIEW is enough.",
+    "interactive": "Your team has written a 60-page requirements specification for a medical dosage-calculation system where every defect is critical. List which review type you would choose and why, name the roles you would assign, and outline the order of the review process activities you would follow.",
+    "expected_answer": "A strong answer selects an inspection because it is the most formal type, follows a full defined process with defined roles, collects metrics, and has the main objective of finding the maximum number of defects — appropriate for safety-critical content. Roles: a review leader/manager to plan and resource it, the author to create and later fix the document, a moderator (facilitator) to run meetings objectively, a scribe to record anomalies and decisions, and several qualified reviewers. Process order: planning, review initiation, individual review (reviewers record anomalies using review techniques), communication and analysis (decide each anomaly's status and overall quality), then fixing and reporting (author fixes defects, scribe updates status, exit criteria checked). The answer notes the document should be split into manageable parts and feedback kept objective and focused on the work product.",
+    "homework": "Take a real document (a user story, a design doc, or a requirements page). Plan a review for it: write the scope and objectives, choose the most appropriate review type with justification, assign each ISTQB review role to a named person (or yourself for several roles), and list the five review process activities in order with one concrete action you would take in each.",
+    "expected_result": "A short review plan that names a justified review type, correctly assigns the ISTQB roles (manager, review leader, author, moderator, scribe, reviewer) without confusing who leads, and lists the five process activities in correct order (planning, initiation, individual review, communication and analysis, fixing and reporting) with concrete actions. Feedback approach is described as objective and product-focused.",
+    "quiz": [
+      {
+        "question": "Which role leads a walkthrough?",
+        "answers": [
+          "The moderator",
+          "The author",
+          "The scribe",
+          "The manager"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "What is the main objective of an inspection?",
+        "answers": [
+          "To reach consensus on technical decisions",
+          "To detect defects as cheaply as possible with no documented output",
+          "To find the maximum number of defects, following a full defined process",
+          "To let the author explain the work product informally"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "Which of the following is the correct order of review process activities?",
+        "answers": [
+          "Individual review, planning, fixing and reporting, initiation, communication and analysis",
+          "Planning, review initiation, individual review, communication and analysis, fixing and reporting",
+          "Planning, individual review, initiation, fixing and reporting, communication and analysis",
+          "Review initiation, planning, communication and analysis, individual review, fixing and reporting"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "In a formal review, who is responsible for recording the anomalies and decisions?",
+        "answers": [
+          "The moderator",
+          "The author",
+          "The scribe (recorder)",
+          "The review leader"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "Why is early and frequent stakeholder feedback valuable?",
+        "answers": [
+          "It guarantees that no defects will reach production",
+          "It removes the need for dynamic testing",
+          "It helps build the right product and reduces project risk by surfacing misunderstandings early",
+          "It replaces the need for a defined review process"
+        ],
+        "correct_index": 2
+      }
+    ]
+  },
+  {
+    "section": "istqb",
+    "title": "Review techniques",
+    "short_description": "Individual review techniques such as ad hoc, checklist-based, scenario-based, role-based, and perspective-based reading help reviewers find more and better defects in work products.",
+    "learning_goals": "(K3) Apply a review technique to a work product to find defects.\n(K2) Explain the differences between ad hoc, checklist-based, and scenario-based review techniques.\n(K2) Describe role-based and perspective-based reading and when to use them.\n(K2) Justify why perspective-based reading is often considered the most effective individual review technique.",
+    "theory": "Several individual review techniques can be applied during the individual review activity to help reviewers detect defects more thoroughly. The choice depends on the work product, the reviewers' experience, and the review objectives. The CTFL v4.0 syllabus describes the main techniques: ad hoc, checklist-based, scenario-based (and dry runs), role-based, and perspective-based reading. These are techniques used by an individual reviewer, not the overall review type.\n\nIn ad hoc review, reviewers are given little or no guidance on how to perform the task. They simply read the work product sequentially and report anomalies as they find them. This technique is highly dependent on reviewer skills and may lead to many reviewers reporting the same defects. It requires little preparation and is quick to start, but its thoroughness varies with the individual.\n\nIn checklist-based review, reviewers detect defects based on a checklist that is distributed at review initiation. A review checklist is a list of questions based on potential defects, which may be derived from experience. Checklists make the review systematic and help cover defect types that experience shows tend to recur. The main advantage is systematic coverage of common defect types; a key risk is that reviewers focus only on the checklist and miss defects outside it, so checklists should be maintained and updated regularly.\n\nScenario-based review provides reviewers with structured guidelines on how to read through the work product. A scenario-based approach supports reviewers in performing dry runs on the work product based on expected usage (for example, if the work product is documented in a defined format such as use cases). These scenarios give reviewers better guidelines on how to identify specific defect types than a simple checklist entry, but there is a risk of following the scenarios too rigidly and missing defects outside their scope.\n\nRole-based review has reviewers evaluate the work product from the perspective of individual stakeholder roles. Typical roles include specific end-user types (experienced, inexperienced, senior, child) and specific roles in the organization (user administrator, system administrator, performance tester). Reviewing through the eyes of a particular role helps surface defects that matter to that role.\n\nPerspective-based reading is similar to role-based review, but reviewers take on different stakeholder viewpoints (perspectives) and, importantly, also attempt to use the work product to generate the products they would derive from it. For example, a reviewer taking the tester's perspective would attempt to write acceptance test cases from a requirements document; a reviewer taking the user's perspective would view it from the user's standpoint; a designer would consider the design. This not only finds defects but also assesses whether the work product is fit for its intended use (for example, whether requirements are testable and complete enough to derive test cases). Empirical studies have shown perspective-based reading to be the most effective general technique for reviewing requirements and technical work products. A central reason is the attempt to use the work product (e.g., deriving test cases from requirements), which exposes ambiguities, omissions, and untestable requirements that other techniques miss.\n\nNo single technique is best for every situation. Ad hoc is cheap but inconsistent; checklist-based gives systematic coverage of known defect types; scenario-based suits work products with defined usage formats; role-based and perspective-based focus the review through stakeholder needs, with perspective-based adding the powerful step of producing derived work products to validate fitness for use.",
+    "key_terms": "ad hoc review, checklist-based review, review checklist, scenario-based review, dry run, role-based review, perspective-based reading, anomaly",
+    "real_world_example": "A team reviews the requirements for a new reporting feature using perspective-based reading. One reviewer takes the tester's perspective and tries to derive acceptance test cases directly from the requirements. While attempting this, the reviewer discovers that the requirement 'show recent transactions' never defines 'recent', so no concrete, testable boundary can be written — a clear omission and untestability defect. A second reviewer takes the end-user (inexperienced) role and finds that the navigation described is confusing. By actually using the document to produce derived products, the team finds defects a quick ad hoc read would have missed.",
+    "step_by_step": "1. Identify the work product and the review objectives, then choose a fitting technique.\n2. For ad hoc, read the work product sequentially and note anomalies as you find them.\n3. For checklist-based, obtain or build a review checklist of questions about likely defects and check the product against each item.\n4. For scenario-based, use structured guidelines and perform dry runs based on expected usage (e.g., walk through use-case scenarios).\n5. For role-based, adopt a specific stakeholder role (e.g., inexperienced user, system administrator) and evaluate the product through that role's needs.\n6. For perspective-based reading, take a stakeholder perspective and attempt to create the products you would derive from it (e.g., write test cases as a tester) to check fitness for use.\n7. Record anomalies, and prefer perspective-based reading for requirements and technical documents when high effectiveness is needed.",
+    "common_mistakes": "Confusing review techniques (how an individual reviews) with review types (informal, walkthrough, technical review, inspection).\nThinking checklist-based review guarantees completeness — reviewers can miss defects not on the checklist, so checklists must be maintained.\nConfusing role-based and perspective-based reading: only perspective-based adds the step of producing the derived work products (e.g., deriving test cases).\nAssuming ad hoc is always inferior; it is cheap and quick but inconsistent and depends heavily on reviewer skill.\nForgetting that perspective-based reading is empirically the most effective general technique for requirements and technical work products."
+,
+    "practical_use_case": "On the job, these techniques structure code reviews (checklists), requirement reviews (perspective-based reading to derive test cases), and usability assessments (role-based reading as different user types). On the CTFL exam, expect K3 questions asking you to apply a technique, plus K2 questions distinguishing ad hoc vs checklist-based vs scenario-based, identifying which technique has reviewers derive products from the work product (perspective-based), and recognizing perspective-based reading as the most effective for requirements and technical documents.",
+    "summary": "Individual review techniques guide how a reviewer examines a work product: ad hoc (little guidance), checklist-based (questions about likely defects), scenario-based (structured guidelines and dry runs), role-based (review as a specific stakeholder role), and perspective-based reading (take a perspective and produce the derived products). Perspective-based reading is generally the most effective for requirements and technical work products because reviewers actually use the work product.",
+    "example": "Applying each technique to one requirement: 'The system shall let users export their report data.'\n\n```\nAd hoc:\n  Reviewer reads it and notes: 'export format is not specified' (one anomaly, depends on skill).\n\nChecklist-based (checklist item: 'Are all formats/limits defined?'):\n  Systematically asks each checklist question ->\n  finds: no format defined, no size limit, no error handling for failed export.\n\nScenario-based (dry run of expected usage 'user exports a 1M-row report'):\n  Walking the usage scenario reveals: no behavior defined for very large exports (timeout? pagination?).\n\nRole-based (role = system administrator):\n  From the admin's needs -> 'who is allowed to export sensitive data? no permission rule given.'\n\nPerspective-based reading (perspective = tester, derive test cases):\n  Tries to WRITE test cases ->\n  cannot, because 'export' has no defined format, size limit, permissions, or success criteria\n  -> exposes that the requirement is untestable and incomplete (multiple defects, strongest result).\n```\n\nCoverage achieved: ad hoc found 1 defect; checklist found a known set; scenario found a usage gap; role-based found a permission gap; perspective-based reading exposed the most defects by attempting to derive test cases, confirming why it is generally the most effective technique.",
+    "interactive": "Take this requirement: 'The mobile app shall load the dashboard fast and show the user's main information.' Apply perspective-based reading as a tester: attempt to derive at least two acceptance test cases from it. Then list every defect that this attempt exposes.",
+    "expected_answer": "A strong answer shows that the reviewer cannot write concrete, executable acceptance test cases because the requirement is ambiguous and untestable. Defects exposed: 'fast' has no measurable threshold (ambiguity / untestability) — there is no value such as 'within 2 seconds on 4G' to test against; 'main information' is undefined (omission) — it is unclear which fields must appear; there is no error/empty-state behavior defined (omission); and no device/network conditions are specified (incompleteness). The answer demonstrates the technique's power: by attempting to derive test cases (the perspective-based step of producing a derived product), the reviewer surfaces ambiguities and omissions that a quick ad hoc read would miss, and concludes the requirement must be made measurable and complete before it can be tested.",
+    "homework": "Pick a real requirements document or user story. Review it twice: once with checklist-based review (write or reuse a checklist of at least six questions) and once with perspective-based reading from the tester's perspective (attempt to derive test cases). Produce two defect lists, then write a short comparison explaining which technique found more or different defects and why, referencing the idea that perspective-based reading produces derived work products.",
+    "expected_result": "A submission with a usable checklist, two distinct defect lists, derived (or attempted) test cases from the tester's perspective, and a comparison that correctly explains that perspective-based reading often finds more defects because the reviewer attempts to use the work product to create derived products, exposing untestability and omissions. The student should not confuse techniques with review types.",
+    "quiz": [
+      {
+        "question": "Which individual review technique gives reviewers little or no guidance on how to perform the review?",
+        "answers": [
+          "Checklist-based review",
+          "Ad hoc review",
+          "Perspective-based reading",
+          "Scenario-based review"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "What is the main risk of checklist-based review?",
+        "answers": [
+          "It requires too many reviewers",
+          "Reviewers may focus only on the checklist and miss defects outside it",
+          "It can only be used on source code",
+          "It produces no documented anomalies"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Which technique has reviewers take on a stakeholder viewpoint AND attempt to produce the products they would derive from the work product?",
+        "answers": [
+          "Ad hoc review",
+          "Checklist-based review",
+          "Perspective-based reading",
+          "Scenario-based review"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "A scenario-based review primarily supports reviewers by:",
+        "answers": [
+          "Providing structured guidelines and dry runs based on expected usage",
+          "Removing all need for reviewer preparation",
+          "Guaranteeing that every defect type is found",
+          "Replacing the moderator's role in the meeting"
+        ],
+        "correct_index": 0
+      },
+      {
+        "question": "Which technique is generally considered the most effective for reviewing requirements and technical work products?",
+        "answers": [
+          "Ad hoc review",
+          "Role-based review",
+          "Checklist-based review",
+          "Perspective-based reading"
+        ],
+        "correct_index": 3
+      }
+    ]
+  }
+]

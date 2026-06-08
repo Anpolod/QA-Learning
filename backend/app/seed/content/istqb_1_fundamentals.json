@@ -1,0 +1,377 @@
+[
+  {
+    "section": "istqb",
+    "title": "What is testing",
+    "short_description": "Testing is a set of activities to discover defects and evaluate the quality of software work products, covering both dynamic and static testing.",
+    "learning_goals": [
+      "(K1) Identify typical objectives of testing",
+      "(K2) Differentiate testing from debugging",
+      "(K2) Explain the difference between dynamic and static testing and the meaning of test object and test basis",
+      "(K1) Recall that testing is more than just executing the software"
+    ],
+    "theory": "Testing is a set of activities aimed at discovering defects and evaluating the quality of software work products. It is much more than running test cases: it includes planning, analysis, design, implementation, execution, reporting and evaluating completion. Testing involves both verification (checking whether a work product meets specified requirements) and validation (checking whether it meets the users' and other stakeholders' needs in its intended environment).\\n\\nThe item being tested is the test object, and the documentation or knowledge the tests are derived from is the test basis (for example, requirements, user stories, design documents or existing code). Testing can be dynamic, which involves executing the software with test data, or static, which involves reviewing work products or analysing code without executing it.\\n\\nTypical test objectives include: evaluating work products such as requirements, designs and code; triggering failures and finding defects; ensuring required coverage of a test object; reducing the level of risk of inadequate software quality; verifying whether specified requirements have been fulfilled; verifying compliance with contractual, legal or regulatory requirements; and providing information to stakeholders to support decisions. The relative importance of these objectives depends on the context.\\n\\nA common misconception is that testing only checks whether requirements are met. In practice, testing also helps validate whether the system serves the users' real needs, and it provides information to stakeholders. Test objectives differ depending on the SDLC phase and the context of the project.\\n\\nTesting is not the same as debugging. Debugging is the development activity that finds, analyses and fixes the cause of a failure (a defect). Dynamic testing can show that failures occur; once a failure is found, debugging locates and removes the defect, and confirmation testing then checks that the fix resolved the problem.",
+    "key_terms": "testing, test object, test basis, debugging, defect, failure, dynamic testing, static testing, verification, validation",
+    "real_world_example": "On an e-commerce checkout project, the team reviews the requirements specification (static testing) and finds an ambiguity in the discount rule before any code exists. Later they execute the checkout flow with various carts (dynamic testing). A tester observes that a 100% discount coupon produces a negative total - a failure. A developer then debugs the code, finds that the total calculation does not clamp at zero (the defect), fixes it, and the tester runs confirmation testing to verify the fix.",
+    "step_by_step": "1. Identify the test object (what you are testing) and the test basis (what you derive tests from).\\n2. Clarify the test objectives for this context (find defects, evaluate quality, reduce risk, provide information).\\n3. Decide whether static testing (reviews/analysis) and/or dynamic testing (execution) is appropriate.\\n4. Perform verification (does it meet specified requirements?) and validation (does it meet stakeholder needs?).\\n5. When a failure is observed, report it; debugging (a developer activity) then locates and removes the underlying defect.\\n6. Run confirmation testing to verify the defect was successfully fixed.",
+    "common_mistakes": "1. Believing testing equals only executing software (it also includes static testing, planning and analysis).\\n2. Confusing testing with debugging - testing reveals failures; debugging finds and fixes the defect.\\n3. Thinking the only objective of testing is to find defects, ignoring objectives like providing information and reducing risk.\\n4. Confusing verification (meets specification) with validation (meets user needs).\\n5. Assuming testing can prove the absence of defects rather than reduce risk.",
+    "practical_use_case": "On the job, understanding that testing spans static and dynamic activities lets teams catch defects early through reviews and late through execution. On the exam, expect questions distinguishing testing from debugging, identifying valid test objectives, and recognising the difference between verification and validation and between test object and test basis.",
+    "summary": "Testing is a broad set of activities, both static and dynamic, that evaluates quality and finds defects, not just software execution. It is distinct from debugging, and it includes both verification (meeting requirements) and validation (meeting user needs).",
+    "example": "Scenario: a login feature.\\n\\n- Test basis: the requirement 'After 3 failed login attempts, the account is locked for 15 minutes.'\\n- Test object: the login module.\\n- Static testing: a review of the requirement reveals it does not say whether a successful login resets the failed-attempt counter (an ambiguity defect found without execution).\\n- Dynamic testing: executing 3 wrong passwords then a correct one shows the account is locked - a failure if the requirement intended a reset.\\n- Verification: the locked behaviour matches the written spec.\\n- Validation: stakeholders confirm the lockout actually meets the security need.\\n- Debugging follows only after a developer reproduces and locates the defect causing any failure.",
+    "interactive": "Given the user story 'As a user, I can reset my password via an email link valid for 1 hour', list two static testing checks and two dynamic test ideas, and state which test object and test basis you are using.",
+    "expected_answer": "Test object: the password-reset feature. Test basis: the user story. Static checks: review whether 'valid for 1 hour' specifies the start time (when sent or when clicked), and check whether behaviour for an expired link is defined. Dynamic test ideas: (1) use the link within 1 hour and confirm reset succeeds (verification); (2) use the link after 1 hour and confirm it is rejected with a clear message. A validation angle: confirm with stakeholders that a 1-hour window meets real user and security needs.",
+    "homework": "Pick a small feature you know (e.g. a contact form). Document its test object and test basis, define three test objectives relevant to it, list two static testing activities and three dynamic test cases, and explain for each test case whether it is verification or validation.",
+    "expected_result": "A short document that correctly labels test object and test basis, lists realistic and distinct test objectives, separates static from dynamic testing, and correctly classifies each dynamic test as verification or validation, while clearly distinguishing testing from debugging.",
+    "quiz": [
+      {
+        "question": "Which statement best describes the difference between testing and debugging?",
+        "answers": [
+          "Testing fixes defects; debugging finds failures",
+          "Testing can reveal failures, while debugging finds, analyses and removes the defect causing a failure",
+          "They are two names for the same activity",
+          "Debugging is a static activity and testing is always dynamic"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "What is the test basis?",
+        "answers": [
+          "The component or system being tested",
+          "The body of knowledge or documentation from which test cases are derived",
+          "The environment in which tests are executed",
+          "The set of defects found during testing"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Which of the following is an example of validation rather than verification?",
+        "answers": [
+          "Checking that the code matches the design document",
+          "Confirming the system meets the users' actual needs in its intended environment",
+          "Checking that a requirement is unambiguous in a review",
+          "Confirming a calculated total matches the formula in the spec"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Which activity is an example of static testing?",
+        "answers": [
+          "Executing test cases against the running system",
+          "Reviewing a requirements document to find ambiguities",
+          "Measuring response time under load",
+          "Re-running a failed test after a fix"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Which is a typical objective of testing?",
+        "answers": [
+          "Proving the software has no defects",
+          "Replacing the need for requirements",
+          "Reducing the level of risk of inadequate software quality and providing information to stakeholders",
+          "Guaranteeing the software will never fail in production"
+        ],
+        "correct_index": 2
+      }
+    ]
+  },
+  {
+    "section": "istqb",
+    "title": "Why is testing necessary",
+    "short_description": "Testing is necessary because it reduces the risk of failures in operation and contributes to software quality, while contributing to success when integrated throughout the SDLC.",
+    "learning_goals": [
+      "(K2) Exemplify why testing is necessary",
+      "(K1) Recall the relation between testing and quality assurance",
+      "(K2) Distinguish error, defect, failure and root cause",
+      "(K2) Explain how testing contributes to success"
+    ],
+    "theory": "Testing is necessary because it provides a cost-effective means of detecting defects, so they can be removed, and because it helps measure and improve the quality of work products. Testing reduces the risk of failures occurring during operation; a rigorous, risk-based test approach can reduce the overall level of residual risk in a system.\\n\\nTesting contributes to success in several ways: testers involved in requirements reviews or user story refinement can detect defects early, reducing the risk of developing incorrect features; working closely with system designers can increase understanding of the design and how to test it; collaborating with developers can increase their understanding of the test object. Testing can also be required to meet contractual or legal requirements, or industry-specific standards.\\n\\nTesting and quality assurance are not the same. Quality management includes both quality assurance and quality control. Quality assurance (QA) is process-oriented and focuses on adhering to proper processes to provide confidence that the appropriate levels of quality will be achieved. Quality control (QC) is product-oriented and includes activities, such as testing, that support the achievement of appropriate quality. Testing is a major form of quality control.\\n\\nA precise causal chain is tested heavily on the exam. A person makes an error (mistake), which produces a defect (fault, bug) in the code or document. If that defect in the code is executed, it may cause a failure - but not always; some defects never cause a failure (e.g. in unreachable code) or only fail under specific conditions. Failures can also be caused by environmental conditions, not only by defects. Root cause analysis identifies the underlying reason for a defect, so that process improvements can prevent similar defects in future.\\n\\nIt is important to distinguish errors, defects and failures because they require different responses, and confusing them is a frequent source of exam mistakes.",
+    "key_terms": "error, defect, failure, root cause, quality, quality assurance, quality control, root cause analysis",
+    "real_world_example": "A developer misunderstands a tax rule (error) and writes a formula that uses 19% instead of 20% VAT (defect). When an invoice is generated, the customer is undercharged (failure). Testing catches this during invoice tests, reducing the risk of shipping incorrect billing. Root cause analysis reveals the requirements were ambiguous about VAT, so the team improves the requirements review process (a QA improvement) to prevent the same class of defect.",
+    "step_by_step": "1. Identify the risks of inadequate quality for your product (financial, safety, reputation).\\n2. Use testing to detect defects early (reviews) and during execution to reduce those risks.\\n3. When a failure occurs, trace the chain: failure -> defect -> error.\\n4. Perform root cause analysis to find the underlying reason.\\n5. Feed findings into quality assurance to improve processes and prevent recurrence.\\n6. Distinguish QC activities (testing the product) from QA activities (improving the process).",
+    "common_mistakes": "1. Treating testing and quality assurance as the same thing - QA is process-oriented, testing is a quality control activity.\\n2. Assuming every defect causes a failure - many defects never trigger a failure or only do so under specific conditions.\\n3. Confusing the terms error (human mistake), defect (in the artifact) and failure (observed behaviour).\\n4. Believing testing alone guarantees quality rather than reducing risk and informing decisions.\\n5. Ignoring that failures can also be caused by environmental conditions, not only defects.",
+    "practical_use_case": "On the job, framing testing as risk reduction helps justify test effort to stakeholders and prioritise testing. On the exam, expect the error/defect/failure causal chain, the QA-versus-QC distinction, and questions on how early tester involvement and root cause analysis contribute to success.",
+    "summary": "Testing is necessary because it detects defects cost-effectively, reduces the risk of operational failures and contributes to quality and project success. It is a form of quality control, distinct from process-oriented quality assurance, and it relies on correctly distinguishing errors, defects and failures.",
+    "example": "Causal chain worked through:\\n\\n```\\nError   (human mistake): developer believes the loop should run 'i <= n' times\\nDefect  (in the code):    off-by-one in 'for (i=0; i<=n; i++)' reads past the array\\nFailure (observed):       app crashes when processing the last record\\n```\\n\\nNotes:\\n- The defect exists even if the array is never that long, so no failure occurs in normal use.\\n- The same crash could also appear due to a corrupted environment (a failure not caused by this defect).\\n- Root cause analysis: requirement did not state inclusive/exclusive bounds -> improve requirement templates (QA).",
+    "interactive": "Read this incident: 'In production, exporting a report with zero rows shows a blank PDF instead of a No data message.' Classify the error, defect and failure, and propose one QA process improvement from root cause analysis.",
+    "expected_answer": "Failure: the user observes a blank PDF when expecting a 'No data' message. Defect: the export code has no branch handling the empty-result case. Error: the developer (or analyst) did not consider the zero-row scenario when specifying or coding the export. QA process improvement: add an 'empty/zero/boundary data' checklist item to design reviews so the empty case is always specified and reviewed - preventing this class of defect rather than just fixing this one.",
+    "homework": "Take three real bug reports (from any tracker or invented). For each, write the failure, the likely defect, and the probable human error, then suggest one process improvement that root cause analysis might recommend. Add a short paragraph explaining how testing reduced or could have reduced risk for that product.",
+    "expected_result": "A table mapping each incident to a correctly distinguished failure, defect and error, plausible root causes, and concrete QA process improvements, plus a clear explanation of testing as risk reduction and a correct QA-versus-QC distinction.",
+    "quiz": [
+      {
+        "question": "Which sequence correctly orders the causal chain?",
+        "answers": [
+          "Failure -> defect -> error",
+          "Error -> defect -> failure",
+          "Defect -> error -> failure",
+          "Error -> failure -> defect"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "How do quality assurance and testing relate?",
+        "answers": [
+          "Testing and quality assurance are identical",
+          "Quality assurance is product-oriented while testing is process-oriented",
+          "Testing is a quality control activity; quality assurance is process-oriented and broader",
+          "Quality assurance is a subset of testing"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "Which statement about defects and failures is correct?",
+        "answers": [
+          "Every defect always leads to a failure",
+          "A defect may never cause a failure, and failures can also result from environmental conditions",
+          "Failures can only be caused by defects in the code",
+          "A failure always exists before the defect"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "What is the main purpose of root cause analysis?",
+        "answers": [
+          "To assign blame to a developer",
+          "To identify the underlying reason for a defect so processes can be improved to prevent recurrence",
+          "To re-run failed tests after a fix",
+          "To measure code coverage"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Which is an example of how testing contributes to success?",
+        "answers": [
+          "Testers reviewing user stories early to detect defects before code is written",
+          "Removing all reviews to speed up delivery",
+          "Waiting until release to start any testing",
+          "Replacing requirements with test cases"
+        ],
+        "correct_index": 0
+      }
+    ]
+  },
+  {
+    "section": "istqb",
+    "title": "Testing principles",
+    "short_description": "The seven testing principles are general guidelines that explain what testing can and cannot achieve and how to test effectively.",
+    "learning_goals": [
+      "(K2) Explain the seven testing principles",
+      "(K1) Recall each principle by name",
+      "(K2) Apply the principles to interpret realistic testing situations",
+      "(K2) Justify why exhaustive testing is usually impossible"
+    ],
+    "theory": "The ISTQB syllabus defines seven fundamental testing principles that summarise decades of experience. (1) Testing shows the presence, not the absence, of defects: testing can show that defects are present, but cannot prove there are none. (2) Exhaustive testing is impossible: testing everything (all input and precondition combinations) is not feasible except in trivial cases, so risk analysis, test techniques and priorities should focus the effort.\\n\\n(3) Early testing saves time and money: to find defects early, both static and dynamic test activities should start as early as possible in the SDLC (also called 'shift left'). Defects removed early are much cheaper than those found later. (4) Defects cluster together: a small number of modules usually contains most of the defects discovered before release, or is responsible for most operational failures. This supports risk-based testing.\\n\\n(5) Tests wear out (the pesticide paradox): if the same tests are repeated many times, they stop finding new defects. To detect new defects, existing tests and test data may need changing, and new tests may need to be written. However, in some cases (such as automated regression testing) repeating the same tests has a beneficial outcome by showing relatively stable behaviour. (6) Testing is context dependent: testing is done differently in different contexts - for example, safety-critical industrial control software is tested differently from a mobile e-commerce app.\\n\\n(7) Absence-of-defects fallacy: it is a fallacy to expect that verifying requirements will ensure a successful system. Finding and fixing many defects does not help if the system built is unusable or does not meet the users' needs and expectations - validation matters as well as verification.\\n\\nThese principles are commonly tested individually on the exam, often by matching a scenario to the principle it illustrates, so it helps to memorise both their names and their meanings.",
+    "key_terms": "testing principles, exhaustive testing, defect clustering, pesticide paradox, shift left, context dependent, absence-of-defects fallacy, risk-based testing",
+    "real_world_example": "A team runs an identical regression suite every sprint for a year and finds no new defects, while users still report crashes - the pesticide paradox. They refresh the tests with new data and scenarios and immediately uncover defects. Separately, they notice 80% of production incidents come from the payments module, so they concentrate testing there (defect clustering and risk-based testing). They also realise that despite passing all requirement-based tests, users find the app confusing - the absence-of-defects fallacy.",
+    "step_by_step": "1. Accept that testing reduces risk but cannot prove zero defects (principle 1).\\n2. Because exhaustive testing is impossible, use risk analysis and techniques to prioritise (principle 2).\\n3. Start testing early, including reviews, to cut cost (principle 3).\\n4. Focus effort where defects cluster and risk is highest (principle 4).\\n5. Periodically refresh and add tests to counter the pesticide paradox (principle 5).\\n6. Adapt your approach to the context - criticality, domain, technology (principle 6).\\n7. Validate against user needs, not only requirements, to avoid the absence-of-defects fallacy (principle 7).",
+    "common_mistakes": "1. Believing testing can prove software is defect-free (it can only show defects are present).\\n2. Thinking exhaustive testing is achievable with enough time.\\n3. Assuming a passing requirement-based test set means a successful product (ignoring validation).\\n4. Forgetting that repeated identical tests stop finding new defects (pesticide paradox).\\n5. Applying the same test approach to every context regardless of risk and domain.",
+    "practical_use_case": "On the job, the principles guide test strategy: prioritising high-risk clustered areas, refreshing suites and shifting testing left. On the exam, the classic format gives a short scenario and asks which principle it demonstrates, or asks to identify a false statement (e.g. 'exhaustive testing is always possible').",
+    "summary": "Seven principles capture what testing can and cannot do: it shows presence not absence of defects, cannot be exhaustive, should start early, follows defect clustering, wears out (pesticide paradox), is context dependent, and must avoid the absence-of-defects fallacy. Memorising their names and meanings is essential for the exam.",
+    "example": "Matching scenarios to principles:\\n\\n| Scenario | Principle |\\n|---|---|\\n| A 4-field form with unbounded text cannot be fully tested | Exhaustive testing is impossible |\\n| Same nightly suite finds nothing new for months | Pesticide paradox (tests wear out) |\\n| 3 of 30 modules cause most reported bugs | Defects cluster together |\\n| Reviewing requirements catches errors before coding | Early testing saves time and money |\\n| All tests pass but users find the app unusable | Absence-of-defects fallacy |\\n| Pacemaker firmware tested far more rigorously than a blog | Testing is context dependent |\\n| QA cannot promise the software has zero defects | Testing shows presence, not absence, of defects |",
+    "interactive": "For each statement, name the principle it illustrates: (a) 'We added new test data and found 5 fresh defects in a suite that had gone quiet.' (b) 'We tested the medical-device module to a far stricter standard than the marketing site.' (c) 'Despite 100% requirement coverage, customers say the workflow is unusable.'",
+    "expected_answer": "(a) Pesticide paradox / tests wear out - repeated tests stop finding defects until refreshed. (b) Testing is context dependent - criticality drives a different, more rigorous approach. (c) Absence-of-defects fallacy - meeting requirements does not guarantee a usable system that meets user needs; validation is missing.",
+    "homework": "Write seven short real or invented project anecdotes, one clearly illustrating each principle. Then swap two anecdotes' labels deliberately and explain why the swap is wrong - to demonstrate you understand the boundaries between principles.",
+    "expected_result": "Seven distinct, plausible anecdotes each correctly mapped to one principle, using correct principle names, plus a clear explanation of why two deliberately mislabelled anecdotes are wrong, showing genuine understanding rather than rote matching.",
+    "quiz": [
+      {
+        "question": "Which principle states that running the same tests repeatedly eventually stops finding new defects?",
+        "answers": [
+          "Defects cluster together",
+          "Exhaustive testing is impossible",
+          "Tests wear out (the pesticide paradox)",
+          "Early testing saves time and money"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "Which statement is FALSE according to the testing principles?",
+        "answers": [
+          "Testing can show that defects are present",
+          "Exhaustive testing is possible if enough time is allocated",
+          "Testing is context dependent",
+          "Defects tend to cluster in a small number of modules"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "All planned tests pass and every requirement is covered, yet users find the product unusable. Which principle does this illustrate?",
+        "answers": [
+          "Defect clustering",
+          "Absence-of-defects fallacy",
+          "Pesticide paradox",
+          "Early testing saves time and money"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Why is risk-based prioritisation important according to the principles?",
+        "answers": [
+          "Because exhaustive testing is impossible, so effort must be focused",
+          "Because testing proves the absence of defects",
+          "Because all modules contain an equal number of defects",
+          "Because context never affects how testing is done"
+        ],
+        "correct_index": 0
+      },
+      {
+        "question": "Which principle most directly supports starting reviews of requirements before coding begins?",
+        "answers": [
+          "Testing is context dependent",
+          "Early testing saves time and money",
+          "Tests wear out",
+          "Testing shows presence, not absence, of defects"
+        ],
+        "correct_index": 1
+      }
+    ]
+  },
+  {
+    "section": "istqb",
+    "title": "Test activities, testware and roles",
+    "short_description": "Testing is a process of distinct activities producing testware, supported by traceability and performed by people in the test management and testing roles.",
+    "learning_goals": [
+      "(K2) Summarise the different test activities and tasks",
+      "(K2) Explain the impact of context on the test process",
+      "(K2) Differentiate the testware produced by test activities",
+      "(K2) Explain the value of maintaining traceability and the two principal testing roles"
+    ],
+    "theory": "There is no single universal test process, but the syllabus describes a common set of test activities, each producing testware. Test planning defines the objectives of testing and the approach within constraints (producing the test plan). Test monitoring and control compares actual progress against the plan using metrics and entry/exit criteria, and takes corrective actions (producing test progress reports and control directives). Test analysis determines 'what to test' by analysing the test basis to identify testable features and define test conditions, also evaluating the test basis for defects. Test design determines 'how to test' by elaborating test conditions into test cases and other testware, designing the test data, the test environment requirements and identifying coverage items.\\n\\nTest implementation prepares the testware needed for execution, checking the test environment is ready, creating test procedures and test suites and arranging them into an execution schedule. Test execution runs the tests, compares actual results with expected results, logs the outcome and reports defects. Test completion collects data from completed activities, creates a test completion report, finalises and archives testware, evaluates testing and communicates lessons learned. These activities may overlap, be combined, reorganised or iterate depending on the context.\\n\\nTestware is the work products produced by the test activities. Examples include: from test planning, the test plan and risk register; from analysis, test conditions and defect reports about the test basis; from design, test cases, coverage items, test data requirements and test environment requirements; from implementation, test procedures, test suites, test data and the test execution schedule; from execution, test logs and defect reports; from completion, the test completion report and action items.\\n\\nTraceability between the test basis and testware is essential. Good traceability supports impact analysis (which tests are affected by a change), test coverage evaluation against the test basis, auditing, and reporting test progress in terms that stakeholders understand (e.g. requirements coverage). It also helps assess whether testing meets its objectives.\\n\\nThe syllabus describes two principal testing roles. The test management role takes overall responsibility for the test process, test team and leadership of the test activities. The testing role takes responsibility for the engineering (technical) aspects of testing. How these roles are allocated depends on the context; one person may fill both, and in some contexts (such as Agile) some tasks are performed by the whole team. Effective testing also depends on good whole-team collaboration and the contribution of independent testers, balanced against the benefits of developers testing their own work.",
+    "key_terms": "test planning, test monitoring and control, test analysis, test design, test implementation, test execution, test completion, test condition, test case, coverage item, testware, traceability",
+    "real_world_example": "On a banking app, the lead (test management role) writes the test plan and sets exit criteria. A tester (testing role) analyses the 'funds transfer' requirement and defines test conditions (e.g. 'transfer exceeding balance is rejected'), then designs test cases with concrete data and identifies coverage items. During implementation they prepare the test environment and order the cases into a suite; during execution they log a defect when a transfer of exactly the available balance is wrongly rejected. Traceability links that case back to the requirement, so when the requirement changes the team instantly sees which tests to re-run.",
+    "step_by_step": "1. Plan: define objectives, scope, approach and entry/exit criteria (test plan).\\n2. Analyse: study the test basis to derive test conditions and find test-basis defects.\\n3. Design: turn test conditions into test cases, define test data, environment needs and coverage items.\\n4. Implement: build test procedures and suites, prepare data and environment, schedule execution.\\n5. Execute: run tests, compare actual vs expected results, log outcomes and report defects.\\n6. Monitor and control throughout: track metrics against the plan and take corrective action.\\n7. Complete: report results, archive testware, capture lessons learned.\\n8. Maintain traceability from the test basis through every work product.",
+    "common_mistakes": "1. Confusing a test condition (an aspect to be tested, the 'what') with a test case (inputs, preconditions and expected results, the 'how').\\n2. Thinking the test activities must be strictly sequential rather than overlapping and iterative depending on context.\\n3. Placing coverage item identification in execution rather than in design.\\n4. Ignoring traceability and so being unable to do impact analysis or report coverage to stakeholders.\\n5. Assuming there is one universal test process that fits every project.",
+    "practical_use_case": "On the job, knowing which activity produces which testware keeps work organised and auditable, and traceability enables impact analysis when requirements change. On the exam, expect questions matching tasks to activities, identifying which testware comes from which activity, distinguishing test conditions, cases and coverage items, and explaining the value of traceability and the two roles.",
+    "summary": "The test process comprises planning, monitoring and control, analysis, design, implementation, execution and completion, each producing specific testware, and adapts to context rather than being universal. Traceability between the test basis and testware enables impact analysis, coverage evaluation and meaningful reporting, while the test management and testing roles divide leadership from engineering responsibilities.",
+    "example": "From requirement to coverage item:\\n\\n```\\nTest basis (requirement): 'A withdrawal is allowed only if amount <= balance.'\\nTest analysis  -> Test condition: 'Withdrawal amount versus available balance'\\nTest design    -> Test cases:\\n   TC1  amount < balance      -> allowed\\n   TC2  amount = balance      -> allowed   (boundary)\\n   TC3  amount > balance      -> rejected\\nCoverage items: the partitions {amount<balance, amount=balance, amount>balance}\\nTest implementation -> procedure ordering TC1,TC2,TC3 with test data and a prepared account\\nTest execution -> actual vs expected; TC2 fails (wrongly rejected) -> defect report\\nTraceability: TC1-TC3 all link back to this requirement for impact analysis and coverage reporting.\\n```",
+    "interactive": "Take the requirement 'A discount code can be applied at most once per order.' Produce one test condition, two test cases (with expected results), name one coverage item, and state which activity each artifact comes from.",
+    "expected_answer": "Test condition (from test analysis): 'Number of times a discount code is applied to a single order.' Test case 1 (from test design): apply the code once -> discount applied, order total reduced. Test case 2: apply the same code a second time on the same order -> rejected with a 'code already used' message. Coverage item (from test design): the partitions {applied 0 times, applied 1 time, applied 2+ times}. Implementation would order these into a suite with prepared cart data; execution would log actual vs expected and any defect; traceability links both cases back to the requirement.",
+    "homework": "Choose a requirement from a real or sample project. Walk it through all seven activities, listing the concrete testware each activity produces for it (plan extract, test conditions, test cases, coverage items, procedure, log, completion note). Add a small traceability matrix linking the requirement to your test cases and explain one impact-analysis scenario it supports.",
+    "expected_result": "A complete walkthrough showing correct testware mapped to each activity, a clear distinction between test conditions, test cases and coverage items, a valid traceability matrix, and a realistic explanation of how traceability enables impact analysis or coverage reporting.",
+    "quiz": [
+      {
+        "question": "During which activity are test conditions primarily identified?",
+        "answers": [
+          "Test design",
+          "Test analysis",
+          "Test execution",
+          "Test completion"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Which best distinguishes a test condition from a test case?",
+        "answers": [
+          "A test condition includes concrete inputs and expected results; a test case does not",
+          "A test condition is an aspect to be tested; a test case specifies preconditions, inputs and expected results",
+          "They are synonyms",
+          "A test case is produced in planning; a test condition in execution"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Which testware is typically produced during test completion?",
+        "answers": [
+          "Test conditions",
+          "Test cases",
+          "The test completion report and lessons learned",
+          "The test plan"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "What is a key benefit of maintaining traceability between the test basis and testware?",
+        "answers": [
+          "It removes the need for test design",
+          "It enables impact analysis, coverage evaluation and meaningful progress reporting",
+          "It guarantees exhaustive testing",
+          "It replaces the test management role"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Which statement about the two principal testing roles is correct?",
+        "answers": [
+          "The test management role handles only technical test engineering",
+          "The testing role takes overall leadership of the test process",
+          "The test management role leads the test process while the testing role covers the engineering aspects, and one person may fill both",
+          "The roles must always be held by two different people"
+        ],
+        "correct_index": 2
+      }
+    ]
+  },
+  {
+    "section": "istqb",
+    "title": "Essential skills and good practices in testing",
+    "short_description": "Effective testing depends on generic and domain skills, a whole-team approach, and the right independence of testing balanced against its drawbacks.",
+    "learning_goals": [
+      "(K2) Give examples of the generic skills required for testing",
+      "(K1) Recall the advantages and disadvantages of independence of testing",
+      "(K2) Explain the benefits of a whole-team approach",
+      "(K2) Explain why good communication and the right mindset matter in testing"
+    ],
+    "theory": "Good testing requires more than tool knowledge. The syllabus highlights generic skills: testing knowledge (to increase effectiveness, e.g. using test techniques); thoroughness, carefulness, curiosity, attention to detail and being methodical (to identify defects, especially hard-to-find ones); good communication skills, active listening and being a team player (to interact effectively with all stakeholders, convey information and report defects without offence); analytical thinking, critical thinking and creativity (to increase effectiveness); technical knowledge (to improve efficiency, e.g. by using test tools); and domain knowledge (to understand and communicate with end users and business stakeholders).\\n\\nTesters are often the bearers of bad news - reporting defects and progress that others may not want to hear. Communicating defects constructively is therefore a key skill: criticism should be about the work product, not the person, and conveyed objectively. Good interpersonal communication, neutral and fact-focused, helps maintain a positive relationship between testers and others and supports the common goal of better quality.\\n\\nA whole-team approach is a good practice especially common in Agile: any team member with the necessary knowledge can perform any task, and everyone is responsible for quality. Team members share the same workspace (physical or virtual) so communication is easier; testers work closely with developers and business representatives. Benefits include improved communication and collaboration, leveraging a range of skill sets for the benefit of the project, and making testing everyone's responsibility. However, the whole-team approach may not suit every context (for example, where deep specialisation or strict independence is required).\\n\\nIndependence of testing means that tested work products are tested by someone other than the author, which tends to reveal different kinds of defects because of different cognitive biases. Several levels exist, from no independence (the author tests their own code), through testing by another developer or a separate test team within the organisation, to testers from outside the organisation. Higher independence is not automatically better.\\n\\nAdvantages of independent testing: independent testers are likely to recognise different kinds of failures and defects compared with the authors due to differing backgrounds and biases; an independent tester can verify, challenge or disprove assumptions made by stakeholders during specification and implementation. Disadvantages: independent testers may be isolated from the development team, leading to a lack of collaboration, communication problems or an adversarial relationship; developers may lose a sense of responsibility for quality; independent testers may be seen as a bottleneck or blamed for delays. A practical good practice is to combine self-testing by developers with the benefits of an appropriate level of independent testing.",
+    "key_terms": "independence of testing, whole-team approach, tester mindset, communication, critical thinking, domain knowledge, technical knowledge, defect report",
+    "real_world_example": "On a logistics platform, developers unit-test their own code (low independence) but a separate test team also tests at system level (higher independence) and finds defects the authors overlooked because of their assumptions. A tester reports a critical routing defect by describing the work product objectively ('the route ignores one-way streets in case X') rather than blaming the developer, preserving a good relationship. The team works in a whole-team setup, so the business analyst, developers and testers share a board and resolve the defect together, with quality treated as everyone's responsibility.",
+    "step_by_step": "1. Build generic skills: techniques knowledge, attention to detail, analytical and critical thinking, communication.\\n2. Acquire enough domain and technical knowledge for your product and tools.\\n3. Choose an appropriate level of independence for the context (author, peer, separate team, external).\\n4. Combine developer self-testing with independent testing to get both ownership and fresh perspective.\\n5. Adopt a whole-team approach where it fits, sharing responsibility for quality.\\n6. Report defects objectively and constructively, focusing on the work product, not the person.\\n7. Listen actively and keep communication neutral and fact-based to avoid an adversarial relationship.",
+    "common_mistakes": "1. Believing higher independence is always better - it has real disadvantages such as isolation and reduced developer ownership.\\n2. Thinking the whole-team approach suits every context.\\n3. Reporting defects in a way that criticises people rather than the work product.\\n4. Assuming testing needs only technical skills and ignoring communication, critical thinking and domain knowledge.\\n5. Treating the independent test team as solely responsible for quality instead of sharing responsibility.",
+    "practical_use_case": "On the job, choosing the right mix of self-testing and independent testing and communicating defects diplomatically keeps quality high and relationships healthy. On the exam, expect questions listing generic tester skills, asking for advantages versus disadvantages of independence, and on the benefits of a whole-team approach and constructive communication.",
+    "summary": "Effective testing needs generic skills (attention to detail, analytical and critical thinking, communication) plus domain and technical knowledge, and constructive, objective defect reporting. A whole-team approach shares responsibility for quality, while independence of testing brings fresh perspectives but has real drawbacks, so the right balance depends on context.",
+    "example": "Levels of independence and their trade-offs:\\n\\n| Level | Who tests | Typical strength | Typical risk |\\n|---|---|---|---|\\n| None | The author tests their own work | Fast, deep code knowledge | Author's biases hide defects |\\n| Low | Another developer on the team | Some fresh perspective, still collaborative | Shared assumptions remain |\\n| Moderate | A separate test team in the org | Different biases find new defects | Possible isolation / bottleneck perception |\\n| High | Testers outside the organisation | Maximum objectivity, challenges assumptions | Communication gaps, less developer ownership |\\n\\nGood practice: developers self-test, AND a higher-independence level reviews, so both ownership and objectivity are obtained.",
+    "interactive": "Rewrite this defect note constructively and objectively: 'You broke the checkout again - the totals are always wrong, did you even test this?' Then state which level of testing independence is reporting it if it comes from a separate test team.",
+    "expected_answer": "Constructive version: 'On build 142, in the checkout flow, applying a percentage discount produces an incorrect order total: cart of 100.00 with a 10% code shows 100.00 instead of 90.00. Steps to reproduce and expected result attached. Severity: high - affects all discounted orders.' This focuses on the work product and facts, not the person. A separate test team in the organisation reporting this is at a moderate level of independence (independent of the author but inside the organisation).",
+    "homework": "Take three poorly written, accusatory defect reports (real or invented) and rewrite each to be objective and constructive, including clear steps to reproduce and expected versus actual results. Then write half a page weighing the advantages and disadvantages of using a fully external (high-independence) test team for a small Agile product, and recommend a level with justification.",
+    "expected_result": "Three rewritten defect reports that are factual, blame-free and reproducible, plus a balanced discussion that correctly lists at least two advantages and two disadvantages of independence and recommends a context-appropriate level (likely a whole-team approach with some independence) with sound reasoning.",
+    "quiz": [
+      {
+        "question": "Which of the following is a generic skill required for testing emphasised by the syllabus?",
+        "answers": [
+          "Avoiding communication with developers",
+          "Analytical thinking, critical thinking and attention to detail",
+          "Always testing one's own code only",
+          "Maximising independence in every context"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Which is a recognised DISADVANTAGE of independent testing?",
+        "answers": [
+          "Independent testers recognise different kinds of defects",
+          "Independent testers can challenge stakeholders' assumptions",
+          "Independent testers may be isolated and developers may lose a sense of responsibility for quality",
+          "Independent testers always speed up delivery"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "What is a key benefit of a whole-team approach?",
+        "answers": [
+          "Only testers are responsible for quality",
+          "Improved communication and collaboration, with everyone responsible for quality",
+          "It removes the need for any testing skills",
+          "It guarantees the highest possible independence"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "How should a tester communicate a defect to maintain a positive relationship?",
+        "answers": [
+          "Blame the developer who wrote the code",
+          "Report it objectively, focusing on the work product and facts, not the person",
+          "Avoid reporting low-severity defects to keep peace",
+          "Report it verbally only, with no details"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Which statement about levels of testing independence is correct?",
+        "answers": [
+          "Higher independence is always the best choice",
+          "Only external testers can find defects",
+          "Independence ranges from the author testing their own work to external testers, and the right level depends on context",
+          "Independence has no disadvantages"
+        ],
+        "correct_index": 2
+      }
+    ]
+  }
+]

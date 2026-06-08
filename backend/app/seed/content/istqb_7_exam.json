@@ -1,0 +1,192 @@
+[
+  {
+    "section": "istqb",
+    "title": "ISTQB exam format and K-levels",
+    "short_description": "Understand the structure of the ISTQB CTFL v4.0 exam and how the cognitive K-levels (K1, K2, K3) shape the questions you will face.",
+    "learning_goals": "(K1) Recall the format of the CTFL v4.0 exam: 40 multiple-choice questions, a 65% (26/40) pass mark, and a 60-minute time limit (75 minutes for non-native-language candidates).\n(K2) Explain the difference between the three cognitive levels K1 (remember), K2 (understand) and K3 (apply) and what each demands from the candidate.\n(K3) Apply an exam strategy that allocates points by question difficulty, uses elimination of distractors, and manages the 60-minute budget.\n(K2) Summarise how each learning objective in the syllabus carries a K-level that predicts the style of the corresponding exam question.",
+    "theory": "The ISTQB Certified Tester Foundation Level (CTFL v4.0) exam is a closed-book, multiple-choice exam consisting of exactly 40 questions. Each question has a single correct answer and is worth one point, giving a maximum score of 40. The pass mark is 65%, which means you must answer at least 26 questions correctly. The standard time limit is 60 minutes; candidates sitting the exam in a language that is not their native or primary language are granted an additional 25%, i.e. 75 minutes. There is no negative marking, so you should answer every question even when you are unsure.\n\nEvery learning objective (LO) in the syllabus is tagged with a cognitive level, called a K-level, drawn from a simplified Bloom's taxonomy. The K-level tells you both how the material is taught and how it will be examined. The Foundation Level uses three levels: K1 (remember), K2 (understand) and K3 (apply). Higher levels build on lower ones, so a K3 objective also assumes you can remember (K1) and understand (K2) the same material.\n\nK1 (Remember) objectives ask you to recognise, recall or retrieve a term or fact. Typical action verbs are identify, recall, recognise and remember. An exam question at K1 might ask you to select the correct definition of a test case or to recognise which activity belongs to the test process. No reasoning is required beyond recognition.\n\nK2 (Understand) objectives ask you to explain, compare, classify, summarise or give reasons. Typical verbs are classify, compare, contrast, differentiate, distinguish, exemplify, explain and summarise. A K2 question might ask you to compare verification with validation, distinguish confirmation testing from regression testing, or explain why early testing saves time and money. You must reason about the concept, not merely recall a label.\n\nK3 (Apply) objectives ask you to use a procedure or technique in a given situation to produce a result. The verb is typically apply. K3 questions are the ones where you actually perform a technique: deriving equivalence partitions and boundary values, building a decision table, computing statement or branch coverage, or producing test cases from a state transition diagram. The exam blueprint weights questions roughly in proportion to the number and level of learning objectives per chapter, so chapters rich in K3 objectives (notably Chapter 4, Test Analysis and Design) contribute several application-style questions.\n\nKnowing the K-level of a topic is a practical exam-prep tool: it tells you whether to memorise a definition (K1), be able to explain and contrast it (K2), or practise performing it on paper until it is fast and accurate (K3). Allocate your study time accordingly and rehearse K3 techniques under time pressure, because they take the longest to answer.",
+    "key_terms": "test object, test basis, test condition, test case, coverage item, confirmation testing, regression testing, verification, validation",
+    "real_world_example": "A test engineer at a fintech company books the CTFL v4.0 exam. During preparation she lists every learning objective with its K-level. She notices that Chapter 1 and Chapter 5 are dominated by K1 and K2 objectives (definitions of the seven testing principles, the test process, roles, and risk concepts), so she creates flashcards to memorise and explain them. Chapter 4, by contrast, is full of K3 objectives, so she spends her last week drilling equivalence partitioning, boundary value analysis, decision tables and statement/branch coverage on scratch paper with a timer. On exam day she answers the 40 questions in 48 minutes, leaves none blank because there is no negative marking, scores 31/40, and comfortably clears the 26-correct pass threshold.",
+    "step_by_step": "1. Confirm the exam logistics for your sitting: 40 questions, 60 minutes (75 if non-native language), pass mark 26/40 (65%), single best answer, no negative marking.\n2. Download the official CTFL v4.0 syllabus and list every learning objective together with its K-level (K1, K2 or K3).\n3. Bucket the objectives: K1 -> memorise definitions and facts; K2 -> be able to explain, compare and classify; K3 -> practise performing the technique on paper.\n4. Drill the K3 techniques (EP, BVA, decision tables, state transition, statement/branch coverage) repeatedly until each can be done quickly and accurately.\n5. Take timed mock exams and track your accuracy per chapter to find weak areas.\n6. In the real exam, do a first pass answering every question you are confident about, flag the hard ones, then return to them.\n7. Budget roughly 90 seconds per question, but spend less on K1 recall items and reserve time for K3 application items.\n8. Never leave a question blank; eliminate obviously wrong distractors and choose the best remaining answer.",
+    "common_mistakes": "Believing there is negative marking and therefore leaving hard questions blank - there is no penalty for wrong answers, so always answer.\nThinking the pass mark is 70% or 60%; it is exactly 65%, i.e. 26 of 40 correct.\nAssuming all non-native speakers automatically get extra time; the 25% extension (to 75 minutes) applies only when the exam is taken in a language that is not the candidate's native or working language and must be requested per the exam provider's rules.\nUnder-practising K3 techniques because they 'seem easy' in the book; under exam time pressure, deriving boundary values or computing branch coverage is where candidates lose the most points.\nConfusing the K-level verbs, e.g. expecting to 'apply' a technique on a K2 'explain' objective, or only memorising a K2 topic without being able to compare or reason about it.",
+    "practical_use_case": "On the job, K-levels map to depth of competence: a junior tester must remember terminology (K1) and explain concepts to peers (K2), while designing test cases with formal techniques is a K3 applied skill used daily. On the exam, knowing the K-level of each topic lets you predict question style - definition-matching for K1, compare/contrast and 'why' questions for K2, and worked calculations or derivations for K3 - so you can rehearse the right kind of answer and pace yourself across the 40 questions in 60 minutes.",
+    "summary": "The CTFL v4.0 exam is 40 single-answer multiple-choice questions, 60 minutes (75 for non-native-language candidates), with a 65% (26/40) pass mark and no negative marking. Each syllabus learning objective carries a K-level - K1 (remember), K2 (understand) or K3 (apply) - that predicts how it will be tested, so you should memorise K1 facts, be able to explain and compare K2 concepts, and practise performing K3 techniques under time pressure.",
+    "example": "Worked mapping of topics to K-levels and the matching exam-question style:\n\n```\nK-level | Demand        | Typical verbs              | Example topic                         | Exam question style\n--------|---------------|----------------------------|---------------------------------------|----------------------------------------\nK1      | Remember      | identify, recall, recognise| Definition of 'test case'             | 'Which of the following is the BEST\n        |               |                            |                                       |  definition of a test case?'\nK2      | Understand    | explain, compare, classify | Verification vs validation;           | 'Which statement correctly distinguishes\n        |               |                            | confirmation vs regression testing    |  confirmation testing from regression\n        |               |                            |                                       |  testing?'\nK3      | Apply         | apply                      | Boundary value analysis on age field  | 'Given the rule age must be 18-65,\n        |               |                            | (valid 18..65)                        |  which set of test inputs covers the\n        |               |                            |                                       |  boundary values?' -> answer: 17,18,65,66\n```\n\nScoring example: a candidate answers 28 of 40 correctly. 28/40 = 70% >= 65%, and 28 >= 26 correct, so the result is PASS. A candidate with 25 correct (62.5%) FAILS because 25 < 26.",
+    "interactive": "Take this learning objective from the syllabus: 'Apply boundary value analysis to derive test cases from given requirements.' State its K-level, justify your answer from the action verb, and describe the style of exam question you should expect for it.",
+    "expected_answer": "The objective is K3 (Apply). The justification is the action verb 'apply', which at Foundation Level is the signature verb for K3 - it requires using a procedure/technique on given inputs to produce a result rather than merely recalling (K1) or explaining (K2). The expected exam question will give a concrete requirement (for example, a numeric input range) and ask you to derive or select the correct set of boundary values / test cases, so you must perform the technique on paper, typically picking the values just below, at and just above each boundary.",
+    "homework": "Build a one-page exam-readiness sheet. Column 1: list at least 12 CTFL v4.0 learning objectives across Chapters 1-6. Column 2: tag each with its K-level (K1/K2/K3). Column 3: write the action verb that justifies the K-level. Column 4: note the exam-question style you expect (recall/define, compare/explain, or apply/calculate). At the bottom, write the exam logistics from memory (number of questions, time, pass mark, negative marking policy) and a 60-minute time-budget plan.",
+    "expected_result": "A correctly filled table where K-levels match the syllabus verbs (e.g. 'identify/recall' -> K1, 'explain/compare/distinguish' -> K2, 'apply' -> K3) and the question-style column is consistent with the K-level. The logistics line must correctly state 40 questions, 60 minutes (75 for non-native-language candidates), 65% / 26-correct pass mark, and no negative marking, plus a sensible pacing plan (about 90 seconds per question with extra time reserved for K3 items).",
+    "quiz": [
+      {
+        "question": "How many questions are on the ISTQB CTFL v4.0 exam and what is the pass mark?",
+        "answers": [
+          "40 questions, pass mark 65% (26 correct)",
+          "40 questions, pass mark 70% (28 correct)",
+          "50 questions, pass mark 60% (30 correct)",
+          "60 questions, pass mark 65% (39 correct)"
+        ],
+        "correct_index": 0
+      },
+      {
+        "question": "A candidate takes the CTFL exam in a language that is not their native language. What is the standard time allowance?",
+        "answers": [
+          "60 minutes, the same as everyone",
+          "90 minutes",
+          "75 minutes (an extra 25%)",
+          "45 minutes"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "Which K-level requires the candidate to USE a procedure or technique on given inputs to produce a result?",
+        "answers": [
+          "K1 (Remember)",
+          "K2 (Understand)",
+          "K3 (Apply)",
+          "K4 (Analyse)"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "A question asks you to 'distinguish confirmation testing from regression testing'. Which cognitive level does this represent?",
+        "answers": [
+          "K1 (Remember)",
+          "K2 (Understand)",
+          "K3 (Apply)",
+          "It is not testable at Foundation Level"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "On the CTFL exam, what happens if you answer a question incorrectly?",
+        "answers": [
+          "You lose one point (negative marking)",
+          "You lose half a point",
+          "Nothing is deducted; there is no negative marking",
+          "The question is removed from scoring"
+        ],
+        "correct_index": 2
+      }
+    ]
+  },
+  {
+    "section": "istqb",
+    "title": "Mock exam: questions and answers",
+    "short_description": "Practise with a set of realistic ISTQB-style multiple-choice questions covering the whole CTFL v4.0 syllabus, each with a worked explanation.",
+    "learning_goals": "(K3) Apply your knowledge of the full CTFL v4.0 syllabus to answer exam-style multiple-choice questions under realistic phrasing and time pressure.\n(K2) Explain why each correct answer is correct and why each distractor is wrong, using precise ISTQB terminology.\n(K2) Classify questions by topic and K-level to identify your weak areas before the real exam.\n(K1) Recall the exam logistics (40 questions, 60 minutes, 26/40 to pass) and rehearse pacing on a mock set.",
+    "theory": "A mock exam is the single most effective preparation tool because it forces retrieval under conditions close to the real exam. The CTFL v4.0 exam mixes K1, K2 and K3 questions across all six chapters, so a good mock set samples fundamentals (principles, the test process, verification vs validation), testing throughout the lifecycle, static testing, test analysis and design techniques (the K3-heavy chapter), managing test activities, and test tools.\n\nWhen you take a mock exam, do a first pass answering everything you know, then revisit flagged questions. Read each stem carefully: ISTQB questions often hinge on a single precise word such as BEST, FIRST, MOST or NOT, and on official glossary terms used exactly. A distractor is frequently a true statement that simply does not answer the question asked, which is why understanding the definitions (test object, test basis, test condition, test case, coverage item) matters as much as recognising them.\n\nAlways analyse your wrong answers. For each missed question, identify the underlying concept and the K-level, then go back to the syllabus section. Confusing pairs are favourite exam material: verification (are we building the product right? - checking against specifications) versus validation (are we building the right product? - checking against user needs); confirmation testing (re-running the failed test after a fix to confirm the defect is gone) versus regression testing (running tests on unchanged areas to detect new defects introduced by a change); and error (human action) versus defect/fault (the flaw in the work product) versus failure (the observed incorrect behaviour).\n\nFor K3 questions, the discipline is to actually perform the technique on scratch paper rather than eyeballing the options. Derive equivalence partitions and pick the boundary values (the value at the boundary and the values just below and just above), build the decision table and count the rules, or trace the control flow to compute statement coverage (percentage of statements executed) versus branch coverage (percentage of decision outcomes exercised). Doing the work prevents you from being trapped by a plausible but wrong option.\n\nThe quiz below is a 10-question mock. Treat it as a timed set (aim for under 15 minutes), then read the explanation embedded in each answer set to confirm not only the right choice but the reasoning behind it.",
+    "key_terms": "test object, test basis, test condition, test case, coverage item, confirmation testing, regression testing, verification, validation",
+    "real_world_example": "Two weeks before his exam, a tester sits a 40-question timed mock and scores 24/40 - just below the 26 needed to pass. Instead of repeating random questions, he categorises his 16 errors: 7 were K3 test-design questions (boundary values and decision tables he rushed), 5 were K2 confusions between confirmation and regression testing and between verification and validation, and 4 were careless misreads of 'NOT' and 'BEST' stems. He spends three evenings drilling EP/BVA and decision tables on paper, writes one-line distinctions for each confusing pair, and practises underlining the keyword in every stem. His next mock scores 33/40, and he passes the real exam.",
+    "step_by_step": "1. Set a 15-minute timer (proportional to 60 minutes for 40 questions) for the 10-question mock below.\n2. Do a first pass: answer every question you are sure of, flag the rest, never leave a blank.\n3. Underline the decisive keyword in each stem (BEST, FIRST, NOT, MOST) before choosing.\n4. For K3 questions, derive the answer on scratch paper - do not eyeball the options.\n5. After time, score yourself and read every explanation, including for questions you got right.\n6. Categorise each wrong answer by chapter and K-level to find patterns.\n7. Return to the syllabus section for each weak topic and re-drill it.\n8. Repeat with a fresh full-length 40-question mock until you reliably exceed 26 correct.",
+    "common_mistakes": "Practising only the questions you find easy and avoiding the K3 test-design questions, which are exactly where most points are lost.\nNot reading the explanation for questions you answered correctly - you may have been right for the wrong reason.\nMissing the decisive keyword (NOT, BEST, FIRST) and answering a subtly different question than the one asked.\nMixing up confirmation testing (re-run the failed test after the fix) with regression testing (re-test unchanged areas for new defects), and verification (build the product right) with validation (build the right product).\nMemorising answer letters from a question bank instead of the underlying reasoning, which fails as soon as the wording changes.",
+    "practical_use_case": "Mock exams are used in every serious CTFL prep plan and by training providers to gauge readiness; consistently scoring above ~32/40 on varied mocks is a strong signal of readiness. On the job the same habit - read the requirement precisely, derive the answer from a technique rather than guessing - is exactly how you design defensible test cases and review specifications. On the real exam, the mock-trained reflexes of keyword-spotting, distractor elimination, and on-paper derivation are what convert knowledge into the 26+ correct answers needed to pass.",
+    "summary": "A mock exam rehearses retrieval under realistic timing and reveals weak topics through error analysis. Read stems for decisive keywords, derive K3 answers on paper, and study the explanation for every question - right or wrong - so you understand the reasoning, not just the letter. Aim to comfortably exceed 26/40 on full-length mocks before sitting the real CTFL v4.0 exam.",
+    "example": "Worked example of analysing one mock question:\n\n```\nStem:  A developer fixes a defect. The tester re-runs the SAME test that previously\n       failed to confirm the defect is gone. What is this called?\nOptions: A) Regression testing  B) Confirmation testing  C) Maintenance testing  D) Smoke testing\n\nDerivation:\n - Key fact: the SAME previously-failed test is re-run AFTER a fix to confirm the fix worked.\n - Definition match: confirmation testing = re-execute the test that detected the defect,\n   after the defect has been fixed, to confirm it is resolved.  -> B is correct.\n - Why distractors fail:\n     A) Regression testing = run tests on UNCHANGED areas to find NEW defects from the change.\n     C) Maintenance testing = testing changes to a system already in production.\n     D) Smoke testing = a shallow set of tests checking core functions still work.\n Answer: B (Confirmation testing). K-level: K2 (Understand - distinguish related concepts).\n```\n\nThe quiz array contains 10 such mock questions; each answer set names the correct option and the reasoning, mirroring this analysis.",
+    "interactive": "Take the first three questions of the quiz below under a strict 4-minute timer. For each one, before checking the key, write down (a) the decisive keyword in the stem and (b) one sentence on why your chosen answer beats the closest distractor.",
+    "expected_answer": "A strong response identifies the keyword in each stem (e.g. BEST, NOT, FIRST), selects the correct option, and gives a one-line justification grounded in glossary definitions - for example, choosing confirmation testing over regression testing because the same previously-failed test is re-run after the fix to confirm resolution, whereas regression testing targets unchanged areas to find new defects. The candidate completes all three within the time limit and leaves none blank.",
+    "homework": "Sit a full 40-question CTFL v4.0 mock exam from a reputable provider under exam conditions (60 minutes, closed book, no breaks). Score it, then produce an error log: for each missed question record the chapter, the topic, the K-level, the correct answer, and one sentence on the concept you misunderstood. Re-study the three weakest topics and resit a different 40-question mock within a few days.",
+    "expected_result": "A completed mock with a score out of 40 (passing is >= 26), plus an error log that correctly attributes each miss to a chapter and K-level and articulates the concept that was misunderstood using accurate ISTQB terminology. Evidence of follow-up study and a second mock with an improved score demonstrates exam readiness.",
+    "quiz": [
+      {
+        "question": "Which of the following BEST describes the testing principle 'Tests show the presence of defects, not their absence'?",
+        "answers": [
+          "Testing can prove that a system is completely defect-free",
+          "Testing can show that defects are present but cannot prove that none remain",
+          "Testing should only be done when defects are already known",
+          "Exhaustive testing is achievable for most systems. Explanation: Correct answer is B - testing reduces the probability of undiscovered defects but, even if no defects are found, this is not proof of correctness."
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "What is the difference between verification and validation?",
+        "answers": [
+          "Verification checks the product against user needs; validation checks it against the specification",
+          "Verification checks the product against the specification (building it right); validation checks it against user needs (building the right product)",
+          "They are two words for the same activity",
+          "Verification is always manual and validation is always automated. Explanation: Correct answer is B - verification = conformance to specified requirements (build the product right); validation = fitness for the user's actual needs (build the right product)."
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "A test fails, a developer fixes the defect, and the tester re-runs the SAME test to check the fix worked. This is:",
+        "answers": [
+          "Regression testing",
+          "Confirmation testing",
+          "Exploratory testing",
+          "Acceptance testing. Explanation: Correct answer is B - confirmation testing re-executes the previously-failed test after the fix; regression testing instead checks unchanged areas for new defects."
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Given the rule 'age must be between 18 and 65 inclusive', which set represents the correct BOUNDARY VALUES to test (using 2-value boundary analysis)?",
+        "answers": [
+          "18, 40, 65",
+          "0, 18, 65, 100",
+          "17, 18, 65, 66",
+          "16, 17, 66, 67. Explanation: Correct answer is C - 2-value boundary analysis uses each boundary and its nearest neighbour on the other side: just below 18 (=17), at 18, at 65, and just above 65 (=66)."
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "Which of the following is NOT one of the seven testing principles?",
+        "answers": [
+          "Testing is context dependent",
+          "Defects cluster together",
+          "Absence-of-errors is a fallacy",
+          "Exhaustive testing is always required. Explanation: Correct answer is D - the principle is that exhaustive testing is IMPOSSIBLE/impractical (except for trivial cases), so testing must be prioritised; requiring exhaustive testing is not a principle."
+        ],
+        "correct_index": 3
+      },
+      {
+        "question": "What is the FIRST activity in the fundamental test process?",
+        "answers": [
+          "Test implementation",
+          "Test planning",
+          "Test execution",
+          "Test completion. Explanation: Correct answer is B - the test activities begin with test planning, followed by monitoring/control, analysis, design, implementation, execution and completion."
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "In a code segment, statement coverage is achieved when:",
+        "answers": [
+          "Every decision outcome (true and false) has been exercised at least once",
+          "Every executable statement in the code has been executed at least once",
+          "Every possible path through the code has been executed",
+          "Every input boundary has been tested. Explanation: Correct answer is B - statement coverage = percentage of executable statements exercised; exercising all decision outcomes is branch coverage (which subsumes statement coverage)."
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Which term refers to the work product (specification, model, etc.) used as the basis for designing test cases?",
+        "answers": [
+          "Test object",
+          "Test basis",
+          "Test condition",
+          "Coverage item. Explanation: Correct answer is B - the test basis is the body of knowledge used as the basis for test analysis and design; the test object is the component/system being tested."
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "A static testing technique that involves a meeting led by the author to walk peers through a document to gather feedback is called a:",
+        "answers": [
+          "Inspection",
+          "Walkthrough",
+          "Audit",
+          "Technical review. Explanation: Correct answer is B - a walkthrough is led by the author who guides participants through the work product; an inspection is the most formal review type led by a trained moderator and based on rules and checklists."
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "A decision table has 3 independent boolean conditions. How many rules (columns) does the FULL table contain before any collapsing?",
+        "answers": [
+          "3",
+          "6",
+          "8",
+          "9. Explanation: Correct answer is C - with 3 boolean conditions the full table has 2^3 = 8 combinations (rules); minimised/collapsed decision-table testing may then reduce this number."
+        ],
+        "correct_index": 2
+      }
+    ]
+  }
+]
