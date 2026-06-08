@@ -1,0 +1,28 @@
+name: Seed
+
+on:
+  workflow_dispatch:
+    inputs:
+      script:
+        description: Seed module to run inside the backend container
+        type: choice
+        default: seed_data
+        options:
+          - seed_data
+          - import_slide_assets
+
+jobs:
+  seed:
+    name: Seed production data
+    runs-on:
+      - self-hosted
+      - production
+      - vps
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          clean: false
+
+      - name: Run seed script
+        run: docker compose exec -T backend python -m app.seed.${{ inputs.script }}
