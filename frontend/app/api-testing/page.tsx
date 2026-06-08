@@ -28,8 +28,8 @@ const statusCodes: { code: string; meaning: string }[] = [
 
 export default function ApiTestingPage() {
   const apiBase = publicApiBase();
-  const swaggerUrl = `${apiBase}/docs`;
-  const redocUrl = `${apiBase}/redoc`;
+  const swaggerUrl = `${apiBase}/api/docs`;
+  const redocUrl = `${apiBase}/api/redoc`;
   const openApiUrl = `${apiBase}/openapi.json`;
 
   return (

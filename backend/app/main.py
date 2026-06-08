@@ -28,7 +28,9 @@ app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 
-@app.get("/docs", include_in_schema=False)
+# Served under /api/* so the reverse proxy routes them to the backend, leaving the
+# frontend /docs route free for the project-documentation page.
+@app.get("/api/docs", include_in_schema=False)
 def custom_swagger_ui() -> object:
     return get_swagger_ui_html(
         openapi_url=app.openapi_url,
@@ -38,7 +40,7 @@ def custom_swagger_ui() -> object:
     )
 
 
-@app.get("/redoc", include_in_schema=False)
+@app.get("/api/redoc", include_in_schema=False)
 def custom_redoc() -> object:
     return get_redoc_html(
         openapi_url=app.openapi_url,
