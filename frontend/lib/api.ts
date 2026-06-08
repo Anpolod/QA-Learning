@@ -15,6 +15,13 @@ function apiUrl() {
   return typeof window === "undefined" ? serverApiUrl : publicApiUrl;
 }
 
+// Bearer token for admin-gated calls. Browser-only (token lives in localStorage after login).
+function authHeader(): Record<string, string> {
+  if (typeof window === "undefined") return {};
+  const token = localStorage.getItem("qa_learning_token");
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${apiUrl()}${path}`, {
     ...init,
@@ -457,7 +464,8 @@ export const api = {
       openrouterConfigured: boolean;
     }>("/api/ai/admin/settings", {
       method: "PATCH",
-      body: JSON.stringify(body)
+      body: JSON.stringify(body),
+      headers: authHeader()
     }),
   aiUsage: () =>
     request<{

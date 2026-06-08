@@ -1,6 +1,7 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Header
 from sqlalchemy.orm import Session
 
+from app.api.routes.auth import _require_admin
 from app.database.session import get_db
 from app.schemas.ai import (
     AiChatRequest,
@@ -44,7 +45,13 @@ def ai_admin_settings(db: Session = Depends(get_db)) -> AiSettingsRead:
 
 
 @router.patch("/admin/settings", response_model=AiSettingsRead)
-def ai_admin_settings_update(request: AiSettingsUpdate, db: Session = Depends(get_db)) -> AiSettingsRead:
+def ai_admin_settings_update(
+    request: AiSettingsUpdate,
+    authorization: str = Header(default=""),
+    db: Session = Depends(get_db),
+) -> AiSettingsRead:
+    # Admin-only: this endpoint writes provider API keys.
+    _require_admin(authorization, db)
     return update_ai_settings(db, request)
 
 
