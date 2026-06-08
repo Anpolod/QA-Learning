@@ -25,7 +25,8 @@ export default function RegisterPage() {
       localStorage.setItem("qa_learning_token", response.accessToken);
       localStorage.setItem("qa_learning_user", JSON.stringify(response.user));
       setStatus(`Account created for ${response.user.email}`);
-      router.replace("/dashboard");
+      const next = new URLSearchParams(window.location.search).get("next");
+      router.replace(next || "/dashboard");
     } catch {
       setError("Registration failed. The email may already be registered or the password is too short.");
     } finally {

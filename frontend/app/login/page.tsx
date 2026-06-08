@@ -24,7 +24,8 @@ export default function LoginPage() {
       localStorage.setItem("qa_learning_token", response.accessToken);
       localStorage.setItem("qa_learning_user", JSON.stringify(response.user));
       setStatus(`Logged in as ${response.user.email}`);
-      router.replace(response.user.role === "admin" ? "/admin" : "/dashboard");
+      const next = new URLSearchParams(window.location.search).get("next");
+      router.replace(next || (response.user.role === "admin" ? "/admin" : "/dashboard"));
     } catch {
       setError("Login failed. Check your email and password.");
     } finally {

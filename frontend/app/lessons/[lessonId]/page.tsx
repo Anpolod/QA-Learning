@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, ClipboardList, Layers, Lightbulb, MousePointerClick, Target } from "lucide-react";
 import { AiAssistant } from "@/components/ai/AiAssistant";
+import { RequireAuth } from "@/components/auth/RequireAuth";
 import { LessonProgressTracker } from "@/components/course/LessonProgressTracker";
 import { LessonSlideDrawer } from "@/components/course/LessonSlideDrawer";
 import { api, mediaUrl } from "@/lib/api";
@@ -10,6 +11,7 @@ export default async function LessonPage({ params }: { params: Promise<{ lessonI
   const lesson = await api.lesson(lessonId);
   const slides = [...lesson.slides].sort((a, b) => a.order_index - b.order_index);
   return (
+    <RequireAuth>
     <main className="mx-auto max-w-7xl px-4 py-8">
       <LessonProgressTracker lessonId={lesson.id} />
       <div className="grid gap-8 lg:grid-cols-[260px_1fr]">
@@ -107,5 +109,6 @@ export default async function LessonPage({ params }: { params: Promise<{ lessonI
       <LessonSlideDrawer lessonTitle={lesson.title} slides={slides} />
       <AiAssistant lessonId={lessonId} />
     </main>
+    </RequireAuth>
   );
 }
