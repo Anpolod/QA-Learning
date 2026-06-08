@@ -28,6 +28,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <Link href="/progress">Progress</Link>
               <Link href="/final-projects">Projects</Link>
               <Link href="/profile">Profile</Link>
+              <Link href="/admin">Admin</Link>
               <Link href="/login">Login</Link>
             </div>
           </nav>
