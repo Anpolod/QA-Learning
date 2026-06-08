@@ -46,7 +46,7 @@ This project is built for education and practice. It is not a commercial SaaS pr
 - Auth: JWT bearer tokens.
 - AI providers: OpenAI and OpenRouter.
 - Deployment: Docker Compose.
-- CI/CD: GitHub Actions with deployment from the `production` branch.
+- CI/CD: GitHub Actions with a self-hosted VPS runner and deployment from the `production` branch.
 
 ## Project Structure
 
@@ -190,16 +190,13 @@ Workflow behavior:
 
 - Push or pull request to `main`: run backend and frontend checks.
 - Push or pull request to `production`: run checks.
-- Push to `production`: copy the project to VPS over SSH and run Docker Compose.
+- Push to `production`: run deployment on the VPS self-hosted runner with Docker Compose.
 
-Required GitHub repository secrets for deployment:
+Production runner:
 
 ```text
-VPS_HOST=89.167.105.129
-VPS_PORT=2222
-VPS_USER=deploy
-VPS_SSH_KEY=<private SSH key allowed to connect to the VPS>
-VPS_PROJECT_DIR=/home/deploy/QA-Learning
+runner name: qa-learning-vps
+runner labels: self-hosted, Linux, X64, production, vps
 ```
 
 Production deployment is branch-based:
@@ -210,13 +207,13 @@ git merge main
 git push origin production
 ```
 
-On deployment, the workflow copies the current `production` branch content to `VPS_PROJECT_DIR` and then runs:
+On deployment, GitHub checks out the `production` branch on the VPS runner and runs:
 
 ```bash
 docker compose up --build -d
 ```
 
-If the required GitHub Secrets are not configured yet, deployment is skipped and CI checks still run.
+No private VPS SSH key is stored in GitHub Secrets for this deployment flow.
 
 ## License
 
