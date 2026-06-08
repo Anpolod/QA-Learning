@@ -1,0 +1,61 @@
+[
+  {
+    "title": "Principles of testing",
+    "short_description": "The seven fundamental testing principles every QA engineer must know and apply.",
+    "learning_goals": "Name and explain the seven testing principles.\nUnderstand why exhaustive testing is impossible and how to test smartly instead.\nApply the principles to real prioritization and test design decisions.\nUse the principles to answer common QA interview questions correctly.",
+    "theory": "The seven testing principles are the foundation of professional QA (formalized by the ISTQB). They explain what testing can and cannot do, and they guide how to test efficiently instead of blindly.\n\n1. Testing shows the presence of defects, not their absence. Finding bugs proves the product has defects; finding none does not prove the product is bug-free. Testing reduces the probability of undiscovered defects but can never prove correctness.\n\n2. Exhaustive testing is impossible. You cannot test every input, combination, and path — for most software the number is effectively infinite. Instead, use risk analysis and test design techniques (equivalence partitioning, boundary values) to focus effort where it matters.\n\n3. Early testing saves time and money (shift left). The earlier a defect is found, the cheaper it is to fix. A requirement defect found in analysis costs far less than the same defect found in production. Start testing activities (reviewing requirements, writing test cases) as early as possible.\n\n4. Defects cluster together. A small number of modules usually contain most of the defects (the Pareto / 80-20 effect). If a feature already has many bugs, expect more there — concentrate testing on risky, complex, and historically buggy areas.\n\n5. Beware the pesticide paradox. Running the same tests over and over stops finding new bugs, just as pests grow resistant to the same pesticide. Regularly review and update test cases, and add new ones to cover new areas.\n\n6. Testing is context dependent. You test a banking app differently from a game or an e-commerce site. Risk, domain, and criticality decide how much and what kind of testing you do. There is no single 'correct' amount of testing for every project.\n\n7. Absence-of-errors is a fallacy. A product with zero known bugs can still fail if it does not meet user needs or solve the right problem. Working software that nobody wants is still a failure — validation (building the right product) matters as much as verification (building the product right).",
+    "key_terms": "presence of defects, exhaustive testing, shift left / early testing, defect clustering, Pareto principle, pesticide paradox, context dependent testing, absence-of-errors fallacy, verification, validation",
+    "real_world_example": "A QA engineer joins a checkout team. Instead of trying to test every possible cart combination (exhaustive testing is impossible), she reviews the requirements during refinement (early testing), focuses on the payment and discount modules that had the most production incidents last quarter (defect clustering), and rotates in new edge-case tests each sprint so the suite keeps finding fresh issues (avoiding the pesticide paradox). When the feature ships with zero known bugs but users complain it is confusing, the team is reminded that absence of errors is not the same as a good product.",
+    "step_by_step": "1. Before coding starts, review requirements and acceptance criteria — catch defects early.\n2. Identify the riskiest, most complex, and historically buggy areas; plan to test them most.\n3. Use test design techniques to cover important cases instead of attempting exhaustive testing.\n4. Execute tests, log defects, and remember zero findings does not equal zero defects.\n5. Each cycle, review and refresh test cases; add new ones to beat the pesticide paradox.\n6. Adjust depth and type of testing to the project context (criticality, domain, risk).\n7. Validate against real user needs, not just the written spec.",
+    "common_mistakes": "Claiming 'I found no bugs, so the software is bug-free.'\nTrying to test every combination and running out of time on what matters.\nStarting testing only after development is finished (no shift-left).\nRe-running the exact same regression set forever and assuming quality is high because it passes.\nApplying the same heavy test process to every project regardless of risk.\nReporting zero defects as success while ignoring whether the product actually meets user needs.",
+    "practical_use_case": "These principles guide everyday QA decisions: where to focus limited testing time, when to push back on 'just test everything', how to justify early involvement in refinement, and how to explain to stakeholders why 'no bugs found' is not a guarantee. They are also among the most frequently asked QA interview questions.",
+    "summary": "Seven principles shape smart testing: testing reveals defects but cannot prove their absence, exhaustive testing is impossible, test early, defects cluster, the same tests stop finding bugs (pesticide paradox), testing depends on context, and zero defects does not mean a good product. Use them to focus effort by risk and to test efficiently.",
+    "example": "Applying the principles to a new 'apply discount code' feature:\n\n- Presence of defects: write tests expecting to find issues (invalid code, expired code, stacked codes), not to prove perfection.\n- Exhaustive testing impossible: instead of all possible codes, use equivalence classes (valid, invalid, expired, empty) and boundaries (0%, max %).\n- Early testing: during refinement, ask 'what happens if two codes are combined?' before any code is written.\n- Defect clustering: the pricing module had 6 production bugs last quarter, so it gets the deepest testing.\n- Pesticide paradox: last release's discount tests all pass, so add new cases for currency rounding and concurrency.\n- Context dependent: this is e-commerce money handling, so rounding and totals get bank-grade scrutiny.\n- Absence-of-errors fallacy: even if all tests pass, confirm with the PO that the discount rules match what customers actually expect.",
+    "interactive": "A teammate says: 'I ran all our test cases and found zero bugs, so the release is safe to ship with no risk.' Using the testing principles, explain what is wrong with this statement and what you would check before agreeing.",
+    "expected_answer": "Two principles apply. 'Testing shows the presence of defects, not their absence' means zero findings does not prove the product is defect-free — undiscovered bugs may remain. The 'pesticide paradox' means the same passing tests may simply no longer find anything new. 'Absence-of-errors fallacy' adds that even a bug-free build can fail if it does not meet user needs. Before agreeing I would check: when were the tests last updated, what risky/changed areas they actually cover, and whether the feature meets the real acceptance criteria — then decide on residual risk rather than declaring zero risk.",
+    "homework": "Pick any feature of an app you use (e.g. login, search, checkout). For each of the seven testing principles, write 1-2 sentences describing how that principle would influence how you test that specific feature. Then list the three areas you would test most and justify your choice using defect clustering and context.",
+    "expected_result": "A document with all seven principles, each tied concretely to the chosen feature (not generic definitions), plus three prioritized test areas with a risk-based justification referencing defect clustering and project context.",
+    "quiz": [
+      {
+        "question": "What does the principle 'testing shows the presence of defects' mean?",
+        "answers": [
+          "Finding no defects proves the software is bug-free",
+          "Testing can reveal defects but cannot prove there are none left",
+          "Every defect must be found before release",
+          "Testing guarantees a correct product"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Why is exhaustive testing usually impossible?",
+        "answers": [
+          "Test tools are too slow",
+          "QA teams are too small",
+          "The number of possible inputs, combinations, and paths is effectively infinite",
+          "Requirements are never written down"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "The 'pesticide paradox' in testing refers to what?",
+        "answers": [
+          "Bugs that damage the database",
+          "Running the same tests repeatedly stops finding new defects",
+          "Testing too early in the lifecycle",
+          "Defects that only appear in production"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "A build has zero known defects but users find it confusing and it does not meet their needs. Which principle does this illustrate?",
+        "answers": [
+          "Absence-of-errors is a fallacy",
+          "Defects cluster together",
+          "Early testing saves money",
+          "Testing is context dependent"
+        ],
+        "correct_index": 0
+      }
+    ]
+  }
+]
