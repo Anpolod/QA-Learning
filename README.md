@@ -100,6 +100,12 @@ Open:
 - Backend health: http://localhost:8000/health
 - Backend API docs: http://localhost:8000/docs
 
+Host ports can be changed without editing compose:
+
+```bash
+FRONTEND_HOST_PORT=3001 BACKEND_HOST_PORT=8000 docker compose up --build -d
+```
+
 ## Local Frontend
 
 ```bash
@@ -212,6 +218,11 @@ On deployment, GitHub checks out the `production` branch on the VPS runner and r
 ```bash
 docker compose up --build -d
 ```
+
+Current VPS production ports:
+
+- Frontend: http://89.167.105.129:3001
+- Backend API: http://89.167.105.129:8000
 
 No private VPS SSH key is stored in GitHub Secrets for this deployment flow.
 

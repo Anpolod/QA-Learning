@@ -68,6 +68,10 @@ jobs:
       - production
       - vps
     if: github.event_name == 'push' && github.ref == 'refs/heads/production'
+    env:
+      BACKEND_HOST_PORT: "8000"
+      FRONTEND_HOST_PORT: "3001"
+      NEXT_PUBLIC_API_URL: "http://89.167.105.129:8000"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
