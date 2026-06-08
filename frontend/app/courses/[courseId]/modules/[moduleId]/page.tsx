@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
+import { RequireAuth } from "@/components/auth/RequireAuth";
 import { api } from "@/lib/api";
 
 export default async function ModulePage({ params }: { params: Promise<{ courseId: string; moduleId: string }> }) {
@@ -8,6 +9,7 @@ export default async function ModulePage({ params }: { params: Promise<{ courseI
   const modules = [...course.modules].sort((a, b) => a.order_index - b.order_index);
   const lessons = [...module.lessons].sort((a, b) => a.order_index - b.order_index);
   return (
+    <RequireAuth>
     <main className="mx-auto max-w-7xl px-4 py-8">
       <div className="grid gap-8 lg:grid-cols-[280px_1fr]">
         <aside className="space-y-3">
@@ -58,5 +60,6 @@ export default async function ModulePage({ params }: { params: Promise<{ courseI
         </section>
       </div>
     </main>
+    </RequireAuth>
   );
 }
