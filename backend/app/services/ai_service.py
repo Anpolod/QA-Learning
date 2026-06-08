@@ -52,6 +52,22 @@ SETTING_FIELDS = {
     "dailyImageLimitAdmin": "ai_daily_image_limit_admin",
 }
 
+# Secret keys: stored as AiSetting rows, never returned in responses (only a configured bool).
+# A stored row overrides the matching backend environment variable.
+SECRET_FIELDS = {
+    "openaiApiKey": "openai_api_key",
+    "openrouterApiKey": "openrouter_api_key",
+}
+
+
+def _effective_secret(db: "Session | None", field: str) -> str:
+    """Resolve an API key: a stored AiSetting row wins, else the backend env value."""
+    if db:
+        row = db.scalar(select(AiSetting).where(AiSetting.key == field))
+        if row and row.value:
+            return row.value
+    return str(getattr(settings, SECRET_FIELDS[field]) or "")
+
 
 def _coerce_setting(key: str, value: str) -> str | int | float:
     if key in {"temperature"}:
@@ -71,8 +87,8 @@ def _effective_ai_settings(db: Session | None = None) -> dict[str, str | int | f
         "dailyTextLimitPerUser": settings.ai_daily_limit_per_user,
         "dailyImageLimitPerUser": settings.ai_daily_image_limit_per_user,
         "dailyImageLimitAdmin": settings.ai_daily_image_limit_admin,
-        "openaiConfigured": bool(settings.openai_api_key),
-        "openrouterConfigured": bool(settings.openrouter_api_key),
+        "openaiConfigured": bool(_effective_secret(db, "openaiApiKey")),
+        "openrouterConfigured": bool(_effective_secret(db, "openrouterApiKey")),
     }
     if db:
         overrides = db.scalars(select(AiSetting)).all()
@@ -128,6 +144,21 @@ def update_ai_settings(db: Session, request: AiSettingsUpdate) -> AiSettingsRead
             row.updated_at = datetime.utcnow()
         else:
             db.add(AiSetting(key=key, value=str(value)))
+    # Secrets: only touched when the field is explicitly sent. A non-empty value stores/updates
+    # the key; an empty string clears the stored override (falling back to the env value).
+    for secret_key in SECRET_FIELDS:
+        if secret_key not in payload or payload[secret_key] is None:
+            continue
+        new_value = str(payload[secret_key]).strip()
+        row = db.scalar(select(AiSetting).where(AiSetting.key == secret_key))
+        if new_value:
+            if row:
+                row.value = new_value
+                row.updated_at = datetime.utcnow()
+            else:
+                db.add(AiSetting(key=secret_key, value=new_value))
+        elif row:
+            db.delete(row)
     db.commit()
     return get_ai_settings(db)
 
@@ -210,7 +241,9 @@ async def chat_with_tutor(db: Session, request: AiChatRequest, user_id: int = 1)
         "Use the current lesson context. For homework, guide and give hints before final answers. "
         "For generated quizzes, return structured JSON."
     )
-    provider = get_text_provider(str(effective["provider"]))
+    provider_name = str(effective["provider"])
+    provider = get_text_provider(provider_name)
+    text_key = _effective_secret(db, "openrouterApiKey" if provider_name == "openrouter" else "openaiApiKey")
     answer = await provider.chat(
         [
             {"role": "system", "content": system_prompt},
@@ -219,6 +252,7 @@ async def chat_with_tutor(db: Session, request: AiChatRequest, user_id: int = 1)
         model=str(effective["textModel"]),
         temperature=float(effective["temperature"]),
         max_tokens=int(effective["maxTokens"]),
+        api_key=text_key,
     )
     db.add(AiChatMessage(session_id=session.id, role="assistant", content=answer))
     if request.mode == "generate_task":
@@ -259,7 +293,9 @@ async def generate_image(db: Session, request: AiImageGenerateRequest, user_id: 
         raise HTTPException(status_code=429, detail="Daily AI image generation limit reached.")
 
     enhanced_prompt = enhance_image_prompt(db, request)
-    image_bytes = await OpenAIImageProvider().generate(enhanced_prompt, request.size, model=str(effective["imageModel"]))
+    image_bytes = await OpenAIImageProvider().generate(
+        enhanced_prompt, request.size, model=str(effective["imageModel"]), api_key=_effective_secret(db, "openaiApiKey")
+    )
     image_id = str(uuid4())
     output_dir = Path("uploads/ai-images")
     output_dir.mkdir(parents=True, exist_ok=True)

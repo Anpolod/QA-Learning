@@ -76,6 +76,10 @@ class AiSettingsUpdate(BaseModel):
     dailyTextLimitPerUser: int | None = Field(default=None, ge=0, le=10000)
     dailyImageLimitPerUser: int | None = Field(default=None, ge=0, le=1000)
     dailyImageLimitAdmin: int | None = Field(default=None, ge=0, le=10000)
+    # Write-only secrets. Send a value to store/replace, an empty string to clear.
+    # Never returned by the API — only the openaiConfigured/openrouterConfigured booleans are.
+    openaiApiKey: str | None = Field(default=None, max_length=300)
+    openrouterApiKey: str | None = Field(default=None, max_length=300)
 
 
 class AiUsageSummary(BaseModel):

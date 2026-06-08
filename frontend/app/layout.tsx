@@ -21,6 +21,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <div className="flex items-center gap-4 text-sm text-slate-700">
               <Link href="/courses">Courses</Link>
               <Link href="/docs">Docs</Link>
+              <Link href="/api-testing">API Testing</Link>
               <Link href="/interview">Interview</Link>
               <Link href="/dashboard">Dashboard</Link>
               <Link href="/game">Game</Link>

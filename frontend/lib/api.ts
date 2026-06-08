@@ -30,6 +30,10 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return response.json() as Promise<T>;
 }
 
+export function publicApiBase() {
+  return publicApiUrl;
+}
+
 export function mediaUrl(path: string) {
   if (!path) return "";
   if (path.startsWith("http")) return path;
@@ -437,6 +441,8 @@ export const api = {
     dailyTextLimitPerUser: number;
     dailyImageLimitPerUser: number;
     dailyImageLimitAdmin: number;
+    openaiApiKey: string;
+    openrouterApiKey: string;
   }>) =>
     request<{
       provider: string;

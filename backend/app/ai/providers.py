@@ -3,23 +3,21 @@ from abc import ABC, abstractmethod
 
 import httpx
 
-from app.core.config import settings
-
 
 class TextAIProvider(ABC):
     @abstractmethod
-    async def chat(self, messages: list[dict[str, str]], *, model: str, temperature: float, max_tokens: int) -> str:
+    async def chat(self, messages: list[dict[str, str]], *, model: str, temperature: float, max_tokens: int, api_key: str) -> str:
         raise NotImplementedError
 
 
 class OpenAIProvider(TextAIProvider):
-    async def chat(self, messages: list[dict[str, str]], *, model: str, temperature: float, max_tokens: int) -> str:
-        if not settings.openai_api_key:
-            return "AI is configured, but OPENAI_API_KEY is missing. Add it to the backend environment."
+    async def chat(self, messages: list[dict[str, str]], *, model: str, temperature: float, max_tokens: int, api_key: str) -> str:
+        if not api_key:
+            return "AI is configured, but the OpenAI API key is missing. Add it in Admin -> AI settings or the backend environment."
         async with httpx.AsyncClient(timeout=45) as client:
             response = await client.post(
                 "https://api.openai.com/v1/chat/completions",
-                headers={"Authorization": f"Bearer {settings.openai_api_key}"},
+                headers={"Authorization": f"Bearer {api_key}"},
                 json={
                     "model": model,
                     "messages": messages,
@@ -32,13 +30,13 @@ class OpenAIProvider(TextAIProvider):
 
 
 class OpenRouterProvider(TextAIProvider):
-    async def chat(self, messages: list[dict[str, str]], *, model: str, temperature: float, max_tokens: int) -> str:
-        if not settings.openrouter_api_key:
-            return "AI is configured, but OPENROUTER_API_KEY is missing. Add it to the backend environment."
+    async def chat(self, messages: list[dict[str, str]], *, model: str, temperature: float, max_tokens: int, api_key: str) -> str:
+        if not api_key:
+            return "AI is configured, but the OpenRouter API key is missing. Add it in Admin -> AI settings or the backend environment."
         async with httpx.AsyncClient(timeout=45) as client:
             response = await client.post(
                 "https://openrouter.ai/api/v1/chat/completions",
-                headers={"Authorization": f"Bearer {settings.openrouter_api_key}"},
+                headers={"Authorization": f"Bearer {api_key}"},
                 json={
                     "model": model,
                     "messages": messages,
@@ -51,8 +49,8 @@ class OpenRouterProvider(TextAIProvider):
 
 
 class OpenAIImageProvider:
-    async def generate(self, prompt: str, size: str, *, model: str) -> bytes:
-        if not settings.openai_api_key:
+    async def generate(self, prompt: str, size: str, *, model: str, api_key: str) -> bytes:
+        if not api_key:
             # A tiny transparent PNG keeps the admin workflow testable without a paid key.
             return base64.b64decode(
                 "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII="
@@ -60,7 +58,7 @@ class OpenAIImageProvider:
         async with httpx.AsyncClient(timeout=90) as client:
             response = await client.post(
                 "https://api.openai.com/v1/images/generations",
-                headers={"Authorization": f"Bearer {settings.openai_api_key}"},
+                headers={"Authorization": f"Bearer {api_key}"},
                 json={"model": model, "prompt": prompt, "size": size},
             )
             response.raise_for_status()
