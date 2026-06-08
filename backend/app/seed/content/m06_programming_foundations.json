@@ -1,0 +1,592 @@
+[
+  {
+    "title": "Programming basics for QA",
+    "short_description": "Introduces what programming is and why a QA automation engineer needs to read and write code.",
+    "learning_goals": "Explain in plain terms what a program, an interpreter/compiler, and source code are.\nDescribe how test automation differs from writing application code and what skills a QA needs.\nSet up a working environment (an editor and a runtime) and run your first script.\nRead an existing test script and understand the high-level flow even before learning syntax in depth.",
+    "theory": "A program is a sequence of instructions a computer executes to achieve a result. You write those instructions as source code in a programming language (Python, JavaScript, Java), and a runtime (an interpreter or compiler plus a virtual machine) translates them into operations the machine performs. For QA, code is the tool that lets you repeat a test exactly the same way 1,000 times without human error, run checks overnight, and verify things a human cannot click fast enough to catch.\n\nA QA automation engineer mostly reads and writes test code, not product code. That means you call existing libraries (Selenium, Playwright, requests, pytest) and glue them together: open a page, click a button, read a value, and assert it equals what you expected. An assertion is the heart of every automated test - it is a statement that must be true, and if it is false the test fails. For example, assert response.status_code == 200 fails the test if the server returned 404 instead.\n\nProgramming for testing is different from development in goals. Developers optimize for features and performance; testers optimize for clarity, repeatability, and clear failure messages. A test that passes when the app is broken (a false negative) is worse than no test at all, so correctness of the check matters more than clever code.\n\nYou interact with code through a few core tools: a code editor or IDE (VS Code, PyCharm) where you type, a terminal where you run commands, and version control (Git) where you store and share code. Understanding the read-execute-observe loop - write a line, run it, look at the output or error - is the single most important habit to build early.\n\nYou do not need to be a software engineer to automate tests, but you do need fluency in the building blocks covered in this module: variables, data types, conditions, loops, functions, and error handling. Everything else is composed from those.",
+    "key_terms": "source code, interpreter, compiler, runtime, assertion, IDE, terminal, library, syntax, automation script",
+    "real_world_example": "A QA team manually checks a login page across 12 test accounts after every release. It takes 40 minutes and someone always skips a case under deadline pressure. The QA writes a small script that loops over the 12 accounts, submits the login form for each, and asserts the dashboard loads. The same check now runs in 90 seconds on every build and never skips a case.",
+    "step_by_step": "1. Install a runtime: Python 3.12 (python.org) or Node.js 20 LTS (nodejs.org).\n2. Verify it from a terminal: run `python --version` or `node --version` and confirm a version prints.\n3. Install VS Code and open a new empty folder as your project.\n4. Create a file named hello.py (or hello.js).\n5. Write one line that prints a message, e.g. print(\"QA automation works\").\n6. Run it from the terminal: `python hello.py`.\n7. Read the output. If you see an error, read the last line first - it names the problem.\n8. Change the message, run again, and confirm the output changed. You have completed the write-run-observe loop.",
+    "common_mistakes": "Trying to memorize syntax instead of running code and reading the output.\nPanicking at red error text instead of reading the last line, which usually states the exact problem.\nConfusing the editor (where you write) with the terminal (where you run), and expecting the file to execute by just saving it.\nThinking you must learn all of computer science before writing a useful test - you only need the basics in this module.",
+    "practical_use_case": "Day to day, a QA reads teammates' test scripts during code review, runs the test suite locally before pushing, and writes small scripts to generate test data or hit an API endpoint repeatedly. Even mostly-manual testers use code to parse logs and confirm a defect.",
+    "summary": "Programming gives QA a way to run checks exactly, repeatedly, and automatically. The core loop is write code, run it, observe the output, and the core check is the assertion. Master the basic building blocks in this module and you can read and write real test automation.",
+    "example": "```python\n# first_check.py - a tiny but real automated check\nimport requests\n\nresponse = requests.get(\"https://httpbin.org/status/200\")\n\n# An assertion: this must be true, or the test fails loudly\nassert response.status_code == 200, f\"Expected 200 but got {response.status_code}\"\nprint(\"PASS: endpoint returned 200\")\n```\nRun it with `python first_check.py`. Change the URL to .../status/404 and watch the AssertionError appear - that is a failing test catching a bad response.",
+    "interactive": "Write and run a script that prints your name and then asserts that 2 + 2 == 4. Then deliberately break the assertion (change it to == 5), run it again, and write down the exact error message you see.",
+    "expected_answer": "A correct submission shows code like:\nprint(\"Alex\")\nassert 2 + 2 == 4\nWhen broken to assert 2 + 2 == 5, running it raises an AssertionError on that line. The learner should report that the program stopped at the assertion and printed AssertionError, demonstrating they understand an assertion halts execution when false.",
+    "homework": "Install Python or Node.js, confirm the version from a terminal, and write a script that prints three lines about why you want to learn QA automation. Then add one assertion that checks a simple math fact. Submit the script file and a screenshot of the terminal output.",
+    "expected_result": "A runnable script file plus a screenshot showing the three printed lines and a passing assertion (no error). The submission proves the environment is set up and the write-run-observe loop works.",
+    "quiz": [
+      {
+        "question": "What does an assertion do in an automated test?",
+        "answers": [
+          "Prints debugging information to the console",
+          "States a condition that must be true, failing the test if it is false",
+          "Installs the testing library",
+          "Speeds up the program execution"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "How does QA automation code typically differ from product development code?",
+        "answers": [
+          "It is always written in a different language",
+          "It cannot use external libraries",
+          "It prioritizes repeatability and clear failure messages over features",
+          "It never produces any output"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "When an error appears, which line is usually the most useful to read first?",
+        "answers": [
+          "The first line of the file",
+          "The last line of the error output, which names the problem",
+          "A random line in the middle",
+          "The import statements"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Which tool do you use to run a script after writing it?",
+        "answers": [
+          "The terminal",
+          "The image viewer",
+          "The web browser bookmarks bar",
+          "The operating system clock"
+        ],
+        "correct_index": 0
+      }
+    ]
+  },
+  {
+    "title": "Python or JavaScript basics",
+    "short_description": "Compares Python and JavaScript for test automation and teaches the minimal syntax to run a script in either.",
+    "learning_goals": "Choose a first language for QA automation based on your stack and ecosystem.\nWrite and run a basic script in Python and recognize the JavaScript equivalent.\nUse print/console.log, comments, and basic statements correctly.\nUnderstand indentation in Python versus braces and semicolons in JavaScript.",
+    "theory": "Python and JavaScript are the two most common languages in QA automation. Python is favored for API testing, data work, and frameworks like pytest and Playwright-Python; its syntax is clean and readable, which lowers the barrier for testers. JavaScript (and TypeScript) dominates front-end testing because tools like Playwright, Cypress, and WebdriverIO run natively in the same Node.js ecosystem the application uses, so it pairs naturally with web projects.\n\nThe biggest visible syntax difference is how blocks are defined. Python uses indentation (4 spaces) to group code, and a colon to start a block. JavaScript uses curly braces { } and ends statements with a semicolon (optional but recommended). Mixing these up is the number-one beginner error: a Python IndentationError or a JavaScript missing-brace SyntaxError.\n\nBoth languages are interpreted and dynamically typed, meaning you do not declare a variable's type up front and you run the file directly without a separate compile step. In Python you run `python file.py`; in Node.js you run `node file.js`. Output goes through print() in Python and console.log() in JavaScript.\n\nWhich to pick? If your team tests REST APIs, data pipelines, or backend services, Python with pytest is a strong default. If your team builds a web front end and already uses Node.js, JavaScript or TypeScript with Playwright keeps everyone in one toolchain. The concepts you learn - variables, loops, functions - transfer almost directly between them, so the first language is not a lifelong commitment.\n\nComments are written with # in Python and // (or /* */) in JavaScript. Use them to explain why a test does something, not what each line literally does.",
+    "key_terms": "interpreted language, dynamic typing, indentation, semicolon, console.log, print, Node.js, pytest, TypeScript, REPL",
+    "real_world_example": "A new QA joins a team whose web app is built in React with a Node.js backend. The existing end-to-end tests are written in Playwright with TypeScript. Even though the QA knows Python better, they learn the JavaScript basics because staying in the team's toolchain means shared CI config, shared linters, and easier code review - cutting onboarding from weeks to days.",
+    "step_by_step": "1. Decide your language: Python if backend/API focus, JavaScript if web/front-end focus.\n2. Open a terminal and confirm the runtime: `python --version` or `node --version`.\n3. Create greet.py or greet.js.\n4. In Python, write: name = \"Sam\"  then on the next line  print(\"Hello \" + name).\n5. In JavaScript, write: const name = \"Sam\";  then  console.log(\"Hello \" + name);.\n6. Run the file with `python greet.py` or `node greet.js`.\n7. Add a comment line explaining what the script does.\n8. Introduce a deliberate indentation (Python) or missing brace (JS) error, run it, and read the SyntaxError so you recognize it later.",
+    "common_mistakes": "In Python, mixing tabs and spaces or using inconsistent indentation, causing IndentationError.\nIn JavaScript, forgetting that console.log is the output function and trying to use print().\nForgetting quotes around text, so the runtime treats words as variable names.\nAssuming you must learn both languages at once instead of becoming solid in one first.",
+    "practical_use_case": "QA engineers read and extend the test suite written in their team's language every day - adding a new test case, fixing a flaky selector, or writing a helper. Picking the language the team already uses means your code fits into the existing framework and CI pipeline.",
+    "summary": "Python and JavaScript are both excellent first languages for QA; the right choice usually matches your team's stack. The core difference is indentation-and-colons (Python) versus braces-and-semicolons (JavaScript), but variables, loops, and functions work the same conceptually. Run files with python or node and print with print or console.log.",
+    "example": "```python\n# Python version\nbrowser = \"Chrome\"\nattempts = 3\nprint(f\"Testing login on {browser}, {attempts} attempts\")\n```\n```javascript\n// JavaScript version - same logic\nconst browser = \"Chrome\";\nconst attempts = 3;\nconsole.log(`Testing login on ${browser}, ${attempts} attempts`);\n```\nBoth print: Testing login on Chrome, 3 attempts. Note f\"...\" in Python and `...` template literals in JavaScript for inserting variables.",
+    "interactive": "Write the same script in your chosen language that defines a variable testEnv set to \"staging\" and prints the sentence: Running smoke tests on staging. Use string interpolation (f-string or template literal), not plain concatenation.",
+    "expected_answer": "Python: env = \"staging\"; print(f\"Running smoke tests on {env}\"). JavaScript: const env = \"staging\"; console.log(`Running smoke tests on ${env}`);. A strong answer uses interpolation correctly, runs without error, and prints exactly: Running smoke tests on staging.",
+    "homework": "Pick one language and write a 10-line script that defines three variables (your name, a browser name, a number of test cases), prints a summary sentence using interpolation, and includes at least two comments. Then rewrite just the print line in the other language to compare the syntax.",
+    "expected_result": "A working script with three variables, interpolated output, and two comments, plus a one-line equivalent in the other language. The submission should run cleanly and show the learner understands the indentation/brace difference.",
+    "quiz": [
+      {
+        "question": "How does Python define a block of code?",
+        "answers": [
+          "With curly braces { }",
+          "With indentation and a colon",
+          "With BEGIN and END keywords",
+          "With parentheses ( )"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Which is the correct output function in JavaScript?",
+        "answers": [
+          "print()",
+          "echo()",
+          "console.log()",
+          "System.out.println()"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "Why might a QA choose JavaScript over Python for a project?",
+        "answers": [
+          "JavaScript runs faster on every machine",
+          "The team's web app already uses the Node.js ecosystem and tools like Playwright/Cypress",
+          "Python cannot test web pages at all",
+          "JavaScript does not need a runtime"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "What does 'dynamically typed' mean?",
+        "answers": [
+          "You must declare every variable's type before use",
+          "The code must be compiled before running",
+          "You do not declare a variable's type up front",
+          "The language can only handle numbers"
+        ],
+        "correct_index": 2
+      }
+    ]
+  },
+  {
+    "title": "Variables",
+    "short_description": "Explains how to store, name, and reuse values in variables for clear, maintainable test code.",
+    "learning_goals": "Declare variables and assign values in Python and JavaScript.\nApply clear naming conventions and choose const vs let appropriately in JavaScript.\nUse variables to remove duplication and magic values from test scripts.\nUnderstand scope basics: where a variable is visible and how reassignment works.",
+    "theory": "A variable is a named container that holds a value so you can reuse and change it. In Python you create one simply by assigning: base_url = \"https://staging.example.com\". In JavaScript you declare with let (reassignable) or const (cannot be reassigned): const baseUrl = \"https://staging.example.com\". Prefer const by default and only use let when a value genuinely changes; this prevents accidental reassignment bugs.\n\nVariables matter in tests because they remove magic values - hard-coded literals scattered through your code. If your base URL appears 20 times and the environment moves to a new domain, one variable means one edit instead of twenty. Variables also make code self-documenting: max_retries = 3 reads better than a bare 3 buried in a loop.\n\nNaming is a real skill. Use descriptive, consistent names: snake_case in Python (expected_status), camelCase in JavaScript (expectedStatus). A good name states what the value represents, not its type. Avoid x, tmp, data2 - they force the next reader (often future you) to decode intent.\n\nVariables have scope - the region of code where they are visible. A variable defined inside a function is local to that function; one defined at the top level is broader. In JavaScript, let and const are block-scoped, meaning they only exist inside the { } where they were declared. Trying to use a variable outside its scope raises a NameError (Python) or ReferenceError (JavaScript).\n\nReassignment replaces a variable's value: attempts = attempts + 1 updates a counter. This is different from declaring a new variable. Understanding that a variable is a label pointing at a value - and that the label can be repointed - clears up most early confusion.",
+    "key_terms": "variable, assignment, const, let, scope, reassignment, magic value, naming convention, snake_case, camelCase",
+    "real_world_example": "A test suite hard-codes the API key \"sk-test-9921\" in 15 different test files. The key rotates monthly. Every rotation, a QA hunts through 15 files and inevitably misses one, causing failures. The team refactors to a single variable API_KEY loaded once and referenced everywhere, so the monthly rotation becomes a one-line change.",
+    "step_by_step": "1. Identify a value you repeat in a script (a URL, a timeout, an expected status).\n2. Create a variable at the top with a descriptive name, e.g. timeout_seconds = 10.\n3. Replace each repeated literal with the variable name.\n4. In JavaScript, choose const if it never changes, let if it does.\n5. Run the script to confirm behavior is unchanged.\n6. Change the variable's value once and confirm every usage updates.\n7. Move a counter variable (like attempts) and reassign it inside a loop to see reassignment in action.\n8. Try using a variable outside its function/block to observe the scope error, then fix it.",
+    "common_mistakes": "Using vague names like data, temp, or x that hide intent.\nUsing let everywhere in JavaScript when const would prevent accidental reassignment.\nMixing naming styles (snake_case and camelCase) in one codebase.\nExpecting a variable defined inside a function or block to be visible outside it.\nConfusing assignment (=) with comparison (==), e.g. writing if x = 5 instead of if x == 5.",
+    "practical_use_case": "Every test script centralizes configuration in variables: environment URL, credentials, timeouts, expected values. Page Object Model files store element selectors as variables so a UI change is fixed in one place. Clear variable names also speed up code review across the team.",
+    "summary": "Variables name and store values so you can reuse and update them in one place, eliminating magic values. Use descriptive names and the right declaration (const by default in JavaScript). Respect scope: variables live only where they are declared.",
+    "example": "```python\n# Centralized config via variables - one edit updates every test\nBASE_URL = \"https://staging.example.com\"\nEXPECTED_STATUS = 200\nMAX_RETRIES = 3\n\nlogin_endpoint = f\"{BASE_URL}/api/login\"\nprint(login_endpoint)            # https://staging.example.com/api/login\nprint(\"Will retry up to\", MAX_RETRIES, \"times, expecting\", EXPECTED_STATUS)\n```\n```javascript\nconst BASE_URL = \"https://staging.example.com\";\nlet attempts = 0;\nattempts = attempts + 1;         // reassignment is allowed because we used let\nconsole.log(`${BASE_URL}, attempt ${attempts}`);\n```",
+    "interactive": "Refactor this snippet to remove the magic value: it checks `if status == 200` in three places. Introduce a variable EXPECTED_OK = 200 and use it in all three checks, then change the expected value to 201 in a single edit.",
+    "expected_answer": "A strong answer defines EXPECTED_OK = 200 once at the top, replaces all three literal 200s with EXPECTED_OK, and demonstrates that changing the single declaration to 201 updates all three checks. The learner should explain that this is exactly why variables beat magic values.",
+    "homework": "Take a script (yours or a provided one) that contains at least three repeated literal values. Replace them with well-named variables, choose const/let correctly if using JavaScript, and add a comment explaining each. Submit before and after versions.",
+    "expected_result": "Before/after scripts where repeated literals are now variables with descriptive names and correct const/let usage. The after version runs identically but updates in one place. Comments explain each variable's purpose.",
+    "quiz": [
+      {
+        "question": "Why prefer const over let in JavaScript when possible?",
+        "answers": [
+          "const variables run faster",
+          "const prevents accidental reassignment, reducing bugs",
+          "let cannot hold strings",
+          "const automatically creates global variables"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "What is a 'magic value' in test code?",
+        "answers": [
+          "A value that changes itself randomly",
+          "A hard-coded literal scattered through code with no named meaning",
+          "A variable that cannot be changed",
+          "A special keyword in Python"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Which naming convention is standard in Python?",
+        "answers": [
+          "camelCase like expectedStatus",
+          "PascalCase like ExpectedStatus",
+          "snake_case like expected_status",
+          "kebab-case like expected-status"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "What happens if you use a variable outside the function where it was defined?",
+        "answers": [
+          "It returns 0",
+          "It works fine everywhere",
+          "You typically get a NameError or ReferenceError because of scope",
+          "It becomes a global automatically"
+        ],
+        "correct_index": 2
+      }
+    ]
+  },
+  {
+    "title": "Data types",
+    "short_description": "Covers the core data types - strings, numbers, booleans, lists, and dictionaries - and why type matters in tests.",
+    "learning_goals": "Identify and use strings, integers, floats, booleans, lists/arrays, and dictionaries/objects.\nConvert between types safely (e.g. string to integer) and recognize when type mismatches cause bugs.\nChoose the right structure (list vs dictionary) for test data.\nUse type-related functions like type(), len(), and parsing for JSON responses.",
+    "theory": "A data type defines what kind of value a variable holds and what you can do with it. The core types are: strings (text, \"404\"), integers (whole numbers, 404), floats (decimals, 19.99), booleans (True/False), lists/arrays (ordered collections, [200, 201, 204]), and dictionaries/objects (key-value pairs, {\"status\": 200, \"ok\": True}). Knowing the type tells you which operations are valid.\n\nType matters intensely in testing because of subtle mismatches. The string \"404\" is not equal to the integer 404, so an assertion like assert response_code == \"404\" can wrongly fail or pass. API responses and form inputs often arrive as strings even when they represent numbers, so you must convert: int(\"404\") gives 404. In JavaScript, the loose == can coerce types ('5' == 5 is true) while strict === does not - always use === in tests to avoid surprises.\n\nBooleans drive every condition and assertion. Comparisons like 200 == 200 produce True; an assertion passes only when the boolean is True. Understanding truthiness - what counts as true or false - prevents bugs: in Python an empty string, empty list, 0, and None are all 'falsy'.\n\nFor test data, choose the right container. A list holds an ordered series you iterate over (a set of test emails). A dictionary maps keys to values and mirrors JSON exactly, which is why it is the natural structure for API request bodies and parsed responses: body = {\"username\": \"qa\", \"password\": \"secret\"}. You access a list by index (emails[0]) and a dictionary by key (response[\"status\"]).\n\nUseful built-ins: type(value) reports the type, len(value) gives length of a string/list/dict, and str()/int()/float()/bool() convert between types. When you parse a JSON API response, you typically get nested dictionaries and lists, and navigating them correctly is a daily QA task.",
+    "key_terms": "string, integer, float, boolean, list/array, dictionary/object, type coercion, type conversion, truthiness, index, key",
+    "real_world_example": "A QA writes an API test that asserts the returned order total equals 49.99. The test keeps failing even though the value looks right. Printing type(total) reveals the API returns the total as a string \"49.99\", not the float 49.99. Converting with float(total) before comparing fixes the test - a classic type-mismatch defect that also turns out to be a real bug worth reporting if the API contract promised a number.",
+    "step_by_step": "1. Take a sample value and print its type: print(type(\"404\")) shows str.\n2. Compare a string and an integer of the same digits: \"404\" == 404 returns False. Note this.\n3. Convert explicitly: int(\"404\") == 404 returns True.\n4. Build a list of test inputs: codes = [200, 404, 500] and access codes[1].\n5. Build a dictionary modeling an API body: user = {\"name\": \"qa\", \"active\": True} and access user[\"name\"].\n6. Use len() on a string and a list to confirm lengths.\n7. In JavaScript, compare '5' == 5 (true) versus '5' === 5 (false) and adopt === for tests.\n8. Parse a small JSON response and navigate one nested key, e.g. data[\"items\"][0][\"id\"].",
+    "common_mistakes": "Comparing a string \"200\" to an integer 200 and getting an unexpected failure.\nUsing loose == in JavaScript so '0' == false or '' == 0 cause confusing results; use ===.\nForgetting to convert form/API input from string to number before arithmetic.\nIndexing a dictionary by position or a list by key, causing KeyError/TypeError.\nAssuming an empty list or empty string is 'true' in a condition when it is actually falsy.",
+    "practical_use_case": "Parsing JSON API responses (nested dicts and lists) is core to API testing. Reading CSV test data yields strings you must convert to numbers. Building request bodies as dictionaries, asserting on boolean conditions, and validating field types against an API contract are everyday tasks.",
+    "summary": "Data types determine what a value is and what operations are valid; mismatches like \"404\" vs 404 are a top source of test bugs. Use lists for ordered collections and dictionaries/objects for key-value data that mirrors JSON. Convert types explicitly and use strict equality (===) in JavaScript.",
+    "example": "```python\n# Modeling an API response and asserting correctly\nresponse = {\n    \"status\": 200,\n    \"items\": [\n        {\"id\": 1, \"price\": \"19.99\"},\n        {\"id\": 2, \"price\": \"49.50\"},\n    ],\n    \"ok\": True,\n}\n\nassert response[\"status\"] == 200            # int vs int - passes\nassert response[\"ok\"] is True               # boolean check\n\nfirst_price = float(response[\"items\"][0][\"price\"])  # convert \"19.99\" -> 19.99\nassert first_price == 19.99\nprint(\"Items in response:\", len(response[\"items\"]))  # 2\n```",
+    "interactive": "Given the value price = \"29.99\" (a string from an API), write code that converts it to a number and asserts it is greater than 25. Then explain in one sentence why the assertion would have failed without conversion.",
+    "expected_answer": "Correct: price = \"29.99\"; assert float(price) > 25. Without float(), price is a string and comparing a string with the number 25 raises a TypeError in Python (or behaves unpredictably with coercion in JavaScript). The one-sentence explanation must note that string vs number comparison is invalid/unreliable, which is why explicit conversion is required.",
+    "homework": "Build a dictionary that models a user signup request (at least: username string, age integer, premium boolean, and a list of two roles). Print the type of each field, access the first role by index, and write one assertion per field validating its expected type or value. Submit the script and its output.",
+    "expected_result": "A script defining a realistic dictionary with mixed types, correct index/key access, type() prints for each field, and four passing assertions. The output should confirm the learner can distinguish and validate strings, numbers, booleans, lists, and dictionaries.",
+    "quiz": [
+      {
+        "question": "What does the comparison \"404\" == 404 evaluate to in Python?",
+        "answers": [
+          "True, because the digits match",
+          "False, because a string is not equal to an integer",
+          "It raises an error immediately",
+          "It depends on the operating system"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Which structure best models a JSON API request body?",
+        "answers": [
+          "An integer",
+          "A boolean",
+          "A dictionary/object of key-value pairs",
+          "A single string"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "Why should you use === instead of == in JavaScript tests?",
+        "answers": [
+          "=== is faster to type",
+          "== performs type coercion that can make '5' == 5 true, hiding bugs",
+          "=== works only on numbers",
+          "There is no difference between them"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "How do you access the value stored under the key \"status\" in a dictionary named response?",
+        "answers": [
+          "response(0)",
+          "response.status()",
+          "response[\"status\"]",
+          "response->status"
+        ],
+        "correct_index": 2
+      }
+    ]
+  },
+  {
+    "title": "Conditions",
+    "short_description": "Teaches if/elif/else logic and comparison operators to make tests branch and assert correctly.",
+    "learning_goals": "Write if, elif/else if, and else branches to control test flow.\nUse comparison and logical operators (==, !=, <, >, and, or, not) correctly.\nValidate API status codes and expected outcomes with conditional logic.\nAvoid common pitfalls like assignment-vs-comparison and operator precedence errors.",
+    "theory": "A condition runs code only when a boolean expression is true. The basic form is if/elif/else (Python) or if/else if/else (JavaScript). The if branch runs when its condition is true; elif/else if checks an alternative; else runs when nothing above matched. This lets a test react differently to different outcomes - for instance, pass on a 200, retry on a 503, and fail on a 404.\n\nConditions rely on comparison operators: == (equal), != (not equal), <, >, <=, >=. They produce booleans. You combine them with logical operators: and (both must be true), or (at least one true), not (negates). For example, if status == 200 and body[\"ok\"] is True: asserts two things at once. Be careful with precedence: not a == b means not (a == b); use parentheses to make intent explicit.\n\nIn testing, conditions express expected behavior. A login test might branch: if redirected to /dashboard, pass; elif error message shown, fail with that message; else fail with 'unexpected state'. Good conditional logic produces specific, actionable failure messages rather than a generic 'test failed'.\n\nA classic trap is confusing assignment (=) with comparison (==). Writing if status = 200 is a syntax error in Python and an accidental assignment in JavaScript that is always truthy - silently breaking the test. Always use == (or === in JS) inside conditions.\n\nConditions also handle boundaries, which is where many real bugs hide. Testing an age field that must be 18+ means checking exactly 17 (should fail), 18 (should pass), and 19. Writing if age > 18 instead of if age >= 18 is an off-by-one error that wrongly rejects 18-year-olds - the kind of defect conditional thinking helps you both write and catch.",
+    "key_terms": "if statement, elif/else if, else, comparison operator, logical operator, boolean expression, operator precedence, off-by-one, boundary, branch",
+    "real_world_example": "A QA automates a discount rule: orders over $100 get 10% off, orders over $500 get 20% off. The first version uses if total > 100 ... elif total > 500 in that order, so a $600 order only ever hits the first branch and gets 10% instead of 20%. Reordering the conditions (check >500 first) fixes the logic - a real branching-order bug found by thinking through the conditions.",
+    "step_by_step": "1. Write a variable to test against, e.g. status_code = 404.\n2. Add an if that handles the success case: if status_code == 200: print success.\n3. Add an elif for a known alternative: elif status_code == 404: fail with 'not found'.\n4. Add an else for anything unexpected: else: fail with the actual code.\n5. Run it for several values (200, 404, 500) and confirm each lands in the right branch.\n6. Combine conditions with and/or, e.g. if status == 200 and len(items) > 0.\n7. Test a boundary explicitly: for an 18+ rule, run age = 17, 18, 19 and verify >= behavior.\n8. Deliberately write = instead of == once to see the error/behavior, then fix it.",
+    "common_mistakes": "Using = (assignment) instead of == (comparison) inside a condition.\nOrdering branches wrong so a broader condition shadows a more specific one (the >100 before >500 trap).\nForgetting boundary cases, e.g. using > where >= is required, causing off-by-one defects.\nMisjudging operator precedence and skipping parentheses in compound conditions.\nWriting a generic else that hides which unexpected value actually occurred instead of reporting it.",
+    "practical_use_case": "Conditions drive every test decision: branch on HTTP status codes, verify an element is visible before clicking, skip a test when a feature flag is off, and produce precise failure messages. Boundary-value and equivalence-partition testing are conditional logic applied to inputs.",
+    "summary": "Conditions execute code only when a boolean expression is true, using if/elif/else and comparison plus logical operators. Order branches from most specific to most general and watch boundaries to avoid off-by-one bugs. Never use = where == belongs.",
+    "example": "```python\ndef classify_response(status_code, body):\n    if status_code == 200 and body.get(\"ok\") is True:\n        return \"PASS\"\n    elif status_code == 404:\n        return \"FAIL: resource not found\"\n    elif 500 <= status_code <= 599:\n        return \"FAIL: server error \" + str(status_code)\n    else:\n        return \"FAIL: unexpected status \" + str(status_code)\n\nprint(classify_response(200, {\"ok\": True}))   # PASS\nprint(classify_response(404, {}))             # FAIL: resource not found\nprint(classify_response(503, {}))             # FAIL: server error 503\n```",
+    "interactive": "Write a condition for an age-verification field that must be 18 or older. It should print 'allowed' for 18 and above and 'blocked' below 18. Then test it with the values 17, 18, and 19 and report which branch each hits.",
+    "expected_answer": "Correct code uses >= : if age >= 18: print('allowed') else: print('blocked'). Testing gives 17 -> blocked, 18 -> allowed, 19 -> allowed. A strong answer explicitly notes that using > instead of >= would wrongly block 18, which is the boundary value to test.",
+    "homework": "Write a function that grades an HTTP response: return 'OK' for 200-299, 'Client Error' for 400-499, 'Server Error' for 500-599, and 'Unexpected' otherwise. Include the actual code in client/server error messages. Test it with at least 200, 404, 500, and 302, and submit the code plus outputs.",
+    "expected_result": "A function using range conditions (e.g. 200 <= code <= 299) in correct order, returning specific messages with the actual code embedded, and verified against the four test values producing the expected labels. Demonstrates correct branching and boundary handling.",
+    "quiz": [
+      {
+        "question": "What is wrong with writing if status = 200: in a condition?",
+        "answers": [
+          "Nothing, it is the correct way to compare",
+          "It uses assignment (=) instead of comparison (==), which is an error or silently wrong",
+          "200 is not a valid number",
+          "if cannot be used with numbers"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "For an 'age must be 18 or older' rule, which operator is correct?",
+        "answers": [
+          "age > 18",
+          "age < 18",
+          "age >= 18",
+          "age != 18"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "In if a and b, when does the block run?",
+        "answers": [
+          "When either a or b is true",
+          "When both a and b are true",
+          "When neither is true",
+          "Always"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Why does branch order matter when checking total > 100 and total > 500?",
+        "answers": [
+          "Order never matters in conditions",
+          "A broader condition checked first can shadow a more specific one, giving wrong results",
+          "Python ignores the second condition",
+          "Only the last branch ever runs"
+        ],
+        "correct_index": 1
+      }
+    ]
+  },
+  {
+    "title": "Loops",
+    "short_description": "Covers for and while loops to repeat actions over collections and run data-driven tests.",
+    "learning_goals": "Write for loops to iterate over lists and ranges, and while loops for condition-based repetition.\nUse break and continue to control loop flow.\nImplement data-driven testing by looping over multiple inputs.\nAvoid infinite loops and off-by-one iteration errors.",
+    "theory": "A loop repeats a block of code. A for loop iterates over a known collection or range - perfect for running the same check against many inputs. A while loop repeats as long as a condition stays true - perfect for polling until something happens, like waiting for a page element or a job status to become 'done'. These two cover almost every repetition need in test automation.\n\nIn Python, for email in emails: runs the body once per item; for i in range(0, 5): runs for i = 0,1,2,3,4 (note range excludes the end). In JavaScript, for (const email of emails) iterates array values, and a classic for (let i = 0; i < 5; i++) counts. Iterating directly over items is cleaner and less error-prone than manual index counting.\n\nTwo control statements refine loops: break exits the loop immediately (stop polling once status is 'ready'), and continue skips to the next iteration (skip a known-bad test input). Used well, they keep loops readable; overused, they make flow hard to follow.\n\nThe headline use in QA is data-driven testing: instead of copying a test five times for five inputs, you loop over a list of (input, expected) pairs and assert each. pytest formalizes this with @pytest.mark.parametrize, but the underlying idea is a loop. This turns 50 near-identical tests into one parameterized test, which is easier to maintain.\n\nThe two dangers are infinite loops and off-by-one errors. A while loop whose condition never becomes false hangs forever - always ensure something inside changes the condition (increment a counter, add a timeout). Off-by-one happens when you iterate one too few or too many times; range(1, 5) gives 1-4, not 1-5, and forgetting that misses a boundary case.",
+    "key_terms": "for loop, while loop, iteration, range, break, continue, infinite loop, off-by-one, data-driven testing, parametrize",
+    "real_world_example": "A QA must verify that a search box returns results for 30 different keywords. Manually typing each takes an hour. They put the 30 keywords in a list and loop: for each keyword, submit the search and assert at least one result appears. The whole suite runs in two minutes, and adding a new keyword is one line - classic data-driven testing built on a loop.",
+    "step_by_step": "1. Put your test inputs in a list, e.g. status_codes = [200, 201, 404, 500].\n2. Write a for loop: for code in status_codes:.\n3. Inside, run your check and assert, printing PASS/FAIL with the code.\n4. Use range for counting: for attempt in range(1, 4): to try something 3 times.\n5. Add break to stop early, e.g. once a polled status equals 'ready'.\n6. Add continue to skip an input you want to ignore.\n7. For a while loop, set a counter and a max so it cannot run forever: while attempts < 5 and not ready:.\n8. Verify the loop ran the exact number of times you expected by counting the printed lines.",
+    "common_mistakes": "Writing a while loop whose condition never becomes false, causing an infinite hang (forgetting to increment or add a timeout).\nMisremembering range bounds, e.g. expecting range(1, 5) to include 5.\nModifying a list while looping over it, which can skip or duplicate items.\nUsing a loop with a fixed sleep to wait instead of polling with a condition and a timeout, making tests slow and flaky.\nCopy-pasting a test five times instead of looping over inputs (data-driven).",
+    "practical_use_case": "Data-driven and parameterized tests, polling for asynchronous results (wait until a status is 'completed' with a timeout), iterating over table rows to validate each, generating bulk test data, and retrying a flaky network call a fixed number of times all rely on loops.",
+    "summary": "Use for loops to iterate over known collections and ranges, and while loops to repeat until a condition changes - always with a guard against infinite loops. break exits early and continue skips an iteration. Loops power data-driven testing, turning many duplicated tests into one maintainable, parameterized check.",
+    "example": "```python\n# Data-driven test: one loop replaces many copy-pasted tests\ntest_cases = [\n    (\"valid@example.com\", True),\n    (\"no-at-sign.com\", False),\n    (\"\", False),\n    (\"a@b.co\", True),\n]\n\ndef is_valid_email(email):\n    return \"@\" in email and \".\" in email.split(\"@\")[-1]\n\nfor email, expected in test_cases:\n    result = is_valid_email(email)\n    status = \"PASS\" if result == expected else \"FAIL\"\n    print(f\"{status}: {email!r} -> {result} (expected {expected})\")\n```\nThis prints one PASS/FAIL line per case, scaling to dozens of inputs by adding tuples.",
+    "interactive": "Write a loop that polls a function get_status() (assume it returns 'pending' then eventually 'ready') at most 5 times, stops as soon as it returns 'ready', and prints 'timed out' if it never does. Make sure it cannot loop forever.",
+    "expected_answer": "A correct answer uses a bounded loop, e.g. for attempt in range(5): if get_status() == 'ready': print('ready'); break  else: print('timed out'). It must include a hard upper bound (range(5) or a counter with a max) so it cannot run forever, and use break to exit early plus a for-else or flag to detect the timeout.",
+    "homework": "Create a list of at least six (input, expected) test cases for a function of your choice (e.g. a password-strength or discount calculator). Write a single loop that runs every case, prints PASS/FAIL with the input, and at the end prints a summary like '5 passed, 1 failed'. Submit the code and output.",
+    "expected_result": "One loop iterating over six or more cases, asserting or comparing each against its expected value, printing per-case PASS/FAIL, and a final passed/failed tally. The submission should show the learner can structure a data-driven test rather than duplicating code.",
+    "quiz": [
+      {
+        "question": "How many times does the body run in for i in range(0, 5)?",
+        "answers": [
+          "4 times (1 through 4)",
+          "5 times (0 through 4)",
+          "6 times (0 through 5)",
+          "Infinitely"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "What does break do inside a loop?",
+        "answers": [
+          "Skips the rest of the current iteration only",
+          "Pauses the program for one second",
+          "Exits the loop immediately",
+          "Restarts the loop from the beginning"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "What is the main benefit of a data-driven (parameterized) test loop?",
+        "answers": [
+          "It makes tests run on the GPU",
+          "One loop runs many inputs, replacing duplicated copy-pasted tests",
+          "It removes the need for assertions",
+          "It guarantees tests never fail"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "What most often causes an infinite while loop?",
+        "answers": [
+          "Using a for loop instead",
+          "The loop condition never becomes false because nothing inside changes it",
+          "Having too many print statements",
+          "Iterating over an empty list"
+        ],
+        "correct_index": 1
+      }
+    ]
+  },
+  {
+    "title": "Functions",
+    "short_description": "Teaches how to define reusable functions with parameters and return values to structure test code.",
+    "learning_goals": "Define functions with parameters and return values in Python and JavaScript.\nReplace duplicated code with reusable helper functions.\nUnderstand arguments, return, default values, and scope.\nBuild small, testable helper functions like login() or get_token() for a test suite.",
+    "theory": "A function is a named, reusable block of code that takes inputs (parameters), does work, and usually returns a result. You define it once and call it many times. In Python: def add(a, b): return a + b, then add(2, 3) gives 5. In JavaScript: function add(a, b) { return a + b; } or const add = (a, b) => a + b. Functions are how you stop copying code and start composing it.\n\nParameters are the named inputs in the definition; arguments are the actual values you pass when calling. A function can have default values (def login(user, retries=3)) so callers can omit them. The return statement sends a value back to the caller; without it, a function returns None (Python) or undefined (JavaScript). A function that only prints but does not return is harder to test because there is nothing to assert on.\n\nFunctions are the backbone of maintainable test suites. Instead of writing the login steps in every test, you write one login(user, password) helper that returns a session or token, and every test calls it. When the login flow changes, you fix one function instead of fifty tests. This is the DRY principle - Don't Repeat Yourself - applied to QA.\n\nKeep functions small and single-purpose. A function named get_auth_token should get a token and nothing else; if it also creates users and sends emails, it is doing too much and is hard to reuse or debug. A good function has a clear name, few parameters, and a predictable return value.\n\nVariables created inside a function are local to it - they vanish when the function returns and are invisible outside. This is good: it prevents tests from leaking state into each other. To share a value, return it. In testing frameworks, functions also underpin fixtures (pytest) and setup/teardown helpers that prepare and clean up test state.",
+    "key_terms": "function, parameter, argument, return value, default argument, DRY, helper function, local scope, fixture, single responsibility",
+    "real_world_example": "A test suite has 40 API tests, each repeating five lines to fetch an auth token before the real check. When the auth endpoint changes from /token to /v2/token, the team must edit 40 places and misses several, leaving broken tests. After refactoring the five lines into a single get_token() function, the same change is a one-line fix in one place - and every test instantly uses the new flow.",
+    "step_by_step": "1. Find a block of code you repeat across tests (e.g. logging in).\n2. Wrap it in a function: def login(username, password):.\n3. Move the repeated lines inside and replace hard-coded values with the parameters.\n4. Add a return statement for the useful result (a token, a session, a response).\n5. Add a default value for an optional parameter, e.g. timeout=10.\n6. Replace each duplicated block in your tests with a single call: token = login(\"qa\", \"secret\").\n7. Run the tests to confirm identical behavior.\n8. Verify the function is single-purpose; if it does several unrelated things, split it.",
+    "common_mistakes": "Writing a function that prints instead of returning, leaving nothing to assert on.\nForgetting the return statement, so the caller silently gets None/undefined.\nCramming many responsibilities into one function, making it hard to reuse and debug.\nConfusing parameters (in the definition) with arguments (in the call).\nRelying on variables leaking out of a function instead of returning them, which fails because of local scope.",
+    "practical_use_case": "Helper functions like login(), get_token(), create_test_user(), and assert_response_ok() are reused across an entire suite. pytest fixtures and setup/teardown are functions that prepare and clean up state. Page Object Model methods are functions encapsulating UI interactions. Functions are the unit you organize all test logic around.",
+    "summary": "Functions package reusable logic with named inputs (parameters) and a return value, letting you write a behavior once and call it everywhere. They keep test suites DRY: change a shared step in one function instead of many tests. Keep functions small, single-purpose, and return values so they are easy to test.",
+    "example": "```python\nimport requests\n\nBASE_URL = \"https://api.example.com\"\n\ndef get_token(username, password, timeout=10):\n    \"\"\"Authenticate and return a bearer token (single responsibility).\"\"\"\n    resp = requests.post(\n        f\"{BASE_URL}/v2/token\",\n        json={\"username\": username, \"password\": password},\n        timeout=timeout,\n    )\n    resp.raise_for_status()          # fail fast on a bad status\n    return resp.json()[\"access_token\"]\n\n# Every test reuses this one helper:\ntoken = get_token(\"qa_user\", \"secret123\")\nassert token, \"Token should not be empty\"\nprint(\"Got token of length\", len(token))\n```",
+    "interactive": "Write a function calculate_discount(price, percent) that returns the discounted price (price minus percent% of price). Call it with (100, 20) and assert the result equals 80. Make sure it returns the value rather than printing it.",
+    "expected_answer": "Correct: def calculate_discount(price, percent): return price - price * percent / 100, then assert calculate_discount(100, 20) == 80. A strong answer uses return (not print), passes the test, and the learner can explain that returning a value is what makes the function assertable in a test.",
+    "homework": "Identify a repeated block in a test script (or write one) and refactor it into a function with at least two parameters, one default argument, and a return value. Replace at least two call sites with the function. Submit before/after code and a one-paragraph note on what changing the logic now requires (one edit vs many).",
+    "expected_result": "A single-purpose function with parameters, a default argument, and a return value, called from at least two places that previously had duplicated code. The before/after clearly shows reduced duplication, and the note explains the DRY maintenance benefit.",
+    "quiz": [
+      {
+        "question": "What is the difference between a parameter and an argument?",
+        "answers": [
+          "They are the same thing",
+          "A parameter is the named input in the definition; an argument is the actual value passed when calling",
+          "A parameter is always a number; an argument is always a string",
+          "An argument is defined inside the function; a parameter outside"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "What does a Python function return if it has no return statement?",
+        "answers": [
+          "0",
+          "An empty string",
+          "None",
+          "It raises an error"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "Why is a function that returns a value easier to test than one that only prints?",
+        "answers": [
+          "Printing is slower",
+          "A returned value can be asserted on; printed output cannot be directly",
+          "Print functions cannot take parameters",
+          "Returned values are automatically logged"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Which principle do reusable functions support in a test suite?",
+        "answers": [
+          "DRY - Don't Repeat Yourself",
+          "WET - Write Everything Twice",
+          "Always use global variables",
+          "One test per file"
+        ],
+        "correct_index": 0
+      }
+    ]
+  },
+  {
+    "title": "Classes and OOP basics",
+    "short_description": "Introduces classes, objects, and OOP concepts and how they structure test frameworks like the Page Object Model.",
+    "learning_goals": "Define a class with attributes and methods and create objects (instances) from it.\nExplain encapsulation and inheritance at a beginner level.\nUnderstand how the Page Object Model uses classes to organize UI tests.\nKnow when a class is the right tool versus a plain function.",
+    "theory": "A class is a blueprint that bundles related data (attributes) and behavior (methods) together. An object is a concrete instance built from that blueprint. If LoginPage is a class, login_page = LoginPage(driver) creates an object you can call methods on, like login_page.enter_username(\"qa\"). Object-oriented programming (OOP) organizes code around these objects instead of loose functions and variables.\n\nIn Python you define a class with class LoginPage:, an initializer def __init__(self, driver): that sets up attributes (self.driver = driver), and methods that take self as the first parameter. self refers to the specific object the method is called on. JavaScript uses class LoginPage { constructor(driver) { this.driver = driver } } with this instead of self. The idea is identical.\n\nThree OOP concepts matter early. Encapsulation means keeping data and the methods that operate on it together, hiding internal details behind a clean interface - a test calls login_page.login(user, pass) without knowing the selectors inside. Inheritance lets a class reuse another: a BasePage class with common helpers (wait, click) can be the parent of every page class, so shared logic lives in one place. (Polymorphism, the third pillar, is less critical for beginners.)\n\nThe killer application in QA is the Page Object Model (POM). Each web page (or component) gets its own class that stores its element locators as attributes and exposes user actions as methods. Tests then read like plain English: home_page.search(\"laptop\"); results_page.assert_has_results(). When the UI changes, you update the locator in one page class, not in dozens of tests - the same maintainability win as functions, but organized around pages.\n\nClasses are not always the answer. For a one-off calculation, a plain function is simpler. Reach for a class when you have data plus behavior that belong together and benefit from being instantiated multiple times - pages, API clients, test data builders, and configuration objects are natural fits.",
+    "key_terms": "class, object/instance, attribute, method, constructor/__init__, self/this, encapsulation, inheritance, Page Object Model, locator",
+    "real_world_example": "A team's UI tests put CSS selectors like '#login-btn' directly inside 60 test functions. A redesign renames the button, breaking all 60 tests. The team adopts the Page Object Model: a LoginPage class holds the selector once as an attribute and exposes a click_login() method. After the redesign they change one line in LoginPage, and all 60 tests pass again - encapsulation paying off.",
+    "step_by_step": "1. Pick a page or component to model, e.g. the login page.\n2. Define a class: class LoginPage: with def __init__(self, driver): self.driver = driver.\n3. Store element locators as attributes, e.g. self.username_field = \"#username\".\n4. Add methods for user actions: def enter_username(self, value): ... and def submit(self): ....\n5. Add a login(self, user, pwd) method that calls the smaller methods - a clean public interface.\n6. Create an object in your test: page = LoginPage(driver).\n7. Call methods through the object: page.login(\"qa\", \"secret\").\n8. (Optional) Create a BasePage parent with shared helpers and have LoginPage inherit from it.",
+    "common_mistakes": "Forgetting the self (Python) or this (JavaScript) when referring to the object's own attributes/methods.\nPutting test assertions inside page classes instead of keeping pages action-only and assertions in tests.\nCreating a class for trivial logic where a plain function would be clearer.\nDuplicating shared helpers in every page class instead of using a BasePage via inheritance.\nConfusing the class (blueprint) with an object (instance) and trying to call methods on the class directly.",
+    "practical_use_case": "The Page Object Model structures nearly all UI automation (Selenium, Playwright). API test suites use client classes (an ApiClient object with get/post methods and a stored base URL and token). Test data builders and configuration objects are also classes. Understanding OOP is essential to reading any real-world test framework.",
+    "summary": "A class bundles data and behavior into a blueprint; objects are instances of it, accessed through self/this. Encapsulation hides details behind a clean interface and inheritance shares common logic, which is exactly how the Page Object Model keeps UI tests maintainable. Use classes when data and behavior belong together; use plain functions for simple one-off logic.",
+    "example": "```python\nclass LoginPage:\n    def __init__(self, driver):\n        self.driver = driver\n        self.username_field = \"#username\"   # locators as attributes\n        self.password_field = \"#password\"\n        self.submit_button = \"#login-btn\"\n\n    def enter_username(self, value):\n        self.driver.find(self.username_field).type(value)\n\n    def enter_password(self, value):\n        self.driver.find(self.password_field).type(value)\n\n    def login(self, user, pwd):            # clean public interface\n        self.enter_username(user)\n        self.enter_password(pwd)\n        self.driver.find(self.submit_button).click()\n\n# In a test:\npage = LoginPage(driver)\npage.login(\"qa_user\", \"secret123\")\n```",
+    "interactive": "Define a class ApiClient with an __init__ that stores a base_url attribute, and a method full_url(path) that returns base_url + path. Create an object with base_url 'https://api.example.com' and assert that full_url('/users') returns 'https://api.example.com/users'.",
+    "expected_answer": "Correct: class ApiClient: def __init__(self, base_url): self.base_url = base_url; def full_url(self, path): return self.base_url + path. Then client = ApiClient('https://api.example.com'); assert client.full_url('/users') == 'https://api.example.com/users'. A strong answer correctly uses self for the attribute and the method, instantiates the object, and the assertion passes.",
+    "homework": "Build a small Page Object class for a page of your choice with at least three locator attributes and two action methods (e.g. enter_search and click_search), plus one method that combines them into a higher-level action. Write a short test that creates the object and calls the combined method. Submit the class and the test.",
+    "expected_result": "A class with an __init__ storing locators as attributes, two or more action methods using self, and a combined method providing a clean interface, plus a test that instantiates and uses it. The submission should keep assertions out of the page class and demonstrate encapsulation.",
+    "quiz": [
+      {
+        "question": "What is the relationship between a class and an object?",
+        "answers": [
+          "They are identical terms",
+          "A class is a blueprint; an object is a concrete instance created from it",
+          "An object is a blueprint; a class is an instance",
+          "A class can only ever create one object"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "In the Page Object Model, what should a page class typically contain?",
+        "answers": [
+          "Test assertions for every scenario",
+          "Element locators and methods for user actions on that page",
+          "The entire test runner configuration",
+          "Database connection logic only"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "What does inheritance let you do?",
+        "answers": [
+          "Run tests faster automatically",
+          "Have one class reuse the attributes and methods of a parent class",
+          "Prevent objects from being created",
+          "Convert classes into functions"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "What does self (Python) or this (JavaScript) refer to inside a method?",
+        "answers": [
+          "The class file name",
+          "A global configuration object",
+          "The specific object instance the method is called on",
+          "The previous function that was called"
+        ],
+        "correct_index": 2
+      }
+    ]
+  },
+  {
+    "title": "Working with files",
+    "short_description": "Teaches reading and writing files - including test data, CSV, and JSON - safely from test code.",
+    "learning_goals": "Open, read, and write text files using safe patterns (with/context managers).\nLoad and parse JSON and CSV test data into Python structures.\nWrite test results and logs to files for later inspection.\nHandle file paths and encoding correctly and avoid leaving files open.",
+    "theory": "Files let tests read external data and persist results. The most common pattern is the context manager: in Python, with open(\"data.json\") as f: ... automatically closes the file when the block ends, even if an error occurs - which prevents resource leaks and locked files. Always prefer with over a bare open() that you must remember to close.\n\nFiles open in modes: 'r' read (default), 'w' write (overwrites the whole file), 'a' append (adds to the end), and adding 'b' for binary. Choosing 'w' when you meant 'a' silently erases existing content - a frequent and painful mistake when writing logs. Specify encoding=\"utf-8\" to avoid garbled characters across operating systems.\n\nTwo structured formats dominate QA test data. JSON maps cleanly to dictionaries and lists, so json.load(f) turns a file into Python objects and json.dump(obj, f) writes them back. CSV is tabular - csv.DictReader yields each row as a dictionary keyed by the header, which is ideal for data-driven tests where each row is a test case. Reading these correctly means your tests can be driven by data files non-programmers can edit.\n\nFile paths cause many cross-machine failures. Relative paths depend on where the script is run from; hard-coded absolute paths break on a teammate's machine or in CI. Build paths robustly (e.g. with pathlib or os.path relative to the script's own location) so the suite runs the same everywhere.\n\nIn testing, files are used to load fixtures and parameterized data, capture screenshots and logs on failure, write JUnit/HTML reports consumed by CI, and snapshot expected outputs for comparison. Reading and writing files reliably - closing them, choosing the right mode, and handling missing-file errors - is a daily skill.",
+    "key_terms": "open, context manager (with), file mode (r/w/a), encoding, JSON, CSV, DictReader, path, fixture, json.load/json.dump",
+    "real_world_example": "A QA stores 200 login test cases in a CSV with columns username, password, expected_result. The automated test opens the file with csv.DictReader, loops over each row, and asserts the outcome. Business analysts who don't code can add new cases by editing the spreadsheet - no code change needed - turning the test data into a shared, maintainable artifact.",
+    "step_by_step": "1. Create a small JSON file, e.g. users.json containing a list of objects.\n2. Open it safely: with open(\"users.json\", encoding=\"utf-8\") as f:.\n3. Parse it: data = json.load(f) - now data is a Python list/dict.\n4. Loop over the data to drive tests, asserting on each entry.\n5. To save results, open a file in write mode: with open(\"results.txt\", \"w\", encoding=\"utf-8\") as out:.\n6. Write lines with out.write(...) or json.dump(...) for structured output.\n7. For tabular data, use csv.DictReader to read each row as a dictionary.\n8. Run the script, confirm the output file appears with the expected content, and handle the case where the input file is missing.",
+    "common_mistakes": "Opening with mode 'w' when you meant 'a', wiping out an existing log or results file.\nForgetting to close files (use with to avoid this) and leaving them locked.\nUsing hard-coded absolute paths that break on other machines and in CI.\nForgetting encoding=\"utf-8\", causing UnicodeDecodeError or garbled characters.\nNot handling FileNotFoundError when the data file is missing, crashing the whole suite.",
+    "practical_use_case": "Loading parameterized test data from JSON/CSV, saving failure screenshots and logs, writing JUnit XML or HTML reports for CI dashboards, reading config files for environment settings, and comparing actual output against a stored 'golden' file (snapshot testing) are all everyday file operations in QA.",
+    "summary": "Use the with/context-manager pattern to open files so they always close, and pick the right mode (r/w/a) to avoid overwriting data. JSON loads into dicts/lists and CSV's DictReader gives one dictionary per row - both ideal for data-driven tests. Specify utf-8 encoding, build paths robustly, and handle missing files gracefully.",
+    "example": "```python\nimport csv\nimport json\n\n# Read data-driven test cases from a CSV (one dict per row)\nwith open(\"login_cases.csv\", newline=\"\", encoding=\"utf-8\") as f:\n    cases = list(csv.DictReader(f))   # [{'username': 'qa', 'expected': 'pass'}, ...]\n\nresults = []\nfor case in cases:\n    # ... run the real check here ...\n    results.append({\"username\": case[\"username\"], \"status\": \"PASS\"})\n\n# Write structured results back out as JSON (mode 'w' creates/overwrites)\nwith open(\"results.json\", \"w\", encoding=\"utf-8\") as out:\n    json.dump(results, out, indent=2)\n\nprint(f\"Ran {len(cases)} cases, wrote results.json\")\n```",
+    "interactive": "Write code that opens a file results.log in append mode and writes the line 'Test run completed' followed by a newline, using a context manager. Explain in one sentence why append mode matters here.",
+    "expected_answer": "Correct: with open('results.log', 'a', encoding='utf-8') as f: f.write('Test run completed\\n'). The one-sentence explanation must note that append mode ('a') adds to the file without erasing previous runs, whereas 'w' would overwrite the entire log each time. Bonus if they mention the context manager guarantees the file closes.",
+    "homework": "Create a JSON file with at least four test-case objects (input and expected fields). Write a script that loads it with json.load, loops over the cases printing each, and writes a summary line to a results file in append mode. Handle the case where the JSON file is missing by printing a clear message instead of crashing. Submit the data file, script, and output.",
+    "expected_result": "A valid JSON data file, a script that safely opens and parses it with a context manager, iterates the cases, appends a summary to a results file, and wraps file access so a missing file produces a friendly message rather than a traceback. Output files should be present and correct.",
+    "quiz": [
+      {
+        "question": "Why use the with statement (context manager) to open files?",
+        "answers": [
+          "It makes files open faster",
+          "It automatically closes the file even if an error occurs",
+          "It converts the file to JSON",
+          "It is required to read CSV files"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "What does opening a file in mode 'w' do to existing content?",
+        "answers": [
+          "Appends new content to the end",
+          "Leaves it unchanged and read-only",
+          "Overwrites/erases the existing content",
+          "Creates a backup automatically"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "What does csv.DictReader return for each row?",
+        "answers": [
+          "A single string of the whole row",
+          "A list of characters",
+          "A dictionary keyed by the column headers",
+          "An integer row number"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "Which problem is caused by hard-coding absolute file paths?",
+        "answers": [
+          "The file loads faster but uses more memory",
+          "Tests break on other machines and in CI where the path differs",
+          "JSON can no longer be parsed",
+          "The encoding is always wrong"
+        ],
+        "correct_index": 1
+      }
+    ]
+  },
+  {
+    "title": "Error handling",
+    "short_description": "Teaches try/except (try/catch), exceptions, and how to make tests fail clearly instead of crashing silently.",
+    "learning_goals": "Use try/except (try/catch) to handle expected errors gracefully.\nDistinguish exceptions you should catch from ones that should fail the test.\nRaise and assert on specific exceptions, and write clear failure messages.\nApply error handling to flaky operations like network calls and waits without hiding real bugs.",
+    "theory": "An exception is an error raised at runtime that stops normal execution - a missing file (FileNotFoundError), a bad type (TypeError), a failed assertion (AssertionError), or a network timeout. Error handling is deciding which of these to recover from and which should legitimately fail the test. The structure is try/except in Python and try/catch in JavaScript: code that might fail goes in try, and the recovery goes in except/catch.\n\nThe golden rule in testing is: handle errors you expect, let unexpected ones fail loudly. Wrapping everything in a broad except: pass is the worst anti-pattern in QA - it swallows real failures so a broken app shows green tests. If you catch an exception, catch the specific type (except requests.Timeout:) and do something meaningful: retry, log, or re-raise. Never silently ignore.\n\nException types carry information. except ValueError as e: gives you the error object, and str(e) is its message - useful for logging and for asserting that the right error happened. In tests you often assert that an operation raises a specific exception: pytest.raises(ValueError) passes only if the code inside raises ValueError, which is how you verify input validation works.\n\nThe finally block (try/finally) runs whether or not an error occurred - ideal for cleanup like closing a browser or deleting test data so one failing test doesn't leave junk for the next. You can also raise your own exceptions to fail fast with a clear message when a precondition isn't met: raise ValueError(f\"Unexpected status {code}\").\n\nError handling shines on flaky, environment-dependent operations: a network call that occasionally times out can be retried a few times before failing; a UI element that loads slowly can be waited for and only fail after a timeout. The skill is targeted handling that absorbs genuine transient noise while never masking real defects - and producing failure messages specific enough to debug from the log alone.",
+    "key_terms": "exception, try/except (try/catch), finally, raise/throw, AssertionError, specific exception type, retry, pytest.raises, cleanup, traceback",
+    "real_world_example": "A nightly API suite occasionally fails because one call times out due to network blips, paging the QA at 3 a.m. for a non-bug. They wrap that call in a retry: try the request up to 3 times catching only requests.Timeout, then fail if all attempts time out. Transient blips no longer create false failures, but a genuinely down endpoint still fails after the retries - error handling that removes noise without hiding real outages.",
+    "step_by_step": "1. Identify an operation that can legitimately fail transiently, e.g. an HTTP request.\n2. Wrap it: try: resp = requests.get(url, timeout=5).\n3. Catch the specific exception: except requests.Timeout:.\n4. In the handler, retry a bounded number of times or log and re-raise - never pass silently.\n5. Use finally to clean up (close the connection, browser, or temp file) regardless of outcome.\n6. To verify validation, assert an error is raised: with pytest.raises(ValueError): parse_age(\"abc\").\n7. Raise your own clear error for unmet preconditions: raise ValueError(f\"Bad status {code}\").\n8. Run the test paths: success, expected error handled, and unexpected error still failing loudly.",
+    "common_mistakes": "Using a bare except: pass that swallows all errors and hides real bugs (tests stay green while the app is broken).\nCatching too broadly (except Exception) when only one specific error was expected.\nForgetting cleanup, so a failed test leaves a browser open or test data behind for the next test.\nWriting vague failure messages like 'error' instead of including the actual value/status.\nCatching an exception that should fail the test, masking a genuine defect.",
+    "practical_use_case": "Retrying flaky network/API calls, waiting for slow UI elements with a timeout, validating that input-validation code raises the right exception, cleaning up test fixtures in finally, and producing clear, debuggable failure messages in CI logs are core daily uses of error handling in QA.",
+    "summary": "Use try/except (try/catch) to recover from errors you expect while letting unexpected ones fail loudly - never use a bare except: pass that hides real defects. Catch specific exception types, clean up in finally, and assert on raised exceptions to verify validation. Targeted error handling removes transient noise (like a one-off network timeout) without masking genuine bugs.",
+    "example": "```python\nimport requests\n\ndef fetch_with_retry(url, attempts=3, timeout=5):\n    last_error = None\n    for attempt in range(1, attempts + 1):\n        try:\n            resp = requests.get(url, timeout=timeout)\n            resp.raise_for_status()      # 4xx/5xx -> raises HTTPError\n            return resp\n        except requests.Timeout as e:    # catch ONLY the transient error\n            last_error = e\n            print(f\"Attempt {attempt} timed out, retrying...\")\n    # All retries exhausted: fail loudly with a clear message\n    raise RuntimeError(f\"GET {url} failed after {attempts} attempts: {last_error}\")\n\n# Validation test: assert the RIGHT exception is raised\nimport pytest\ndef parse_age(value):\n    age = int(value)             # raises ValueError on non-numeric input\n    if age < 0:\n        raise ValueError(\"age must be non-negative\")\n    return age\n\nwith pytest.raises(ValueError):\n    parse_age(\"abc\")\n```",
+    "interactive": "Write a try/except that converts a user input string to an integer with int(value). If it fails, catch ValueError specifically and print 'Invalid number: <value>' instead of crashing. Test it with '42' and with 'hello'.",
+    "expected_answer": "Correct: try: n = int(value) except ValueError: print(f'Invalid number: {value}'). With '42' it succeeds (n becomes 42); with 'hello' it catches ValueError and prints 'Invalid number: hello' without crashing. A strong answer catches ValueError specifically (not a bare except) and includes the offending value in the message.",
+    "homework": "Write a function that reads a JSON config file and returns a setting. Handle two specific errors: FileNotFoundError (print a clear 'config missing' message) and json.JSONDecodeError (print 'config is not valid JSON'). Add a finally block that prints 'done'. Demonstrate all three paths: success, missing file, and malformed JSON. Submit the code and outputs.",
+    "expected_result": "A function using try/except that catches FileNotFoundError and json.JSONDecodeError separately with clear distinct messages, a finally block that always runs, and evidence of all three execution paths. No bare except, and unexpected errors are not swallowed. Demonstrates targeted, debuggable error handling.",
+    "quiz": [
+      {
+        "question": "Why is 'except: pass' considered a dangerous anti-pattern in tests?",
+        "answers": [
+          "It makes tests run slower",
+          "It swallows all errors, so a broken app can still show green/passing tests",
+          "It only works in JavaScript",
+          "It prevents the program from starting"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "When should you catch an exception versus let it fail the test?",
+        "answers": [
+          "Always catch every exception",
+          "Never catch any exception",
+          "Catch errors you expect and can recover from; let unexpected ones fail loudly",
+          "Catch only AssertionError"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "What is the finally block used for?",
+        "answers": [
+          "Running code only when no error occurs",
+          "Running cleanup code whether or not an error occurred",
+          "Defining new exceptions",
+          "Skipping the rest of the test"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "What does pytest.raises(ValueError) verify?",
+        "answers": [
+          "That the code never raises any error",
+          "That the code inside raises a ValueError, passing only if it does",
+          "That a ValueError is printed to the console",
+          "That all values are valid"
+        ],
+        "correct_index": 1
+      }
+    ]
+  }
+]

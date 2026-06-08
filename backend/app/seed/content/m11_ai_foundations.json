@@ -1,0 +1,238 @@
+[
+  {
+    "title": "What is AI in QA",
+    "short_description": "This lesson explains what 'AI' actually means in a QA context, focusing on large language models and machine learning, and what they can and cannot do for testing work.",
+    "learning_goals": "Define the practical difference between rule-based automation, machine learning, and generative AI (LLMs) as they apply to QA.\nExplain in plain terms how a large language model produces output (tokens, prediction, no real 'understanding') and why that shapes its reliability.\nIdentify three concrete places in the QA workflow where AI adds value and two where it does not.\nUse AI terminology correctly (model, prompt, token, hallucination, context window) so you can talk credibly about tools like ChatGPT, Copilot, and Claude in a team setting.",
+    "theory": "When people say 'AI' in QA today, they almost always mean generative AI built on large language models (LLMs) such as GPT-4, Claude, or Gemini. This is a narrow but important slice of artificial intelligence. It helps to separate three things that beginners blur together. Rule-based automation (a Selenium script, a regex, an if/else) does exactly what you coded, every time, deterministically. Machine learning (ML) learns patterns from data to make predictions, for example a model that flags which test cases are most likely to fail. Generative AI (LLMs) predicts the next chunk of text (a 'token') and can produce new content: test cases, code, bug summaries, documentation.\n\nAn LLM does not 'understand' your application the way you do. It was trained to predict the statistically likely next token given the text so far. That is why it can write a fluent, professional-looking test plan in seconds, and also why it can confidently invent an API endpoint that does not exist. This behavior is called a hallucination, and it is the single most important concept for a QA to internalize: AI output is a draft, not a fact.\n\nA few terms you will use daily. A 'prompt' is the instruction you give the model. The 'context window' is how much text (your prompt plus prior conversation plus any files) the model can consider at once, measured in tokens; exceed it and the model 'forgets' the earliest parts. 'Tokens' are the chunks the model reads and writes (roughly 4 characters or three-quarters of a word in English), and most paid APIs bill per token. 'Temperature' controls randomness: low (0-0.3) gives more consistent, repeatable output, useful when you want stable test data.\n\nWhy this matters for QA specifically: testing is full of repetitive text-shaped work that LLMs are good at drafting. Turning a user story into candidate test cases, summarizing a long stack trace into a readable bug title, generating boundary values for an input field (0, 1, max, max+1), or writing the first version of a Selenium locator. None of this replaces the QA's judgment; it removes the blank-page problem and speeds up the first 70 percent so you spend your time on the hard 30 percent: deciding what is actually correct.\n\nAI is the wrong tool when correctness must be guaranteed and verified, when data is sensitive (never paste production credentials or customer PII into a public chatbot), or when the task needs real-time knowledge of your specific system that the model was never trained on. A good rule: use AI to draft and brainstorm, use your own brain and the real system to verify.",
+    "key_terms": "Large Language Model (LLM), generative AI, machine learning, prompt, token, context window, hallucination, temperature, deterministic vs probabilistic",
+    "real_world_example": "Your product owner drops a one-line user story in the sprint channel: 'As a user I can reset my password via email.' You have an hour before the grooming call and no test cases yet. You paste the story into an LLM and ask for candidate test scenarios. In ten seconds you get 15 ideas: valid email, unregistered email, expired reset link, link reused twice, password not meeting policy, etc. About 12 are genuinely useful, two are duplicates, and one references a 'security question' feature your product does not have (a hallucination). You keep the good ones, delete the invented one, and add two edge cases the AI missed because it does not know your system uses a 15-minute link expiry. The AI saved you the blank page; your judgment produced the final, correct set.",
+    "step_by_step": "1. Identify whether your task is text-shaped (writing, summarizing, brainstorming, drafting code) - those suit LLMs; if it requires guaranteed correctness on its own, plan to verify the output.\n2. Pick a tool: a general LLM (ChatGPT, Claude, Gemini) for ideation and drafting, or a code-aware tool (GitHub Copilot) inside your IDE for test code.\n3. Write a clear prompt that states the role, the input, and the desired output format.\n4. Read the output critically and assume some of it is wrong until checked.\n5. Verify every factual or technical claim against the real system, the real docs, or the real API.\n6. Keep only what is correct, fix what is close, and discard hallucinations.\n7. Never paste secrets, production data, or customer PII into a public AI tool.",
+    "common_mistakes": "Treating AI output as authoritative truth instead of a draft to verify, then filing AI-invented endpoints or features as real test cases.\nThinking 'AI' means a robot that understands the app, rather than a next-token predictor with no knowledge of your specific system.\nConfusing deterministic automation (a stable Selenium script) with probabilistic AI (which can give a different answer to the same prompt).\nPasting confidential data (API keys, customer records, internal URLs) into a public chatbot.\nExpecting the model to know your current sprint, your latest build, or anything outside its training data and the context you provide.",
+    "practical_use_case": "Day to day, a QA uses AI to break the blank-page barrier: generating a first draft of test cases from a story during grooming, summarizing a 200-line log into a one-paragraph bug description, suggesting boundary and negative cases for a new field, and explaining an unfamiliar error message. The QA always reviews and corrects before anything reaches a ticket or the test suite.",
+    "summary": "In QA, 'AI' today mostly means generative LLMs that predict text and can draft test cases, summaries, and code fast but can also hallucinate. Understanding that the model predicts rather than knows is what lets you use it safely: AI drafts, the QA verifies. Use it for text-shaped, low-risk tasks and never for guaranteed-correctness or sensitive-data work without checking.",
+    "example": "Prompt and result showing the draft-then-verify loop:\n\n```text\nPrompt:\nYou are a senior QA engineer. From this user story, list candidate test\nscenarios. Mark each as positive or negative. Do not invent features.\n\nUser story: \"As a registered user, I can log in with email and password.\"\n\nModel output (abridged):\n1. [Positive] Valid email + valid password -> user is logged in\n2. [Negative] Valid email + wrong password -> error shown, no login\n3. [Negative] Unregistered email -> generic error (no account enumeration)\n4. [Negative] Empty email field -> validation error\n5. [Negative] Empty password field -> validation error\n6. [Boundary] Password at min length (e.g. 8 chars) vs 7 chars\n7. [Negative] 5 failed attempts -> account lockout    <-- VERIFY: does our app lock?\n```\n\nQA review: scenarios 1-6 are kept. Scenario 7 assumes a lockout policy the AI cannot know exists - you check the requirements, confirm the app locks after 5 attempts, and keep it. Nothing goes into the test suite unverified.",
+    "interactive": "Take this user story and ask an AI tool (or simulate it yourself) for test scenarios: 'As a shopper, I can add a product to my cart.' Then go through the AI's list and mark each item as KEEP, FIX, or HALLUCINATION, writing one sentence explaining the two items you were most unsure about.",
+    "expected_answer": "A strong answer keeps valid cases (add in-stock item updates cart count and subtotal; add out-of-stock item is blocked; add item then change quantity; add same item twice increments quantity) and flags as HALLUCINATION anything the story does not support (e.g. 'apply discount code' or 'gift wrap option' if not mentioned). The learner should explicitly note that any scenario about stock limits, max quantity, or login-required behavior must be VERIFIED against real requirements because the AI cannot know the app's rules. The key insight demonstrated: AI output is a draft filtered by QA judgment, and uncertain items are verified, not assumed.",
+    "homework": "Pick a small feature from any app you use (search bar, file upload, sign-up form). Write the feature as a one-sentence user story, get an AI tool to produce test scenarios, then submit a short report: the prompt you used, the raw AI list, and a cleaned final list where each item is labeled KEEP / FIXED / REMOVED-HALLUCINATION with a one-line reason. Include at least one hallucination you caught and one edge case the AI missed that you added yourself.",
+    "expected_result": "A report containing the exact prompt, the unedited AI output, and a curated final list. A good submission identifies at least one hallucination (a feature or rule the story never stated), adds at least one human-found edge case, and shows clear reasoning for each KEEP/FIX/REMOVE decision - demonstrating the draft-then-verify discipline rather than copying AI output wholesale.",
+    "quiz": [
+      {
+        "question": "Why can an LLM confidently describe an API endpoint that does not actually exist in your app?",
+        "answers": [
+          "Because it queried your server and got a wrong response",
+          "Because it predicts statistically likely text rather than knowing your specific system",
+          "Because the endpoint exists but is hidden from QA",
+          "Because the temperature was set too low"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Which task is the WORST fit for a public generative AI tool?",
+        "answers": [
+          "Drafting test scenarios from a user story",
+          "Summarizing a long stack trace into a bug title",
+          "Analyzing a file of real customer payment records",
+          "Brainstorming boundary values for an input field"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "What is the 'context window' of an LLM?",
+        "answers": [
+          "The maximum amount of text (in tokens) the model can consider at once",
+          "The time window during which the API is available",
+          "The browser tab where the chat runs",
+          "The number of test cases it can generate per request"
+        ],
+        "correct_index": 0
+      },
+      {
+        "question": "Which statement best captures the right mindset for using AI in QA?",
+        "answers": [
+          "AI replaces the need for QA judgment on correctness",
+          "AI output is always factually reliable if the prompt is good",
+          "AI is deterministic, so the same prompt always returns identical, correct results",
+          "AI produces drafts that the QA must verify against the real system"
+        ],
+        "correct_index": 3
+      }
+    ]
+  },
+  {
+    "title": "How QA engineers can use AI",
+    "short_description": "This lesson maps concrete, day-to-day ways a QA engineer uses AI across the testing lifecycle, from test design and data generation to automation code and bug reports.",
+    "learning_goals": "List at least five distinct QA tasks where AI meaningfully speeds up real work, with the trade-offs of each.\nUse AI to convert a requirement into a structured set of test cases and to generate realistic test data.\nUse a code-aware AI tool to scaffold an automation test (e.g. a Selenium or Playwright snippet) and know what to fix afterward.\nApply AI to summarize logs and draft clear, reproducible bug reports while keeping the QA accountable for accuracy.",
+    "theory": "AI is most useful in QA at the points where the work is text-heavy and repetitive but still needs human judgment at the end. The biggest wins fall into five buckets: test design, test data, automation code, analysis and triage, and documentation. In each, the pattern is the same - AI produces a fast first draft, the QA reviews and corrects, and only the verified result is used.\n\nTest design is the highest-value use. Given a requirement or user story, an LLM can enumerate positive, negative, boundary, and edge scenarios far faster than typing them by hand. It is especially good at reminding you of cases you tend to forget: empty inputs, special characters, very long strings, concurrent actions, and error states like HTTP 404 or 500. You still decide which apply to your system and add the ones only you know about.\n\nTest data generation is a quieter but huge time-saver. Need 50 fake users with valid-looking emails, names, and addresses? Need boundary values for an age field (e.g. -1, 0, 1, 17, 18, 64, 65, 130)? Need a malformed JSON payload to test your API's validation? AI produces these in seconds and in the exact format you ask for (CSV, JSON, SQL inserts). Crucially, this is synthetic data, which keeps you away from using real customer PII.\n\nAutomation code is where code-aware tools like GitHub Copilot or an LLM with your page structure shine. You describe the test ('click login, enter credentials, assert dashboard heading is visible') and get a working skeleton in Playwright, Selenium, or Cypress. The catch: AI-generated locators are often fragile or wrong (it guesses IDs it has never seen), so you must replace guessed selectors with real ones from the actual DOM and verify the test runs green. AI scaffolds; you stabilize.\n\nAnalysis, triage, and documentation round it out. Paste a 300-line log and ask for the root-cause line and a one-paragraph summary. Turn a messy set of reproduction notes into a clean bug report with Steps to Reproduce, Expected, Actual, and Environment. Draft a release note or a test summary report. The QA remains accountable: an AI-summarized bug with a wrong reproduction step wastes a developer's time, so you re-read against reality before posting.",
+    "key_terms": "test case generation, synthetic test data, boundary value analysis, automation scaffolding, log summarization, root-cause triage, bug report drafting, GitHub Copilot, prompt-to-code",
+    "real_world_example": "A developer pushes a fix and your nightly Playwright suite fails with a 280-line trace full of timeouts and stack frames. Instead of reading it line by line at 9am, you paste the trace into an AI tool and ask: 'In one paragraph, what failed and which line is the likely root cause?' It points you to a 'TimeoutError: locator #submit-btn not found' near the top and notes the element id changed. You open the build, confirm the button id is now data-testid=\"submit\", update the locator, and re-run. The AI cut a 20-minute log dig down to 3 minutes - but you confirmed the fix against the real DOM rather than trusting the summary blindly.",
+    "step_by_step": "1. Pick the QA task and match it to a bucket: test design, test data, automation code, analysis/triage, or documentation.\n2. For test design, paste the requirement and ask for positive, negative, boundary, and edge cases in a table.\n3. For test data, specify the exact format (CSV/JSON/SQL), the fields, and the boundary values you need - and demand synthetic data only.\n4. For automation, describe the steps and the framework, then replace every guessed selector with a real one from the live DOM.\n5. For analysis, paste logs or notes and ask for a summary plus the likely root-cause line.\n6. For documentation, give the raw notes and ask for a structured bug report or test summary.\n7. Review, correct, and verify the output against the real system before it reaches a ticket, suite, or report.",
+    "common_mistakes": "Committing AI-generated automation code without running it, leaving fragile or invented selectors that fail in CI.\nUsing AI test data that looks realistic but violates your schema constraints (e.g. an email missing the domain, a date in the wrong format).\nAccepting an AI bug-report summary without re-checking the reproduction steps, then sending developers on a wrong trail.\nAsking AI for test cases but never adding the system-specific edge cases only you know, so coverage looks thorough but misses real risks.\nFeeding real production data or PII to AI for 'realistic' test data instead of generating synthetic data.",
+    "practical_use_case": "Across a normal sprint a QA uses AI to: draft test cases during grooming, generate a CSV of 50 synthetic users for a load smoke test, scaffold a Playwright test for a new checkout flow, summarize failing CI logs each morning, and clean up rough reproduction notes into a filed bug report. Each output is reviewed before use, turning AI into a fast junior assistant rather than an unsupervised author.",
+    "summary": "QA engineers get the most from AI in five areas: test design, synthetic test data, automation scaffolding, log/triage analysis, and documentation. In every case AI produces a fast draft and the QA verifies it - especially automation selectors and bug reproduction steps, which AI frequently gets wrong. Used this way, AI removes grunt work without removing accountability.",
+    "example": "Using a code-aware AI to scaffold a Playwright login test, then fixing the guessed selectors:\n\n```javascript\n// AI-generated scaffold (selectors are GUESSES - must be replaced with real ones)\nimport { test, expect } from '@playwright/test';\n\ntest('user can log in with valid credentials', async ({ page }) => {\n  await page.goto('https://example.com/login');\n  await page.fill('#email', 'qa.user@example.com');     // guessed id\n  await page.fill('#password', 'Secret123!');           // guessed id\n  await page.click('button[type=\"submit\"]');\n  await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();\n});\n\n// After inspecting the real DOM, the QA replaces guessed selectors with stable ones:\n//   page.fill('#email', ...)    ->  page.getByTestId('login-email')\n//   page.fill('#password', ...) ->  page.getByTestId('login-password')\n// Then runs `npx playwright test` and confirms it passes before committing.\n```",
+    "interactive": "Take this requirement: 'An age field accepts whole numbers from 18 to 120 inclusive.' Ask an AI tool (or do it yourself) to produce a boundary-value test data set, then review it: which values are correct boundaries, which are missing, and which (if any) are wrong? List your final corrected set.",
+    "expected_answer": "A strong final set covers the boundaries and just-outside values: 17 (invalid, below min), 18 (valid, min), 19 (valid), 119 (valid), 120 (valid, max), 121 (invalid, above max), plus non-numeric/edge inputs like 0, -1, a decimal such as 18.5 (should be rejected since whole numbers only), and an empty value. The learner should notice if the AI omitted the 'just inside' values (18 and 120 themselves) or the decimal/empty cases, and should explain that boundary testing targets the values on and immediately around each limit, not random numbers in the middle of the range.",
+    "homework": "Choose a real feature with at least one input (a registration form, a search box, a quantity selector). Use AI for three of the five buckets: generate test cases, generate synthetic test data in a named format (CSV or JSON), and scaffold one automation snippet. Submit all three outputs plus a 'corrections log' listing every change you made to the AI output and why (e.g. 'replaced guessed #qty selector with real data-testid', 'added empty-input case AI missed').",
+    "expected_result": "Three AI-assisted artifacts (test cases, formatted synthetic data, an automation snippet) accompanied by a corrections log. A good submission shows the learner ran or validated the outputs, replaced at least one fragile/guessed selector with a real one, added at least one system-specific case the AI missed, and used synthetic (not real) data - demonstrating that AI accelerated the work but the QA owned correctness.",
+    "quiz": [
+      {
+        "question": "What is the most important step after an AI generates Playwright/Selenium test code?",
+        "answers": [
+          "Commit it immediately so the suite grows faster",
+          "Replace guessed selectors with real ones and run the test to confirm it passes",
+          "Delete all assertions to avoid false failures",
+          "Increase the temperature and regenerate it"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Why should AI-generated test data be synthetic rather than copied from production?",
+        "answers": [
+          "Synthetic data runs faster in the database",
+          "Production data is always formatted incorrectly",
+          "To avoid exposing real customer PII to an AI tool",
+          "Synthetic data is the only kind AI can produce"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "An AI summarizes a failing log and names a root-cause line. What should the QA do before acting?",
+        "answers": [
+          "Verify the summary against the actual log and system before trusting it",
+          "Forward the summary to developers without reading the log",
+          "Assume the first line of any log is always the root cause",
+          "Re-run the AI three times and average the answers"
+        ],
+        "correct_index": 0
+      },
+      {
+        "question": "Which is a genuine, high-value use of AI in test design?",
+        "answers": [
+          "Guaranteeing 100% bug-free releases automatically",
+          "Deciding final pass/fail status of a regression run without human review",
+          "Storing the official source-of-truth requirements",
+          "Quickly enumerating positive, negative, boundary, and edge scenarios from a requirement"
+        ],
+        "correct_index": 3
+      }
+    ]
+  },
+  {
+    "title": "Risks and limits of AI in QA",
+    "short_description": "This lesson covers the real dangers of using AI in QA - hallucinations, data privacy, automation bias, and accountability - and the practical habits that keep AI use safe.",
+    "learning_goals": "Recognize and give examples of the main AI failure modes that affect QA: hallucination, fabricated citations, fragile/invented code, and silent staleness.\nExplain the data-privacy and confidentiality risks of pasting code, logs, or data into AI tools and state safe-handling rules.\nDescribe automation bias and how over-trusting AI degrades a QA's own testing judgment.\nApply a verification checklist that keeps the QA, not the AI, accountable for everything that ships.",
+    "theory": "AI is a powerful assistant and an unreliable authority, and most of the danger in QA comes from forgetting the second half of that sentence. The first and most famous risk is hallucination: the model produces confident, fluent, plausible content that is simply false - an API endpoint that does not exist, a Selenium method with the wrong signature, a 'fact' about your app it could not possibly know. Because the output looks professional, beginners file it as truth. In QA this is especially dangerous: a hallucinated test case can give false confidence that something is covered when it is not.\n\nData privacy and confidentiality is the risk that gets people fired. Public AI tools may log and use your inputs. Pasting source code, internal URLs, production logs, API keys, or customer records (names, emails, payment data) into a public chatbot can leak intellectual property or breach regulations like GDPR. The rule is simple and absolute: never paste secrets, credentials, or real personal data into a tool your company has not approved. Use synthetic data and redact identifiers.\n\nAutomation bias is the subtle, long-term risk. When a tool is right most of the time, humans start trusting it without checking - and stop exercising the very skill (critical analysis of correctness) that makes them good testers. A QA who copies AI test cases for months without thinking may find their own test-design ability has quietly eroded, and they no longer notice the cases the AI misses. The job of a QA is professional skepticism; AI makes it easy to outsource that and slowly lose it.\n\nThere are technical limits too. An LLM has a knowledge cutoff and no awareness of your latest build, current sprint, or the real-time state of the system, so it cannot tell you whether a feature actually works right now. It is non-deterministic: the same prompt can yield different answers, which is poison for reproducibility if you treat its output as a fixed test oracle. It has a finite context window, so feeding a huge spec means it 'forgets' the early parts. And it reflects biases and errors in its training data.\n\nThe through-line is accountability. AI does not sign off on a release; you do. If an AI-written test passes but the feature is broken, that is the QA's miss, not the model's. The professional posture is: AI proposes, the human disposes. Use it to go faster, verify everything that matters, keep sensitive data out, and never let it replace your judgment about whether the product is actually correct.",
+    "key_terms": "hallucination, data privacy / PII, confidentiality leak, automation bias, knowledge cutoff, non-determinism, context window limit, training-data bias, human accountability",
+    "real_world_example": "Under deadline pressure, a junior QA asks an AI to write API tests for the payments service and pastes in a real request captured from staging - which happens to include a live bearer token and a customer's email. The AI returns useful tests, but the token and email are now in a third-party tool's logs, and staging shares the token with another environment. Separately, one generated test asserts a response field called 'transactionStatus' that the API actually calls 'status' - a hallucination. The test was written to pass against the wrong field name, so it goes green while testing nothing real. Two classic AI risks in one ticket: a confidentiality leak and a false-confidence hallucination. The fix: redact the token/email and use a synthetic payload, and verify every asserted field against the real API contract.",
+    "step_by_step": "1. Before sending anything to an AI tool, scan it for secrets, credentials, internal URLs, and any real personal data - redact or replace with synthetic values.\n2. Confirm the tool is approved by your company for the kind of content you are about to paste.\n3. Treat every factual or technical claim in the output as unverified: endpoints, method names, field names, status codes, app-specific rules.\n4. Verify each claim against the real source: the live system, the API contract, the official docs, the actual DOM.\n5. Run any AI-generated test and confirm it fails when it should (not just passes) so you are not fooled by a green-but-empty test.\n6. Periodically do a task without AI to keep your own test-design skills sharp and counter automation bias.\n7. Sign off only on what you have personally verified - you, not the AI, are accountable.",
+    "common_mistakes": "Trusting fluent AI output as fact and filing hallucinated test cases, asserting on field names or endpoints that do not exist.\nPasting secrets, production logs, or customer PII into a public AI tool and creating a confidentiality breach.\nWriting an AI test that passes without checking it can actually fail - a green test that verifies nothing gives false confidence.\nLetting automation bias erode your own judgment by copying AI output for months without critical review.\nTreating non-deterministic AI output as a stable test oracle, so results are not reproducible and 'the truth' changes between runs.",
+    "practical_use_case": "Every time a QA uses AI, these risks apply: redacting a log before pasting it for summarization, double-checking that an AI-suggested status code (e.g. it claimed 403 when the real response is 401) matches the contract, refusing to paste a customer record into a chatbot for 'realistic' data, and validating that a generated test genuinely exercises the feature. The habits are small but constant, and they are what separates safe AI use from a costly incident.",
+    "summary": "The main AI risks in QA are hallucination (confident falsehoods), data-privacy leaks (PII and secrets in public tools), automation bias (eroded human judgment), and technical limits (knowledge cutoff, non-determinism, context window). The mitigation is one discipline: keep sensitive data out, verify everything that matters against the real system, and remember that the QA - never the AI - is accountable for what ships.",
+    "example": "A safe-use checklist a QA can keep next to their screen:\n\n```text\nBEFORE sending to AI:\n[ ] No API keys, tokens, or passwords in the text\n[ ] No real customer names, emails, or payment data (use synthetic)\n[ ] No internal-only URLs or secrets\n[ ] Tool is company-approved for this content\n\nAFTER receiving output:\n[ ] Verified every endpoint / method / field name against the real contract\n[ ] Verified status codes (e.g. 401 vs 403) against actual responses\n[ ] Ran generated tests and confirmed they can FAIL, not just pass\n[ ] Added system-specific cases the AI could not know\n[ ] I (the QA) reviewed and am accountable for what ships\n```",
+    "interactive": "Here is an AI-generated API test assertion: 'expect(response.status).toBe(200) and expect(response.body.userRole).toBe(\"admin\")'. The requirement says an unauthenticated request to this endpoint must be rejected. Identify what is wrong and what risks this illustrates.",
+    "expected_answer": "The assertion is wrong because an unauthenticated request should be rejected, so the expected status is not 200 - it should be 401 Unauthorized (or 403 Forbidden depending on the contract), and there should be no successful body with a userRole at all. This illustrates two AI risks: a hallucination/incorrect-oracle problem (the AI asserted a success path that contradicts the requirement) and the false-confidence trap (if committed, the test would either fail confusingly or, worse, be 'fixed' to match the wrong behavior). The correct habit is to verify the assertion against the requirement and the real API response, and to confirm the test fails when the endpoint is wrongly accessible.",
+    "homework": "Find or write three AI-generated QA artifacts (test cases, a snippet, or a bug report - you can prompt an AI to produce them). Audit each one and submit a risk report that flags every hallucination, every privacy concern, and every unverifiable claim, with the corrected version beside it. Include a short paragraph on one habit you will adopt to counter automation bias.",
+    "expected_result": "A risk report covering three artifacts, each with identified hallucinations (e.g. invented field names, wrong status codes, non-existent methods), any privacy issues (real data that should be synthetic/redacted), and unverifiable claims, plus the corrected version. A strong submission verifies claims against a real source, demonstrates running/checking at least one artifact, and articulates a concrete anti-bias habit (e.g. 'design test cases manually first, then compare with AI').",
+    "quiz": [
+      {
+        "question": "An AI writes a test asserting an endpoint returns HTTP 200, but the requirement says unauthenticated requests must be rejected. This is primarily an example of:",
+        "answers": [
+          "A correct test that needs no review",
+          "A hallucination / wrong oracle that creates false confidence if trusted",
+          "A network configuration bug in the test runner",
+          "A data-privacy violation"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Which action is the clearest data-privacy violation?",
+        "answers": [
+          "Asking AI to generate synthetic test users",
+          "Asking AI to summarize a redacted error message",
+          "Pasting a production log containing a live token and a customer email into a public chatbot",
+          "Asking AI to explain what HTTP 429 means"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "What is 'automation bias' in the context of a QA using AI?",
+        "answers": [
+          "Preferring automated tests over manual tests",
+          "Over-trusting the tool until your own critical-thinking and test-design skills erode",
+          "A bug where automation runs at the wrong time",
+          "The AI being biased toward certain programming languages"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Why is an LLM's non-determinism a problem if you treat its output as a fixed test oracle?",
+        "answers": [
+          "It always returns the wrong answer",
+          "It cannot produce code at all",
+          "It only works at temperature 0",
+          "The same prompt can yield different answers, so results are not reproducible"
+        ],
+        "correct_index": 3
+      }
+    ]
+  },
+  {
+    "title": "Prompt engineering for QA",
+    "short_description": "This lesson teaches how to write precise, structured prompts that get reliable, usable QA output - test cases, data, and code - from AI tools.",
+    "learning_goals": "Write prompts using the role + context + task + format pattern and explain why each part improves output.\nControl AI output structure by specifying exact formats (tables, JSON, Gherkin) and constraints (count, boundaries, 'do not invent features').\nUse few-shot examples and iterative refinement to get consistent, reusable QA artifacts.\nBuild and reuse a small library of QA prompt templates for test design, data generation, and bug-report drafting.",
+    "theory": "Prompt engineering is the skill of writing instructions that get an AI to produce exactly what you need, reliably. For QA the difference between a vague prompt and a precise one is the difference between a generic, half-useful list and a copy-ready test artifact. The most reliable structure has four parts: Role (who the AI should act as), Context (the input and any rules), Task (the specific thing to do), and Format (exactly how the output should look). 'Write some tests for login' is weak; 'You are a senior QA engineer. Given this login requirement [...], write test cases as a markdown table with columns ID, Title, Type (positive/negative/boundary), Steps, Expected. Do not invent features not in the requirement.' is strong.\n\nBe specific about constraints, because under-specified prompts invite hallucination and padding. Pin down the count ('exactly 8 scenarios'), the categories ('include at least 2 negative and 2 boundary cases'), the boundaries ('use values 0, 1, max, max+1'), and the guardrails ('only test what the requirement states'). Specifying the output format is just as important: ask for a markdown table for test cases, JSON or CSV for test data, or Gherkin (Given/When/Then) when your team uses BDD. A named format makes the output paste-ready and machine-usable.\n\nFew-shot prompting means giving the model one or two examples of the input-output pattern you want before asking it to do the real one. If you show it one well-formed test case in your team's exact style, the rest will match. This is the single most effective trick for consistency, because the model imitates the pattern you demonstrate rather than guessing your house style.\n\nIteration is part of the method, not a failure. Your first prompt rarely produces the perfect result. Read the output, identify what is off ('too verbose', 'missing negative cases', 'wrong status code'), and refine: 'Good, now add the lockout-after-5-attempts case and use exactly the column order ID, Priority, Steps, Expected.' Treat the conversation as a draft you sculpt. Keeping temperature low (around 0-0.3) helps when you want stable, repeatable output such as structured test data.\n\nFinally, build a reusable prompt library. The prompts that work for your domain - 'turn a user story into a test-case table', 'generate N synthetic users as CSV', 'rewrite these messy notes into a bug report with Steps/Expected/Actual/Environment' - are assets. Save them as templates with placeholders, and you get consistent, high-quality output every time instead of reinventing the prompt under deadline pressure. And remember the prior lesson: even a great prompt still produces a draft you must verify.",
+    "key_terms": "prompt engineering, role prompting, context, output format, constraints, few-shot prompting, zero-shot, iterative refinement, Gherkin / Given-When-Then, prompt template library",
+    "real_world_example": "You need test cases for a new coupon feature and your first prompt - 'write test cases for applying a coupon' - returns a vague bulleted list mixing valid and invalid cases with no structure, and it invents a 'coupon stacking' feature your product does not support. You rewrite it with the full pattern: role (senior QA), context (paste the actual requirement plus the rule 'coupons cannot be stacked and expire after the listed date'), task ('produce exactly 10 test cases'), and format ('markdown table: ID, Type, Steps, Expected; include at least 3 negative and 2 boundary cases; do not invent features'). The second result is a clean, ten-row table you paste straight into the test plan after a quick review. Same model, dramatically better output - the prompt did the work.",
+    "step_by_step": "1. State the role: 'You are a senior QA engineer.'\n2. Give context: paste the actual requirement/user story and any system-specific rules the AI cannot know.\n3. State the task precisely, including count and required categories ('exactly 8 cases, with at least 2 negative and 2 boundary').\n4. Specify the exact output format (markdown table with named columns, JSON, CSV, or Gherkin).\n5. Add guardrails: 'do not invent features not in the requirement.'\n6. Optionally add one few-shot example of a perfectly formatted item in your team's style.\n7. Run it, then iterate: tell the model exactly what to add, remove, or reformat until it matches.\n8. Save the working prompt as a reusable template with placeholders, and always verify the final output.",
+    "common_mistakes": "Writing vague one-line prompts ('test the login') and then blaming the AI for generic output.\nForgetting to specify an output format, so you get prose you must reshape by hand instead of a paste-ready table or JSON.\nNot providing guardrails, so the model invents features and statuses the requirement never mentioned.\nGiving up after the first imperfect answer instead of iterating, when one refinement would fix it.\nNot pasting the real requirement and system rules as context, so the model fills gaps with plausible but wrong assumptions.",
+    "practical_use_case": "A QA uses prompt templates throughout the sprint: a 'story-to-test-table' prompt during grooming, a 'synthetic-data-as-CSV' prompt when building fixtures, a 'logs-to-bug-report' prompt when triaging failures, and a 'Gherkin-from-acceptance-criteria' prompt when the team works in BDD. Because the prompts are pre-built and precise, the output is consistent and needs only a quick review rather than heavy rework.",
+    "summary": "Good QA prompts follow Role + Context + Task + Format, pin down constraints (count, categories, boundaries, guardrails), and specify an exact output structure like a table, JSON, or Gherkin. Few-shot examples and iteration make output consistent, and saving working prompts as templates compounds the value. A precise prompt turns a vague AI into a reliable drafting assistant - whose output you still verify.",
+    "example": "A reusable QA prompt template (fill the placeholders) and the kind of output it yields:\n\n```text\nPROMPT TEMPLATE - Story to test-case table\n----------------------------------------\nYou are a senior QA engineer.\nRequirement:\n<<paste the user story and any system rules here>>\n\nTask: Produce exactly <<N>> test cases. Include at least 2 negative and\n2 boundary cases. Do not invent features that are not in the requirement.\n\nFormat: a markdown table with columns: ID | Type | Steps | Expected\n----------------------------------------\n\nEXAMPLE OUTPUT (for a 'username must be 3-15 chars' rule):\n| ID   | Type     | Steps                          | Expected                         |\n| ---- | -------- | ------------------------------ | -------------------------------- |\n| TC01 | Positive | Enter 'anna' (4 chars), submit | Accepted                         |\n| TC02 | Boundary | Enter 3-char name, submit      | Accepted (min length)            |\n| TC03 | Boundary | Enter 15-char name, submit     | Accepted (max length)            |\n| TC04 | Negative | Enter 2-char name, submit      | Rejected: 'minimum 3 characters' |\n| TC05 | Negative | Enter 16-char name, submit     | Rejected: 'maximum 15 characters'|\n| TC06 | Negative | Leave field empty, submit      | Rejected: 'username required'    |\n```",
+    "interactive": "Take this weak prompt: 'give me tests for a search bar'. Rewrite it into a strong prompt using Role + Context + Task + Format, including at least two constraints and a named output format. Assume the search bar searches product names and shows 'No results' when nothing matches.",
+    "expected_answer": "A strong rewrite looks like: 'You are a senior QA engineer. Context: a product search bar that searches product names and displays \"No results found\" when there are no matches; queries are case-insensitive. Task: produce exactly 8 test cases including at least 2 negative and 2 boundary cases (e.g. empty query, very long query, special characters, leading/trailing spaces). Do not invent features not described. Format: a markdown table with columns ID, Type, Steps, Expected.' The learner should demonstrate all four parts, name a concrete format (table/JSON/Gherkin), pin a count, require negative and boundary categories, and add a guardrail against invented features.",
+    "homework": "Build a small personal prompt library of three reusable QA templates: (1) story-to-test-case table, (2) synthetic test data as CSV/JSON, and (3) messy-notes-to-bug-report. Each template must use the Role + Context + Task + Format pattern with placeholders and at least one constraint. Then run each template on a real example and submit both the templates and their (reviewed) outputs.",
+    "expected_result": "Three reusable prompt templates with clear placeholders and constraints, plus the actual outputs from running them on real inputs. A good submission shows each template follows Role + Context + Task + Format, specifies an exact output format, includes guardrails, and that the learner reviewed/corrected the outputs - demonstrating that precise prompting produced consistent, paste-ready QA artifacts.",
+    "quiz": [
+      {
+        "question": "Which prompt is most likely to produce a usable, paste-ready set of test cases?",
+        "answers": [
+          "'Write some tests for the login page.'",
+          "'You are a senior QA engineer. Given this requirement [...], produce exactly 8 test cases as a markdown table (ID, Type, Steps, Expected) with at least 2 negative cases; do not invent features.'",
+          "'Test login and make it good.'",
+          "'List everything that could go wrong with logins.'"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "What does few-shot prompting do for QA output?",
+        "answers": [
+          "It limits the AI to a few words per answer",
+          "It runs the prompt only a few times to save tokens",
+          "It shows the model one or two example input/output pairs so it matches your house style",
+          "It disables hallucinations entirely"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "Why specify an exact output format like a markdown table, JSON, or Gherkin in a QA prompt?",
+        "answers": [
+          "It guarantees the content is factually correct",
+          "It makes the AI faster",
+          "It is required by all AI tools",
+          "It makes the output structured and paste-ready instead of loose prose you must reshape"
+        ],
+        "correct_index": 3
+      },
+      {
+        "question": "Your first prompt returns a list missing negative cases and inventing a feature. What is the best next move?",
+        "answers": [
+          "Iterate: refine the prompt to add negative cases and a 'do not invent features' guardrail",
+          "Accept the output as-is since AI knows best",
+          "Abandon AI for this task permanently",
+          "Raise the temperature and hope for a better random result"
+        ],
+        "correct_index": 0
+      }
+    ]
+  }
+]

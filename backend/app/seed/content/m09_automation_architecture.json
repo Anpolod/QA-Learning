@@ -1,0 +1,415 @@
+[
+  {
+    "title": "Page Object Model",
+    "short_description": "This lesson teaches the Page Object Model (POM) design pattern for structuring UI automation so that locators and page interactions live in one reusable place instead of being scattered across tests.",
+    "learning_goals": "Explain what a Page Object is and why hard-coded locators inside tests make a suite brittle and expensive to maintain.\nDesign a Page Object class that exposes business-level methods (login, search, addToCart) instead of raw clicks and selectors.\nApply separation of concerns so that tests describe WHAT to verify and Page Objects describe HOW to interact with the page.\nRefactor a procedural test into a POM-based structure and recognize when extra layers (components, fluent page chaining) help or hurt.",
+    "theory": "The Page Object Model is a design pattern where each page (or significant UI component) of the application is represented by a class. That class holds the locators for the elements on the page and the methods that perform actions on them. A test never touches a CSS selector or an XPath directly; it calls a readable method like loginPage.loginAs('user', 'pass'). This is the single most important structural pattern in UI test automation.\n\nThe core reason POM exists is maintainability. Imagine 40 tests that each contain page.locator('#username'). If a developer renames that id to #user-email, you must edit 40 places. With POM, the locator lives once inside LoginPage, so a UI change is a one-line fix. This is the DRY principle (Don't Repeat Yourself) applied to automation, and it is what keeps a 500-test suite from collapsing under its own weight.\n\nA good Page Object exposes business actions, not mechanical clicks. Compare loginPage.enterUsername('a'); loginPage.enterPassword('b'); loginPage.clickSubmit(); with the cleaner loginPage.loginAs('a', 'b'). The second hides the mechanics and reads like a user story. The rule of thumb: methods on a Page Object should return either another Page Object (navigation) or data/state, and they should encapsulate waits so tests don't sprinkle sleeps everywhere.\n\nThere are two related variants worth knowing. The classic POM has one class per page. The Component Object pattern extracts reusable widgets (a navbar, a date picker, a product card) into their own classes that pages compose, which avoids duplicating a shared header across ten page classes. Playwright pushes this further with fixtures (covered in the next lesson) so Page Objects are injected automatically.\n\nKeep assertions OUT of Page Objects in most teams' conventions. The Page Object's job is interaction and state exposure; the test's job is to assert. This keeps a single page method reusable across a passing test and a negative test. Some teams allow thin verification helpers (assertErrorVisible) but the default discipline is: Page Object acts, test asserts.\n\nWhen NOT to over-engineer: a five-test smoke suite doesn't need a deep hierarchy. POM pays off as the suite grows. Start with one class per page, extract components only when duplication actually appears, and avoid premature abstraction that nobody can navigate.",
+    "key_terms": "Page Object, locator, encapsulation, DRY principle, Component Object, separation of concerns, maintainability, business-level method, fluent interface",
+    "real_world_example": "Your team's checkout flow has 28 automated tests. The frontend team rebuilds the cart and changes the 'Place Order' button from id=#submit-order to a data-testid=checkout-confirm. Without POM, you grep the whole suite and edit the selector in 28 files, risking a typo in each. With POM, you open CheckoutPage.ts, change one locator line, rerun the suite, and all 28 tests pass again. The fix takes two minutes instead of an afternoon, and that difference is exactly why interviewers ask about POM.",
+    "step_by_step": "1. Identify the pages and major components in the flow you want to automate (e.g. LoginPage, ProductsPage, CartPage).\n2. Create one class per page. In its constructor accept the page/driver object so the class can interact with the browser.\n3. Declare all locators for that page as fields or getters in one place at the top of the class.\n4. Add public methods named after user intentions (loginAs, searchFor, addProductToCart), each encapsulating the clicks, fills, and waits.\n5. Have navigation methods return the next Page Object so tests can chain (loginPage.loginAs(...) returns a ProductsPage).\n6. Write the test using only those methods; put every assertion in the test, not the Page Object.\n7. When two pages share a widget, extract it into a Component Object and compose it into both pages.",
+    "common_mistakes": "Putting assertions inside Page Objects, which couples interaction to one specific expectation and kills reuse.\nExposing raw locators publicly so tests still reference selectors and the abstraction leaks.\nCreating one giant 'BasePage' god-class with hundreds of unrelated methods instead of focused page classes.\nAdding hard-coded sleeps inside methods instead of proper waits, making the suite slow and flaky.\nOver-engineering a tiny suite with deep inheritance before any real duplication exists.",
+    "practical_use_case": "Every serious UI automation framework you join (Playwright, Selenium, Cypress with custom commands) is organized around Page Objects or an equivalent. Day to day you add a new method to an existing Page Object when a feature gains a button, create a new Page Object when a new screen ships, and fix a single locator when the UI changes. It is the structural backbone you work in constantly.",
+    "summary": "The Page Object Model centralizes a page's locators and interactions into a reusable class so tests stay readable and a UI change is a one-place fix. Expose business-level methods, keep assertions in the tests, and extract shared widgets into Component Objects as duplication appears. It is the maintainability backbone of UI automation.",
+    "example": "A Playwright + TypeScript Page Object and a test that uses it:\n\n```typescript\n// pages/LoginPage.ts\nimport { Page, Locator } from '@playwright/test';\n\nexport class LoginPage {\n  readonly page: Page;\n  readonly username: Locator;\n  readonly password: Locator;\n  readonly submit: Locator;\n  readonly error: Locator;\n\n  constructor(page: Page) {\n    this.page = page;\n    this.username = page.getByTestId('username');\n    this.password = page.getByTestId('password');\n    this.submit = page.getByRole('button', { name: 'Log in' });\n    this.error = page.getByRole('alert');\n  }\n\n  async goto() {\n    await this.page.goto('/login');\n  }\n\n  async loginAs(user: string, pass: string) {\n    await this.username.fill(user);\n    await this.password.fill(pass);\n    await this.submit.click();\n  }\n}\n```\n\n```typescript\n// tests/login.spec.ts\nimport { test, expect } from '@playwright/test';\nimport { LoginPage } from '../pages/LoginPage';\n\ntest('valid login lands on dashboard', async ({ page }) => {\n  const login = new LoginPage(page);\n  await login.goto();\n  await login.loginAs('standard_user', 'secret_sauce');\n  await expect(page).toHaveURL(/.*dashboard/);\n});\n\ntest('invalid login shows error', async ({ page }) => {\n  const login = new LoginPage(page);\n  await login.goto();\n  await login.loginAs('standard_user', 'wrong');\n  await expect(login.error).toContainText('do not match');\n});\n```",
+    "interactive": "You are given this brittle test:\nawait page.fill('#search', 'laptop'); await page.click('.search-btn'); await page.click('.product:first-child .add'); expect(await page.textContent('.cart-count')).toBe('1');\nRefactor it into a ProductsPage class and a clean test. Show the class with locators and at least two business-level methods (searchFor, addFirstResultToCart) and the rewritten test with the assertion left in the test.",
+    "expected_answer": "A strong answer defines a ProductsPage class whose constructor takes the page, declares the three locators (search input, search button, first product's add button, cart count) as fields, and exposes async searchFor(term) and async addFirstResultToCart() methods that contain the fills and clicks plus appropriate waits. The rewritten test instantiates ProductsPage, calls products.searchFor('laptop') then products.addFirstResultToCart(), and only then asserts cart count equals '1' in the TEST, not in the page object. Bonus points for noting the assertion stays out of the Page Object and for using stable locators (data-testid / getByRole) rather than fragile CSS like .product:first-child.",
+    "homework": "Take a public demo app (e.g. saucedemo.com) and build a small POM framework: LoginPage and InventoryPage classes plus three tests (valid login, invalid login shows error, add two items and verify the cart badge shows 2). All locators must live in the page classes, methods must be business-level, and every assertion must be in the test files.",
+    "expected_result": "A submission with separate page-class files and test files. Page classes contain all locators and expose intention-revealing methods with built-in waits; tests contain only method calls plus assertions. The invalid-login test asserts on an error message, the cart test asserts the badge equals 2, and there are no raw selectors or assertions inside the page classes. Tests should pass when run.",
+    "quiz": [
+      {
+        "question": "What is the primary maintainability benefit of the Page Object Model?",
+        "answers": [
+          "It makes tests run faster by parallelizing the browser",
+          "A locator that changes in the UI is updated in one place instead of in every test",
+          "It removes the need to write any assertions",
+          "It automatically generates test data"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Where should assertions normally live in a POM-based suite?",
+        "answers": [
+          "Inside each Page Object method",
+          "In a shared BasePage class",
+          "In the test files, not the Page Objects",
+          "In the locators themselves"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "Which method signature best follows the 'business-level method' principle?",
+        "answers": [
+          "loginPage.loginAs(user, password)",
+          "loginPage.clickElementById('#submit')",
+          "loginPage.getUsernameLocator()",
+          "loginPage.sleep(3000)"
+        ],
+        "correct_index": 0
+      },
+      {
+        "question": "When should you extract a Component Object instead of leaving code in a Page Object?",
+        "answers": [
+          "Always, for every single element",
+          "Never; Component Objects are an anti-pattern",
+          "When a widget (e.g. a navbar) is shared across multiple pages and would otherwise be duplicated",
+          "Only when the page has more than 1000 lines"
+        ],
+        "correct_index": 2
+      }
+    ]
+  },
+  {
+    "title": "Fixtures",
+    "short_description": "This lesson explains test fixtures: reusable setup-and-teardown building blocks that prepare the state a test needs and clean it up afterward, with concrete examples in pytest and Playwright.",
+    "learning_goals": "Define what a fixture is and how it separates setup/teardown from the test body to keep tests focused and readable.\nUse fixture scopes (function, class, module, session) and understand the cost/isolation trade-off each one makes.\nWrite fixtures that provide resources (a logged-in page, a seeded database record, an API client) and tear them down reliably even when a test fails.\nCompose fixtures (one depending on another) and parametrize them, and recognize when a fixture beats plain setUp/tearDown.",
+    "theory": "A fixture is a reusable piece of code that prepares the preconditions a test needs and, crucially, cleans them up afterward. Instead of every test repeating 'open browser, log in, create a user, then later delete that user', you write that logic once as a fixture and inject it into any test that asks for it. Fixtures answer the question: what must be true before this test runs, and what must be undone after?\n\nThe biggest advantage over old-style setUp/tearDown methods is dependency injection and granularity. In pytest, a test simply declares the fixture it needs as a function argument (def test_x(logged_in_user):) and pytest supplies it. A test only pays for the fixtures it actually requests, fixtures can depend on other fixtures, and the framework wires them together automatically. This is far more flexible than a single setUp that runs before every method whether needed or not.\n\nScope controls how often a fixture is created, and it is the key decision. function scope (the default) creates a fresh instance for every test, giving maximum isolation but maximum cost. session scope creates it once for the entire test run, which is fast but shared state risks leaking between tests. Common middle grounds are module and class scope. A rule: use the narrowest scope that still keeps tests isolated; widen it only for expensive resources like a database connection or a browser context where re-creation dominates runtime.\n\nProper teardown is what makes fixtures reliable. In pytest the yield keyword splits a fixture: code before yield is setup, code after yield is teardown, and the teardown runs even if the test fails, which prevents leaked test data and orphaned resources. This guarantee is why fixtures are safer than ad-hoc setup at the top of a test, where a failure mid-test can skip cleanup.\n\nFixtures compose. A db_session fixture can be requested by a seeded_user fixture, which is requested by an authenticated_client fixture, which a test requests. pytest builds the whole chain on demand. Fixtures can also be parametrized so one fixture definition runs the dependent tests once per parameter (e.g. once per browser, once per user role), multiplying coverage without copying test code.\n\nPlaywright Test has its own fixture system that is central to its design: the built-in page, context, and browser fixtures are injected into every test, and you define your own (like a loginPage Page Object fixture) by extending the base test. Understanding fixtures is therefore not optional pytest trivia; it is how modern frameworks manage state.",
+    "key_terms": "fixture, setup, teardown, scope (function/class/module/session), yield, dependency injection, conftest.py, parametrization, fixture composition",
+    "real_world_example": "Your API tests each need a fresh authenticated user. Early on, each test created a user and forgot to delete it, so after a week the test database had 4,000 junk users and tests started colliding on unique-email constraints. You replace the inline setup with a pytest fixture: it POSTs to /users to create the account, yields the auth token to the test, and after yield issues DELETE /users/{id}. Now every test runs against a clean account that is removed regardless of pass or fail, and the database stops accumulating garbage.",
+    "step_by_step": "1. Identify the precondition your tests repeat (a logged-in session, a seeded record, a configured client).\n2. Write a fixture function that performs the setup and returns or yields the resource the test needs.\n3. If cleanup is required, use yield: put setup before it, hand the resource to the test at yield, and put teardown after it.\n4. Choose the scope: function for full isolation, or a wider scope (module/session) for expensive shared resources.\n5. Place broadly shared fixtures in conftest.py so multiple test files can use them without imports.\n6. In the test, declare the fixture name as a parameter; the framework injects it automatically.\n7. Compose by having one fixture request another, and parametrize the fixture when you want the same tests run across multiple inputs.",
+    "common_mistakes": "Using session scope for a fixture that mutates shared state, causing tests to pass or fail depending on order.\nDoing setup at the top of the test instead of a fixture, so cleanup is skipped when the test fails mid-way.\nForgetting teardown entirely and leaking test data, files, or browser contexts.\nMaking every fixture session-scoped for speed and then chasing flaky cross-test contamination bugs.\nDuplicating the same setup in many files instead of putting a shared fixture in conftest.py.",
+    "practical_use_case": "Almost every automated test you write requests at least one fixture: a database session, an HTTP client with auth, a temp directory, or a ready-to-use page. You add a new fixture whenever a precondition starts repeating, tune scope when the suite gets slow, and rely on yield-based teardown to keep the test environment clean across hundreds of runs in CI.",
+    "summary": "Fixtures package the setup and teardown a test depends on into a reusable, injectable unit, with yield guaranteeing cleanup even on failure. Scope (function to session) trades isolation against speed, and fixtures compose and parametrize to wire complex preconditions automatically. They are the standard way modern frameworks manage test state.",
+    "example": "A pytest fixture with yield-based teardown, scope, and composition:\n\n```python\n# conftest.py\nimport pytest\nimport requests\n\nBASE = \"https://api.example.com\"\n\n@pytest.fixture(scope=\"session\")\ndef api_base_url():\n    return BASE\n\n@pytest.fixture\ndef created_user(api_base_url):\n    # setup: create a throwaway user\n    payload = {\"email\": \"qa+test@example.com\", \"name\": \"Temp\"}\n    resp = requests.post(f\"{api_base_url}/users\", json=payload)\n    assert resp.status_code == 201\n    user = resp.json()\n\n    yield user  # the test runs here, receiving the user dict\n\n    # teardown: always runs, even if the test failed\n    requests.delete(f\"{api_base_url}/users/{user['id']}\")\n```\n\n```python\n# test_users.py\ndef test_user_is_retrievable(created_user, api_base_url):\n    user_id = created_user[\"id\"]\n    resp = requests.get(f\"{api_base_url}/users/{user_id}\")\n    assert resp.status_code == 200\n    assert resp.json()[\"email\"] == \"qa+test@example.com\"\n```",
+    "interactive": "Write a pytest fixture named tmp_config_file that creates a temporary JSON config file with the contents {\"env\": \"staging\"} before the test, yields its path to the test, and deletes the file afterward even if the test fails. Then write one test that reads the file and asserts the env value is 'staging'. Explain why yield is used instead of a return.",
+    "expected_answer": "A correct answer uses the tmp_path fixture (or tempfile) to build a file, writes json.dumps({'env': 'staging'}) into it, yields the path, and after the yield removes the file (or relies on tmp_path auto-cleanup, noting that). The test requests tmp_config_file, opens it, json.loads the content, and asserts data['env'] == 'staging'. The explanation should state that yield splits setup from teardown so the deletion runs even when the assertion fails, whereas return would leave no place to clean up. Strong answers mention that function scope (the default) keeps each test isolated.",
+    "homework": "Build a fixture-based test module for a small REST API (real or mocked). Create at least three fixtures: a session-scoped base_url, a function-scoped auth_token that logs in and yields a token, and a created_resource fixture that depends on auth_token, creates a record, yields it, and deletes it in teardown. Write three tests that use these fixtures and verify GET returns the resource, an unauthorized request returns 401, and the resource is gone after deletion.",
+    "expected_result": "A submission with a conftest.py (or fixtures in the test file) showing correct scopes, at least one fixture depending on another, and yield-based teardown that issues the DELETE. The three tests inject the fixtures by name, assert on status codes (200, 401), and demonstrate isolation (no leftover records). The auth_token fixture must be requested by created_resource, proving composition.",
+    "quiz": [
+      {
+        "question": "In a pytest fixture, what does the code AFTER the yield statement do?",
+        "answers": [
+          "It runs the test body",
+          "It performs teardown/cleanup and runs even if the test fails",
+          "It is dead code that never executes",
+          "It defines the fixture's return value"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Which fixture scope creates a fresh instance for every single test, giving the most isolation?",
+        "answers": [
+          "session",
+          "module",
+          "function",
+          "class"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "What is the main risk of using session scope for a fixture that modifies shared data?",
+        "answers": [
+          "It makes the suite run slower",
+          "State can leak between tests, making results depend on test order",
+          "pytest cannot inject it",
+          "Teardown will never run"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "How does a pytest test request a fixture?",
+        "answers": [
+          "By importing it at the top of the file",
+          "By calling fixture() inside the test",
+          "By declaring the fixture's name as a parameter of the test function",
+          "By annotating the test with @fixture"
+        ],
+        "correct_index": 2
+      }
+    ]
+  },
+  {
+    "title": "Test data",
+    "short_description": "This lesson covers how automated tests get and manage their data: static fixtures versus generated data, factories and faker, data-driven parametrization, and keeping tests isolated and repeatable.",
+    "learning_goals": "Choose the right test-data strategy (hard-coded, factory-generated, faker-randomized, or externalized) for a given test and justify it.\nDesign data-driven tests with parametrization that cover boundary and equivalence values without copying test code.\nKeep tests independent and repeatable by creating and cleaning their own data instead of depending on a shared mutable dataset.\nApply boundary-value and equivalence-partitioning thinking to pick the specific values your automated tests should feed in.",
+    "theory": "Test data is every input a test feeds the system and every precondition record it relies on. How you manage it largely determines whether your suite is reliable or a flaky mess. The central tension is between control (deterministic, hard-coded values you can assert on exactly) and coverage (varied, realistic data that finds more bugs). Good suites use both deliberately.\n\nThere are four common sources. Hard-coded literals are simplest and best when the exact value matters (asserting a discount is exactly 10.00). Factories build valid domain objects with sensible defaults and let a test override only the field it cares about (a user with role='admin', everything else defaulted). Fakers (the Faker library) generate realistic random values like names, emails, and addresses, which is great for filling forms and stress-varying input but bad when a test must assert an exact value. External data lives in CSV/JSON/YAML files or a seeded database and is loaded at runtime, useful for large or business-owned datasets.\n\nData-driven testing runs the same test logic against many inputs via parametrization. Instead of copy-pasting a test five times for five inputs, you declare a table of (input, expected) rows and the framework generates one test case per row. This is where boundary-value analysis pays off: for a quantity field valid from 1 to 99, you parametrize the meaningful values 0 (just below min, expect rejection), 1 (min, accept), 99 (max, accept), 100 (just above max, reject), plus an equivalence-class middle value like 50. Five rows, one test body, real coverage of the edges where bugs hide.\n\nIsolation and repeatability are non-negotiable. A test must not depend on data another test created, and it must produce the same result whether run alone, in a suite, or twice in a row. The dangerous anti-pattern is sharing one mutable seeded record across tests: one test edits it, another asserts the old value, and you get order-dependent failures. The fix is each test creates the data it needs (often via a fixture) and cleans it up, or uses unique values (timestamps, UUIDs) to avoid collisions on unique constraints.\n\nSensitive and environment-specific data needs care. Never commit real customer data or production credentials into test files. Use synthetic data, anonymize where you must use real-shaped data, and keep secrets in environment variables or a vault, not in the repo. For data that must be stable across runs (a reference product catalog), seed it deterministically and treat it as read-only in tests.",
+    "key_terms": "test data, fixture data, factory, Faker, data-driven testing, parametrization, boundary value analysis, equivalence partitioning, test isolation, synthetic data",
+    "real_world_example": "A registration test hard-codes the email qa@test.com. It passes the first time, then fails on every rerun because the account already exists and the API returns HTTP 409 Conflict. The flakiness wastes a morning of debugging. The fix: generate a unique email per run, e.g. f\"qa+{uuid4().hex}@test.com\", so each test creates a fresh account, and add teardown that deletes it. Now the test is repeatable and order-independent, which is exactly what reviewers expect from a senior automation engineer.",
+    "step_by_step": "1. For each test, decide whether the exact value matters (hard-code it) or only its shape matters (generate it with a factory/faker).\n2. For inputs with ranges, list the boundary values (min-1, min, max, max+1) and one representative middle value via equivalence partitioning.\n3. Turn repeated near-identical tests into one parametrized data-driven test with a table of (input, expected) rows.\n4. Make data unique where uniqueness is enforced (UUID, timestamp suffix) to avoid collisions across runs.\n5. Have each test create its own data in setup and remove it in teardown so tests stay isolated.\n6. Keep large or business-owned datasets in external files/seed scripts and load them at runtime rather than inlining.\n7. Never commit real credentials or PII; use synthetic data and store secrets in env vars.",
+    "common_mistakes": "Reusing a fixed value like qa@test.com so the test passes once then fails on rerun due to duplicate-key/409 errors.\nDepending on data another test created or on the order tests run in, producing intermittent failures.\nUsing random faker values where the test must assert an exact value, making assertions impossible or wrong.\nTesting only one happy-path value and skipping boundaries (0, 1, max, max+1) where real defects live.\nCommitting real customer data or production credentials into the test repository.",
+    "practical_use_case": "Every test you write needs data, so this is daily work: you parametrize a validation test across boundary values, write a factory so creating a valid Order in a test is one line, generate unique emails to keep registration tests repeatable, and load a product catalog from a seed file. When a test is flaky, the cause is very often shared or non-unique data.",
+    "summary": "Test data strategy balances control (hard-coded values you assert on) against coverage (factories and fakers for variety). Use data-driven parametrization to hit boundary and equivalence values cheaply, keep every test isolated by creating and cleaning its own unique data, and never commit real PII or secrets. Most flakiness traces back to shared or non-unique data.",
+    "example": "A data-driven boundary-value test in pytest with a factory and unique data:\n\n```python\nimport uuid\nimport pytest\n\ndef make_user(**overrides):\n    \"\"\"Factory: valid defaults, override only what you care about.\"\"\"\n    user = {\n        \"email\": f\"qa+{uuid.uuid4().hex}@test.com\",  # unique per call\n        \"name\": \"Test User\",\n        \"age\": 30,\n    }\n    user.update(overrides)\n    return user\n\n# Boundary-value analysis for age valid range 18..99\n@pytest.mark.parametrize(\"age, expected_valid\", [\n    (17, False),  # min - 1\n    (18, True),   # min\n    (50, True),   # equivalence-class middle\n    (99, True),   # max\n    (100, False), # max + 1\n])\ndef test_age_validation(age, expected_valid):\n    user = make_user(age=age)\n    result = is_registration_allowed(user)  # system under test\n    assert result == expected_valid\n\n\ndef is_registration_allowed(user):\n    return 18 <= user[\"age\"] <= 99\n```",
+    "interactive": "A coupon code field accepts strings 4 to 12 characters long. Using boundary-value analysis and equivalence partitioning, list the exact input values you would feed a data-driven test and the expected result (accept/reject) for each. Then write the @pytest.mark.parametrize table that encodes them.",
+    "expected_answer": "A strong answer lists: length 3 -> reject (min-1), length 4 -> accept (min), a middle length like 8 -> accept (valid equivalence class), length 12 -> accept (max), length 13 -> reject (max+1), plus optionally empty string -> reject. It then writes a parametrize table such as [(\"abc\", False), (\"abcd\", True), (\"abcdefgh\", True), (\"abcdefghijkl\", True), (\"abcdefghijklm\", False)] with a single test body asserting the validator's result equals the expected flag. Bonus: noting that only edges and one representative per class are needed, not every length, which is the whole point of equivalence partitioning.",
+    "homework": "Take a signup form with three fields (username 3-20 chars, age 18-65, email format). Design a test-data plan: a factory function with valid defaults, a parametrized data-driven test for each field's boundaries, and unique-data handling so tests are rerunnable. Implement it in pytest with at least 12 parametrized cases total and add teardown if you persist anything.",
+    "expected_result": "A submission containing a factory with sensible defaults and per-field overrides, three parametrized tests covering min-1/min/middle/max/max+1 for the numeric and length fields plus valid/invalid formats for email, and unique values (UUID/timestamp) where collisions could occur. Tests must be independent and pass on a second consecutive run, demonstrating repeatability. PII and secrets must not be hard-coded.",
+    "quiz": [
+      {
+        "question": "Why does hard-coding a fixed email like qa@test.com in a registration test often cause flakiness?",
+        "answers": [
+          "Faker cannot generate emails",
+          "On reruns the account already exists, so the API returns a conflict (e.g. HTTP 409)",
+          "Emails are not valid test data",
+          "Parametrization forbids string values"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "For a quantity field valid from 1 to 99, which set best reflects boundary-value analysis?",
+        "answers": [
+          "1, 2, 3, 4, 5",
+          "50 only",
+          "0, 1, 99, 100",
+          "Random values between 1 and 99"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "When is the Faker library a POOR choice for test data?",
+        "answers": [
+          "When filling many form fields with realistic-looking values",
+          "When the test must assert on an exact, known value",
+          "When generating unique usernames",
+          "When stress-varying input data"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "What is the main benefit of data-driven (parametrized) testing?",
+        "answers": [
+          "It runs the same test logic across many inputs without duplicating the test body",
+          "It removes the need for assertions",
+          "It guarantees tests never fail",
+          "It hides test data from the report"
+        ],
+        "correct_index": 0
+      }
+    ]
+  },
+  {
+    "title": "Test structure",
+    "short_description": "This lesson covers how to structure individual tests and a whole test project: the Arrange-Act-Assert pattern, naming, the test pyramid, organizing files, and writing tests that are isolated, readable, and trustworthy.",
+    "learning_goals": "Write individual tests using the Arrange-Act-Assert (AAA) pattern with a clear single responsibility per test.\nName tests and organize folders so a failure report tells you what broke without opening the code.\nApply the test pyramid to decide how many unit, integration, and end-to-end tests to write and why.\nMake tests independent, deterministic, and free of inter-test order dependencies so they can run in parallel and in CI.",
+    "theory": "Test structure operates at two levels: the structure of a single test, and the structure of the whole project. Getting both right is what separates a suite people trust from one they ignore because 'the tests are always red'.\n\nInside a single test, the dominant pattern is Arrange-Act-Assert (AAA), also called Given-When-Then in BDD. Arrange sets up the preconditions and inputs. Act performs the one action under test. Assert checks the outcome. Keeping these three phases visually separated makes a test readable in seconds. The matching discipline is one logical assertion target per test: a test should verify one behavior so that when it fails, the name alone tells you what is broken. A test that arranges, acts, asserts, acts again, asserts again is really two tests and should be split.\n\nNaming is part of structure. A good test name states the scenario and expected outcome: test_login_with_invalid_password_shows_error or addItem_whenCartIsFull_throwsException. When CI prints a red line, that name should be a sentence you understand without reading the body. Avoid names like test1 or test_login that say nothing about the case.\n\nAt the project level, the test pyramid guides the mix. The base is many fast, cheap unit tests (test one function/class in isolation). The middle is fewer integration tests (test that components work together, e.g. service plus database, or an API endpoint end to end on the server). The top is a small number of slow, expensive end-to-end/UI tests that drive the real app through a browser. The shape matters because UI tests are slow and flaky; relying on them for everything (the 'ice-cream cone' anti-pattern) gives a suite that takes an hour and fails randomly. Push coverage down the pyramid where it is fast and stable.\n\nIndependence and determinism are the qualities that make structure pay off. Each test must set up its own state and not rely on another test having run first, so tests can execute in any order and in parallel across CI workers. Determinism means the same code gives the same result every run; the enemies are real time/dates, network calls to flaky services, random data the test asserts on, and shared mutable state. Control those (freeze time, mock external services, seed randomness, isolate data) and red means a real bug, not noise.\n\nFolder layout supports all this. A common structure mirrors the app (tests/unit, tests/integration, tests/e2e), groups page objects and fixtures in their own directories, and uses a conftest.py or equivalent for shared setup. The goal is that a new engineer can find where a test should go and where to add a shared helper without asking.",
+    "key_terms": "Arrange-Act-Assert, Given-When-Then, test pyramid, single responsibility, test isolation, deterministic test, flaky test, test naming convention, unit vs integration vs e2e",
+    "real_world_example": "Your CI run takes 52 minutes and fails about one in four times with no code change, so the team has started clicking 'rerun' on red builds and ignoring failures. You audit the suite and find 80% are slow UI end-to-end tests (an ice-cream cone) and many share a seeded admin account that tests mutate. You restructure: move validation and calculation logic into fast unit tests, keep a thin layer of integration tests, and cut UI tests to a critical-path smoke set. Each test now creates its own data. CI drops to 9 minutes and red once again means a real bug, so people stop ignoring it.",
+    "step_by_step": "1. For each test, write the three AAA blocks explicitly: arrange inputs/preconditions, perform one action, assert one behavior.\n2. Name the test as scenario_plus_expected_outcome so a failure line is self-explanatory.\n3. Ensure the test creates its own state and does not depend on other tests or run order.\n4. Remove sources of non-determinism: freeze time, mock external services, seed randomness, isolate data.\n5. Classify the test as unit, integration, or e2e and put coverage at the lowest level that can verify the behavior.\n6. Place it in the matching folder (tests/unit, tests/integration, tests/e2e) and reuse shared setup via fixtures/conftest.\n7. Periodically check the pyramid shape: if e2e tests dominate and CI is slow/flaky, push logic-level checks down to unit tests.",
+    "common_mistakes": "Writing one giant test that exercises many behaviors, so a failure does not tell you which behavior broke.\nTests that depend on execution order or on data left behind by a previous test, breaking under parallel runs.\nVague names like test_login that give no information in the CI failure report.\nAn ice-cream-cone suite (mostly slow UI tests) that is slow and flaky instead of a pyramid.\nNon-deterministic tests using real dates, live network calls, or asserted random values, causing intermittent red.",
+    "practical_use_case": "You apply this every time you write or review a test: structuring it as AAA, naming it clearly, deciding it should be a unit test rather than a UI test, and ensuring it cleans up after itself. In code review you flag a test that mixes two behaviors or depends on another test. When CI is slow or flaky, you reach for the pyramid and determinism principles to fix it.",
+    "summary": "Structure tests internally with Arrange-Act-Assert and one behavior per test, name them so failures explain themselves, and keep them isolated and deterministic so they run in any order. At the project level, follow the test pyramid: many fast unit tests, fewer integration tests, few e2e tests. This produces a fast suite where red reliably means a real bug.",
+    "example": "A well-structured pytest test showing AAA, clear naming, and isolation:\n\n```python\nimport pytest\nfrom shop import Cart, Product, CartFullError\n\nMAX_ITEMS = 50\n\n\ndef test_add_item_increases_cart_count_by_one():\n    # Arrange\n    cart = Cart()\n    product = Product(id=\"p1\", price=9.99)\n\n    # Act\n    cart.add(product)\n\n    # Assert (single behavior)\n    assert cart.count() == 1\n\n\ndef test_add_item_when_cart_is_full_raises_error():\n    # Arrange: fill the cart to its max\n    cart = Cart()\n    for i in range(MAX_ITEMS):\n        cart.add(Product(id=f\"p{i}\", price=1.00))\n\n    # Act + Assert: the boundary action raises\n    with pytest.raises(CartFullError):\n        cart.add(Product(id=\"overflow\", price=1.00))\n```\n\nEach test builds its own cart (isolation), follows Arrange-Act-Assert, checks exactly one behavior, and is named so a red line in CI reads as a sentence.",
+    "interactive": "You are handed this test:\ndef test_user(): u = get_shared_user(); u.name = 'X'; assert u.name == 'X'; u.deactivate(); assert u.active == False; assert db.count_users() == 1\nIdentify three structural problems and rewrite it into properly structured test(s). Explain your changes.",
+    "expected_answer": "A strong answer identifies: (1) it uses a shared user (get_shared_user) and mutates it, breaking isolation and order-independence; (2) it tests multiple behaviors (rename, deactivate, global user count) so a failure is ambiguous and it violates single responsibility; (3) the assert on db.count_users()==1 depends on global state another test could change, making it non-deterministic; the name test_user is uninformative. The rewrite splits into separate tests each creating its own user via a fixture/factory: e.g. test_rename_user_updates_name, test_deactivate_user_sets_inactive, each following Arrange-Act-Assert, with descriptive names and no reliance on shared/global state. Removing the global count assertion or scoping it to the created user is also valid.",
+    "homework": "Take an existing small test file (yours or an open-source one) and restructure it. Deliver: every test rewritten in explicit Arrange-Act-Assert with a self-describing name, each test made independent (creates its own data, no order dependency), a short note classifying each as unit/integration/e2e, and a one-paragraph analysis of whether the file's mix matches the test pyramid with one improvement suggestion.",
+    "expected_result": "A submission where each test has visible AAA structure, a scenario+outcome name, and no cross-test dependencies; tests pass when run in a shuffled order. The classification note correctly labels unit vs integration vs e2e, and the pyramid analysis identifies the actual shape (e.g. too many e2e) with a concrete suggestion to push a check down to a faster level.",
+    "quiz": [
+      {
+        "question": "What do the three phases of the Arrange-Act-Assert pattern represent?",
+        "answers": [
+          "Set up preconditions, perform the action under test, verify the outcome",
+          "Allocate memory, run the app, assert performance",
+          "Arrange files, act on the database, assert logs",
+          "Authentication, Authorization, Access"
+        ],
+        "correct_index": 0
+      },
+      {
+        "question": "According to the test pyramid, which type of test should be the MOST numerous?",
+        "answers": [
+          "End-to-end UI tests",
+          "Manual exploratory tests",
+          "Unit tests",
+          "Performance tests"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "Why should a test create its own data instead of using a shared seeded record other tests mutate?",
+        "answers": [
+          "To make the test file longer",
+          "To keep tests isolated and order-independent so they can run in parallel",
+          "Because shared data is illegal",
+          "To slow the suite down on purpose"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Which test name best follows good naming conventions?",
+        "answers": [
+          "test1",
+          "test_login",
+          "test_thing",
+          "test_login_with_invalid_password_shows_error"
+        ],
+        "correct_index": 3
+      }
+    ]
+  },
+  {
+    "title": "API automation",
+    "short_description": "This lesson introduces automated API testing: validating REST endpoints directly via HTTP, checking status codes, response bodies, headers, and contracts, and why API tests are faster and more stable than UI tests.",
+    "learning_goals": "Send automated HTTP requests (GET/POST/PUT/PATCH/DELETE) and assert on status codes, JSON bodies, headers, and response time.\nValidate the happy path plus negative and edge cases (auth failures, validation errors, not-found) using correct HTTP semantics.\nUnderstand why API tests sit in the middle of the pyramid: faster and more stable than UI tests, broader than unit tests.\nChain requests, handle authentication tokens, and assert against a schema/contract rather than only exact values.",
+    "theory": "API automation tests the application at its HTTP interface, below the UI. Instead of clicking buttons, the test sends a request directly to an endpoint and inspects the response. Because there is no browser, these tests are dramatically faster (milliseconds, not seconds), far more stable (no flaky element waits), and they can exercise logic the UI does not even expose. This is why API tests form the strong middle layer of the test pyramid.\n\nThe foundation is HTTP. You must know the methods and their intent: GET reads, POST creates, PUT replaces, PATCH partially updates, DELETE removes. You must know status-code families: 2xx success (200 OK, 201 Created, 204 No Content), 3xx redirects, 4xx client errors (400 Bad Request for invalid input, 401 Unauthorized when not authenticated, 403 Forbidden when authenticated but not allowed, 404 Not Found, 409 Conflict for duplicates), and 5xx server errors (500 Internal Server Error). A large part of API testing is asserting the right status code for the right scenario, and beginners constantly confuse 401 vs 403 and 400 vs 422.\n\nA complete API assertion checks more than the status code. You verify the response body (the right fields with the right types and values), key headers (Content-Type: application/json, caching, auth-related headers), and often response time against an SLA. For bodies, prefer asserting on structure and types (schema/contract validation) over brittle exact-match on every field, especially for values like generated ids or timestamps that change each run. JSON Schema validation lets you assert 'id is a string, price is a number >= 0, status is one of [active, inactive]' without pinning exact values.\n\nReal API tests go beyond a single happy-path call. You test negative cases: POST with a missing required field should return 400/422, a request without a token should return 401, accessing another user's resource should return 403, GET on a deleted id should return 404, and creating a duplicate should return 409. You also chain requests: create a resource with POST, capture the returned id, GET it to confirm it persisted, then DELETE it and confirm a follow-up GET returns 404. This create-read-delete chain is a classic, high-value API test.\n\nAuthentication is part of the workflow. Most APIs require a token (often a Bearer token in the Authorization header) or an API key. A typical test first authenticates (or uses a fixture that yields a token), then attaches that token to subsequent requests. Idempotency matters too: GET, PUT, and DELETE should be safe to repeat, while POST usually is not, and your tests can verify this behavior.\n\nTools range from libraries (Python requests/httpx, JavaScript fetch/axios, Playwright's APIRequestContext, Rest Assured in Java) to GUI tools (Postman/Newman) for exploration and collection runs. In a code-based suite you combine an HTTP client with a test runner (pytest, Playwright Test) and fixtures for setup, applying everything from the earlier lessons: AAA structure, isolated unique data, and schema-based assertions.",
+    "key_terms": "REST, HTTP methods (GET/POST/PUT/PATCH/DELETE), status codes (200/201/400/401/403/404/409/500), request/response body, headers, Bearer token, JSON Schema/contract testing, idempotency",
+    "real_world_example": "The login UI test is flaky and slow, so you move coverage to the API. You write tests against POST /auth/login: valid credentials return 200 with a token field that is a non-empty string; a wrong password returns 401; a missing password field returns 400; a locked account returns 403. Then you chain: log in, take the token, call GET /me with Authorization: Bearer <token> and assert it returns 200 with the right user id; call GET /me with no token and assert 401. These run in under a second total, never flake on a slow page load, and catch auth-logic regressions the UI test missed.",
+    "step_by_step": "1. Read the API contract/docs: endpoints, methods, required fields, auth scheme, and expected status codes.\n2. Set up an HTTP client and a base URL, and a fixture that authenticates and yields a token if auth is needed.\n3. Write the happy-path test: send the request, assert the success status (e.g. 201 Created) and validate the response body/schema.\n4. Add negative tests: missing/invalid fields (400/422), no auth (401), forbidden (403), not found (404), duplicate (409).\n5. Validate body structure and types with schema assertions rather than brittle exact matches on generated values.\n6. Chain related requests: create, then read to confirm persistence, then delete, then confirm a follow-up read returns 404.\n7. Keep data unique and clean up created resources in teardown so tests stay isolated and rerunnable.",
+    "common_mistakes": "Asserting only the status code and never checking the response body or headers, so wrong data passes silently.\nConfusing 401 (not authenticated) with 403 (authenticated but not allowed), or 400 with 404.\nExact-matching fields that change every run (ids, timestamps) instead of validating type/schema, causing false failures.\nOnly testing the happy path and skipping auth failures, validation errors, and not-found cases.\nLeaking created resources by not deleting them in teardown, so reruns hit duplicate/409 errors.",
+    "practical_use_case": "API tests are the workhorse of most automation suites: you write them for every new endpoint, run them on every pull request because they finish in seconds, and use them to cover business logic and edge cases that would be slow and brittle through the UI. When a UI bug appears, an API test quickly tells you whether the problem is in the backend or the frontend.",
+    "summary": "API automation drives the application directly over HTTP, making tests fast and stable. A complete test asserts the correct status code, validates the body and headers (preferably against a schema), and covers negative cases like 401, 403, 404, and 409 in addition to the happy path. Chaining create-read-delete with unique, cleaned-up data gives high-value, rerunnable coverage.",
+    "example": "A pytest API test using requests: happy path, negative case, and a create-read-delete chain with schema-style checks:\n\n```python\nimport uuid\nimport requests\n\nBASE = \"https://api.example.com\"\n\ndef auth_headers(token):\n    return {\"Authorization\": f\"Bearer {token}\"}\n\ndef test_create_then_fetch_then_delete_product(token):\n    # Arrange: unique payload so reruns don't collide\n    payload = {\"name\": f\"Widget-{uuid.uuid4().hex[:8]}\", \"price\": 19.99}\n\n    # Act: create\n    create = requests.post(f\"{BASE}/products\", json=payload, headers=auth_headers(token))\n    # Assert: 201 and body shape\n    assert create.status_code == 201\n    body = create.json()\n    assert isinstance(body[\"id\"], str)\n    assert body[\"price\"] == 19.99\n    product_id = body[\"id\"]\n\n    # Read back to confirm persistence\n    fetched = requests.get(f\"{BASE}/products/{product_id}\", headers=auth_headers(token))\n    assert fetched.status_code == 200\n    assert fetched.json()[\"name\"] == payload[\"name\"]\n\n    # Delete, then confirm it is gone\n    deleted = requests.delete(f\"{BASE}/products/{product_id}\", headers=auth_headers(token))\n    assert deleted.status_code == 204\n    missing = requests.get(f\"{BASE}/products/{product_id}\", headers=auth_headers(token))\n    assert missing.status_code == 404\n\ndef test_create_product_without_token_is_unauthorized():\n    resp = requests.post(f\"{BASE}/products\", json={\"name\": \"x\", \"price\": 1})\n    assert resp.status_code == 401\n```",
+    "interactive": "For an endpoint POST /orders that requires authentication and a body {item_id, quantity} where quantity must be 1-10, list the test cases you would automate. For each, give the request scenario and the exact expected HTTP status code, covering happy path and at least four negative/edge cases.",
+    "expected_answer": "A strong answer lists: valid order with token and quantity within range -> 201 Created; missing token -> 401 Unauthorized; quantity = 0 or 11 (boundary out of range) -> 400 (or 422) validation error; missing required field (no item_id) -> 400/422; item_id that does not exist -> 404 Not Found; quantity = 1 and quantity = 10 (boundaries) -> 201 accepted; possibly ordering on someone else's behalf or a forbidden item -> 403 Forbidden; duplicate idempotency-key order -> 409 Conflict. It should map each scenario to the correct status family and distinguish 401 (no auth) from 403 (auth but not allowed) and 400/422 (validation) from 404 (not found).",
+    "homework": "Pick a public test API (e.g. reqres.in, restful-api.dev, or a local app) and build an API test suite with at least eight tests: a create-read-update-delete chain plus negative cases for unauthorized (401), validation error (400/422), and not found (404). Use a fixture for the base URL/token, validate response bodies (not just status), keep data unique, and clean up created resources.",
+    "expected_result": "A submission with a fixture-based setup, a working CRUD chain that creates a resource, reads it back, updates it, deletes it, and confirms a follow-up GET returns 404, plus distinct negative tests asserting 401, 400/422, and 404. Assertions check body fields/types, not only status codes; data is unique per run and cleaned up so the suite passes on a second consecutive run.",
+    "quiz": [
+      {
+        "question": "A request is sent without an authentication token to a protected endpoint. Which status code is correct?",
+        "answers": [
+          "200 OK",
+          "401 Unauthorized",
+          "403 Forbidden",
+          "404 Not Found"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Why are API tests generally preferred over UI tests for covering business logic?",
+        "answers": [
+          "They require a real browser",
+          "They are slower but more thorough",
+          "They are faster and more stable because they skip the browser/UI layer",
+          "They cannot check status codes"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "When validating a response body that contains a generated id and timestamp, what is the best practice?",
+        "answers": [
+          "Assert the exact id and timestamp values",
+          "Validate the structure and types (schema) rather than exact generated values",
+          "Skip body validation entirely",
+          "Only check the response time"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "A user is logged in but tries to access another user's resource they are not allowed to see. Which status code is most appropriate?",
+        "answers": [
+          "401 Unauthorized",
+          "400 Bad Request",
+          "403 Forbidden",
+          "500 Internal Server Error"
+        ],
+        "correct_index": 2
+      }
+    ]
+  },
+  {
+    "title": "Playwright API testing",
+    "short_description": "This lesson shows how to test APIs using Playwright's built-in request fixture and APIRequestContext, including assertions, auth state reuse, and combining API setup with UI tests.",
+    "learning_goals": "Use Playwright's request fixture and APIRequestContext to send HTTP requests without spinning up a browser.\nAssert on responses with Playwright's expect, checking status with ok()/status() and validating JSON bodies.\nReuse authentication by acquiring a token or storageState via the API and applying it to later requests or UI tests.\nUse fast API calls to set up and tear down state for UI tests, making end-to-end tests faster and less flaky.",
+    "theory": "Playwright is best known for browser automation, but it ships a first-class API testing client, so you can write API tests and browser tests in the same framework, with the same runner, assertions, fixtures, and reporting. The entry point is the built-in request fixture (an APIRequestContext) injected into any test. Calling await request.get(url) or request.post(url, { data }) sends a real HTTP request with no browser involved, which makes these tests fast and stable.\n\nThe request methods mirror HTTP: request.get, request.post, request.put, request.patch, and request.delete. The post/put/patch calls take an options object where data sends a JSON body, params sets query string values, and headers sets headers like Authorization. Each call returns an APIResponse. You read it with response.status() for the numeric code, response.ok() (true for 2xx), response.json() to parse the body, response.text(), and response.headers().\n\nAssertions use Playwright's expect. You can assert on values you read (expect(response.status()).toBe(201)) and there is a response-aware matcher expect(response).toBeOK() that passes for 2xx and, on failure, prints the status and body to make debugging easy. For bodies you parse with await response.json() and assert on fields. This unifies API and UI assertions under one expect API with built-in auto-retry semantics on the web-first matchers.\n\nA major strength is authentication reuse. You can create an APIRequestContext that carries a baseURL and default headers (including a Bearer token) via request.newContext({ baseURL, extraHTTPHeaders }), so every subsequent call is pre-authenticated. Even more powerfully, you can log in once through the API, capture the resulting storageState (cookies and localStorage) to a file, and load it into browser tests so the UI starts already logged in, skipping a slow login through the page on every test. This is the standard Playwright pattern for fast authenticated suites.\n\nThe killer combination is using the API to arrange and clean up state for UI tests. Instead of clicking through five screens to create the precondition a UI test needs, you POST it via the API in milliseconds, then drive only the one screen under test in the browser, and DELETE the data via the API in teardown. This dramatically cuts e2e runtime and flakiness because most of the setup never touches the slow, brittle UI layer. You define this as a fixture so any test can request a ready-made resource.\n\nConfiguration ties it together: playwright.config sets baseURL, default headers, timeouts, and projects, so request calls can use relative paths and the suite runs consistently across environments. Everything from earlier lessons applies: Page Objects for UI, fixtures for setup, AAA structure, and unique isolated data.",
+    "key_terms": "APIRequestContext, request fixture, APIResponse, expect().toBeOK(), storageState, newContext, extraHTTPHeaders, baseURL, request.post data option",
+    "real_world_example": "Your e2e test 'admin can edit an existing article' used to log in through the UI, click New, fill a 6-field form, save, then finally test the edit, taking 40 seconds and failing whenever the create form lagged. You rewrite the setup: a fixture uses request.post('/api/articles', { data: {...}, headers: bearer }) to create the article in 80 ms and yields its id; the browser test navigates straight to /articles/{id}/edit, changes the title, and asserts the saved value; teardown calls request.delete to remove it. Runtime drops to 6 seconds, flakiness from the create form disappears, and the test now isolates exactly the edit behavior.",
+    "step_by_step": "1. In playwright.config set baseURL and any default headers so requests can use relative paths.\n2. In a test, accept the built-in request fixture and call request.get/post/put/delete with the path and options.\n3. For a body, pass { data: {...} }; for query params pass { params: {...} }; for auth pass { headers: { Authorization: 'Bearer ' + token } }.\n4. Assert with expect: use expect(response).toBeOK() or expect(response.status()).toBe(201), then await response.json() and assert fields.\n5. For authenticated suites, log in once via the API, save storageState to a file, and load it in browser projects so the UI starts logged in.\n6. Build a fixture that creates a resource via the API, yields it to the test, and deletes it in teardown.\n7. Use that fixture to arrange state for UI tests so the browser only drives the screen actually under test.",
+    "common_mistakes": "Spinning up a browser/page to test pure API behavior instead of using the lightweight request fixture.\nForgetting to await response.json() (or the request call), so assertions run on a pending promise.\nHard-coding absolute URLs and tokens in every test instead of using baseURL and a shared authenticated context.\nLogging in through the UI on every e2e test instead of reusing storageState for speed.\nCreating data via the API for UI tests but never deleting it in teardown, leaking state across runs.",
+    "practical_use_case": "On a Playwright project you constantly mix the two clients: pure API tests for backend coverage, and API calls to seed and clean up state so UI tests stay fast and focused. The storageState login-once pattern is standard for any authenticated app, and the request fixture is your go-to for verifying an endpoint quickly without the cost of a browser.",
+    "summary": "Playwright provides a full HTTP client via the request fixture and APIRequestContext, letting you write fast, browserless API tests with the same expect assertions and fixtures as UI tests. Reuse auth with storageState or a pre-authenticated context, and use quick API calls to arrange and tear down state for UI tests, cutting e2e runtime and flakiness. It unifies API and UI testing in one framework.",
+    "example": "Playwright API tests plus an API-driven fixture for UI setup (TypeScript):\n\n```typescript\nimport { test, expect, request } from '@playwright/test';\n\n// Pure API test using the built-in request fixture\ntest('GET product returns 200 and valid body', async ({ request }) => {\n  const res = await request.get('/api/products/42');\n  await expect(res).toBeOK();              // passes for any 2xx\n  expect(res.status()).toBe(200);\n  const body = await res.json();\n  expect(typeof body.id).toBe('string');\n  expect(body.price).toBeGreaterThanOrEqual(0);\n});\n\ntest('POST without auth is rejected with 401', async ({ request }) => {\n  const res = await request.post('/api/products', { data: { name: 'x', price: 1 } });\n  expect(res.status()).toBe(401);\n});\n```\n\n```typescript\n// fixtures.ts - create state via API, hand it to a UI test, clean up after\nimport { test as base, expect } from '@playwright/test';\n\ntype Fixtures = { articleId: string };\n\nexport const test = base.extend<Fixtures>({\n  articleId: async ({ request }, use) => {\n    const create = await request.post('/api/articles', {\n      data: { title: 'Draft', body: 'seeded via API' },\n      headers: { Authorization: `Bearer ${process.env.TOKEN}` },\n    });\n    expect(create.ok()).toBeTruthy();\n    const { id } = await create.json();\n    await use(id);                          // test runs here\n    await request.delete(`/api/articles/${id}`, {\n      headers: { Authorization: `Bearer ${process.env.TOKEN}` },\n    });                                     // teardown\n  },\n});\nexport { expect };\n```",
+    "interactive": "Write a Playwright API test that performs a create-then-read flow: POST to /api/users with { name: 'Neo' } and assert the response is 2xx and returns an id; then GET /api/users/{id} using that id and assert status 200 and that the returned name equals 'Neo'. Use the request fixture and Playwright's expect, and remember to await the responses and the json parsing.",
+    "expected_answer": "A correct answer defines an async test taking { request }, awaits request.post('/api/users', { data: { name: 'Neo' } }), asserts with expect(res).toBeOK() or expect(res.status()).toBe(201), awaits res.json() to read the id, then awaits request.get(`/api/users/${id}`), asserts status 200, awaits its json, and asserts body.name === 'Neo'. Key points graded: using the request fixture (not a browser), awaiting both the request calls and response.json(), using Playwright expect, and chaining the id from the first response into the second request. Bonus for adding a delete in teardown to keep it isolated.",
+    "homework": "Build a small Playwright project with both layers. Part A: at least four pure API tests against a public or local API (happy path 2xx, 401 without auth, 404 not found, and a create-read-delete chain) using the request fixture and expect. Part B: one UI test whose precondition is created via an API fixture (POST in setup, DELETE in teardown) so the browser only drives the screen under test. Configure baseURL in playwright.config.",
+    "expected_result": "A submission with a playwright.config setting baseURL, a fixtures file that creates and deletes a resource via request, at least four API tests covering the required status codes and a CRUD chain (with body assertions, not just status), and one UI test that relies on the API fixture for setup. Responses and json parsing are properly awaited, data is unique and cleaned up, and the suite passes on a rerun.",
+    "quiz": [
+      {
+        "question": "Which Playwright fixture lets you send HTTP requests without launching a browser?",
+        "answers": [
+          "page",
+          "browser",
+          "request (APIRequestContext)",
+          "context"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "What does expect(response).toBeOK() assert?",
+        "answers": [
+          "The response status is exactly 200",
+          "The response status is in the 2xx success range",
+          "The response body is valid JSON",
+          "The request completed in under one second"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "What is the main benefit of saving and reusing storageState in Playwright?",
+        "answers": [
+          "It makes API responses cacheable",
+          "It lets browser tests start already authenticated instead of logging in through the UI every time",
+          "It validates JSON schemas automatically",
+          "It runs tests in parallel"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Why use API calls to set up state for a UI test instead of clicking through the UI?",
+        "answers": [
+          "API setup is slower but more realistic",
+          "It is the only way to authenticate",
+          "API setup is much faster and less flaky, so the UI test focuses only on the screen under test",
+          "The UI cannot create data"
+        ],
+        "correct_index": 2
+      }
+    ]
+  },
+  {
+    "title": "Selenium test examples",
+    "short_description": "This lesson presents concrete, runnable Selenium WebDriver examples in Python: locating elements, interacting with forms, explicit waits, handling dropdowns and alerts, and structuring a basic Selenium test.",
+    "learning_goals": "Set up a Selenium WebDriver session and locate elements reliably using By strategies (id, css selector, xpath).\nInteract with forms, buttons, dropdowns, and alerts, and read element text/attributes to assert outcomes.\nReplace fragile sleeps with explicit waits (WebDriverWait + expected_conditions) to handle dynamic, asynchronous pages.\nStructure a complete Selenium test with proper driver setup and teardown, and recognize the most common sources of flakiness.",
+    "theory": "Selenium WebDriver is the long-standing, cross-browser, cross-language standard for browser automation, and it underpins a huge share of existing UI suites. A Selenium test drives a real browser through the WebDriver protocol: you start a driver (e.g. webdriver.Chrome()), navigate with driver.get(url), find elements, interact with them, and assert on the resulting state. Knowing Selenium is still essential because so many companies maintain Selenium suites even as newer tools appear.\n\nLocating elements is the heart of Selenium, done via driver.find_element(By.X, value). The By strategies are By.ID (fast and stable when available), By.NAME, By.CSS_SELECTOR (flexible and generally preferred), By.XPATH (most powerful, can match by text or traverse the DOM, but more brittle and slower), By.CLASS_NAME, and By.LINK_TEXT. The locator-quality lesson is universal: prefer stable, intention-revealing locators (an id or a data-testid via CSS) over deep, position-based XPath like /div[3]/span[2] that breaks on any layout change.\n\nInteraction is straightforward once you have an element: .click() presses it, .send_keys('text') types into an input, .clear() empties a field, .text reads visible text, and .get_attribute('value') reads attributes. Dropdowns built with the HTML select element use the Select helper class (Select(el).select_by_visible_text('Option')). JavaScript alerts/confirms are handled via driver.switch_to.alert.accept() or .dismiss(). For multi-step actions like hover or drag you use ActionChains.\n\nWaiting correctly is the single biggest skill that separates a stable Selenium suite from a flaky one. Modern pages load content asynchronously, so an element may not exist the instant the page 'loads'. The wrong fix is time.sleep(3), which is both slow (always waits the full time) and unreliable (sometimes still too short). The right tool is an explicit wait: WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.ID, 'submit'))) polls until the condition is met or times out. Common expected_conditions include presence_of_element_located, visibility_of_element_located, element_to_be_clickable, and text_to_be_present_in_element. There is also implicit wait (a global setting), but mixing implicit and explicit waits causes unpredictable timeouts, so most teams use explicit waits only.\n\nA complete test has clear setup and teardown: create the driver, optionally configure options (headless mode, window size), run the steps, and always call driver.quit() at the end to close the browser and free the session, even if the test fails. In pytest this lives in a fixture; without quit() you leak browser processes. The common failure modes to internalize are: NoSuchElementException (locator wrong or element not yet present, usually a missing wait), StaleElementReferenceException (the element was re-rendered after you found it, so re-find it), and ElementClickInterceptedException (something overlaps the element, often a modal or sticky header). Add Page Objects and fixtures from earlier lessons and you have a maintainable Selenium framework.",
+    "key_terms": "WebDriver, By locators (id/css/xpath), find_element, explicit wait, WebDriverWait, expected_conditions, Select, ActionChains, driver.quit(), NoSuchElementException, StaleElementReferenceException",
+    "real_world_example": "Your Selenium login test passes locally but fails about a third of the time in CI with NoSuchElementException on the dashboard heading. The cause: after clicking Login, the dashboard loads asynchronously and the test reads the heading before it renders. A teammate 'fixed' it with time.sleep(2), which slowed the suite and still flaked on slow CI machines. The real fix is an explicit wait: WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'h1.dashboard-title'))). Now the test waits exactly as long as needed (and no longer), the flakiness disappears, and the suite is faster on fast machines.",
+    "step_by_step": "1. Install selenium and a matching browser driver (modern Selenium auto-manages drivers via Selenium Manager).\n2. Create the driver (webdriver.Chrome()), optionally with headless options, and driver.get(the URL).\n3. Locate elements with driver.find_element(By.CSS_SELECTOR, ...), preferring stable id/data-testid selectors over deep XPath.\n4. Interact: send_keys to type, click to press, Select for native dropdowns, switch_to.alert for alerts.\n5. Replace every sleep with WebDriverWait(driver, timeout).until(EC.<condition>) before reading or clicking dynamic elements.\n6. Assert on element .text or .get_attribute(...) or the page URL/title to verify the outcome.\n7. Always driver.quit() in teardown (a fixture) so the browser closes even when the test fails.",
+    "common_mistakes": "Using time.sleep() instead of explicit waits, producing slow and still-flaky tests.\nWriting brittle absolute XPath like /html/body/div[2]/div[3] that breaks on any layout change.\nForgetting driver.quit(), leaking browser processes and exhausting CI resources.\nNot handling StaleElementReferenceException after the DOM re-renders, instead of re-finding the element.\nMixing implicit and explicit waits, which leads to confusing, inconsistent timeout behavior.",
+    "practical_use_case": "If you join a team with an established UI suite, it is very often Selenium, so you read and extend these tests daily: adding a Page Object method, fixing a locator after a UI change, or converting a flaky sleep into an explicit wait. Selenium skills also transfer to Appium for mobile and remain a frequent interview topic.",
+    "summary": "A Selenium test starts a real browser, locates elements with By strategies (prefer stable id/CSS over brittle XPath), interacts via click/send_keys/Select, and asserts on element text or URL. Explicit waits with WebDriverWait and expected_conditions are the key to stability; never use raw sleeps, and always driver.quit() in teardown. Knowing the common exceptions (NoSuchElement, Stale, ClickIntercepted) lets you diagnose flakiness fast.",
+    "example": "A complete, runnable Selenium test in Python with a pytest fixture, explicit waits, a dropdown, and proper teardown:\n\n```python\nimport pytest\nfrom selenium import webdriver\nfrom selenium.webdriver.common.by import By\nfrom selenium.webdriver.support.ui import WebDriverWait, Select\nfrom selenium.webdriver.support import expected_conditions as EC\n\n\n@pytest.fixture\ndef driver():\n    options = webdriver.ChromeOptions()\n    options.add_argument(\"--headless=new\")\n    drv = webdriver.Chrome(options=options)\n    drv.implicitly_wait(0)  # use explicit waits only\n    yield drv\n    drv.quit()  # teardown runs even if the test fails\n\n\ndef test_login_and_select_shows_welcome(driver):\n    # Arrange\n    driver.get(\"https://example.com/login\")\n    wait = WebDriverWait(driver, 10)\n\n    # Act: fill the form using stable locators\n    driver.find_element(By.CSS_SELECTOR, \"[data-testid='username']\").send_keys(\"standard_user\")\n    driver.find_element(By.CSS_SELECTOR, \"[data-testid='password']\").send_keys(\"secret_sauce\")\n\n    # native <select> dropdown\n    Select(driver.find_element(By.ID, \"country\")).select_by_visible_text(\"Ukraine\")\n\n    driver.find_element(By.CSS_SELECTOR, \"button[type='submit']\").click()\n\n    # Assert: wait for the async dashboard, then check text\n    heading = wait.until(\n        EC.visibility_of_element_located((By.CSS_SELECTOR, \"h1.dashboard-title\"))\n    )\n    assert \"Welcome\" in heading.text\n    assert \"/dashboard\" in driver.current_url\n```",
+    "interactive": "Here is a flaky Selenium snippet:\ndriver.get(url); driver.find_element(By.XPATH, '/html/body/div[2]/button').click(); time.sleep(2); msg = driver.find_element(By.CLASS_NAME, 'toast').text; assert msg == 'Saved'\nIdentify the two main reliability problems and rewrite the snippet to fix them, explaining each change.",
+    "expected_answer": "A strong answer flags: (1) the brittle absolute XPath /html/body/div[2]/button, which breaks on any layout change and should be replaced with a stable locator like a data-testid or a semantic CSS selector; (2) the time.sleep(2), which is slow and still flaky, and should be replaced with an explicit WebDriverWait(driver, 10).until(EC.element_to_be_clickable(...)) before the click and EC.visibility_of_element_located(...) (or text_to_be_present_in_element) before reading the toast. The rewrite uses By.CSS_SELECTOR with a stable selector, wraps the click and the read in explicit waits, and asserts on the toast text. Bonus: noting the toast may be transient so waiting for its text directly is more robust, and that driver.quit() should run in teardown.",
+    "homework": "Write a complete Selenium test suite (3 tests) in Python against a public demo site (e.g. saucedemo.com or the-internet.herokuapp.com): a valid-login test, an invalid-login test that asserts an error message, and a flow that interacts with a dropdown or checkbox and asserts the result. Use a pytest fixture for driver setup/teardown with driver.quit(), stable locators, and explicit waits instead of any sleeps.",
+    "expected_result": "A submission with a pytest driver fixture that yields the driver and calls quit() in teardown, three tests using stable By.CSS_SELECTOR/By.ID locators (no absolute XPath), explicit WebDriverWait + expected_conditions before interacting with or reading dynamic elements, and clear assertions on element text or URL. No time.sleep calls, and the invalid-login test asserts on the actual error message. Tests should run headless and pass.",
+    "quiz": [
+      {
+        "question": "What is the correct, reliable way to wait for an element that loads asynchronously before clicking it?",
+        "answers": [
+          "time.sleep(5)",
+          "WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.ID, 'submit')))",
+          "A while loop checking find_element repeatedly",
+          "driver.refresh() until it appears"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Which locator strategy is generally the most brittle and prone to breaking on layout changes?",
+        "answers": [
+          "By.ID",
+          "By.CSS_SELECTOR with a data-testid",
+          "An absolute XPath like /html/body/div[2]/div[3]",
+          "By.NAME"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "What does driver.quit() do, and why is it important in teardown?",
+        "answers": [
+          "It clicks the quit button on the page",
+          "It closes the browser and ends the session, preventing leaked browser processes",
+          "It saves a screenshot before exiting",
+          "It only closes the current tab but keeps the session alive"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "You select an option from a native HTML <select> dropdown. Which Selenium helper is designed for this?",
+        "answers": [
+          "ActionChains",
+          "switch_to.alert",
+          "The Select class (e.g. Select(el).select_by_visible_text(...))",
+          "execute_script only"
+        ],
+        "correct_index": 2
+      }
+    ]
+  }
+]
