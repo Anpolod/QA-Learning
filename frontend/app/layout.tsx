@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { GraduationCap } from "lucide-react";
+import { AdminNavLink } from "@/components/auth/AdminNavLink";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -28,7 +29,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <Link href="/progress">Progress</Link>
               <Link href="/final-projects">Projects</Link>
               <Link href="/profile">Profile</Link>
-              <Link href="/admin">Admin</Link>
+              <AdminNavLink />
               <Link href="/login">Login</Link>
             </div>
           </nav>

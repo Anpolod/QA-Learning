@@ -72,9 +72,11 @@ export default function AdminPage() {
       try {
         const currentUser = await api.me(token);
         if (currentUser.role !== "admin") {
-          localStorage.removeItem("qa_learning_token");
-          localStorage.removeItem("qa_learning_user");
-          router.replace("/login");
+          // Keep the user signed in — just deny access instead of logging them out.
+          if (isMounted) {
+            setError("This account is not an admin. Sign in with an admin account to open the admin panel.");
+            setLoading(false);
+          }
           return;
         }
 
