@@ -190,7 +190,7 @@ Workflow behavior:
 
 - Push or pull request to `main`: run backend and frontend checks.
 - Push or pull request to `production`: run checks.
-- Push to `production`: deploy to VPS over SSH and run Docker Compose.
+- Push to `production`: copy the project to VPS over SSH and run Docker Compose.
 
 Required GitHub repository secrets for deployment:
 
@@ -210,13 +210,13 @@ git merge main
 git push origin production
 ```
 
-The server should contain a clone of this repository at `VPS_PROJECT_DIR`. On deployment, the workflow runs:
+On deployment, the workflow copies the current `production` branch content to `VPS_PROJECT_DIR` and then runs:
 
 ```bash
-git fetch origin production
-git reset --hard origin/production
 docker compose up --build -d
 ```
+
+If the required GitHub Secrets are not configured yet, deployment is skipped and CI checks still run.
 
 ## License
 

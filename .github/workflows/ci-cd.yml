@@ -65,17 +65,45 @@ jobs:
       - frontend-build
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/production'
+    env:
+      VPS_HOST: ${{ secrets.VPS_HOST }}
+      VPS_PORT: ${{ secrets.VPS_PORT }}
+      VPS_USER: ${{ secrets.VPS_USER }}
+      VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+      VPS_PROJECT_DIR: ${{ secrets.VPS_PROJECT_DIR }}
     steps:
+      - name: Skip deploy when secrets are missing
+        if: env.VPS_HOST == '' || env.VPS_PORT == '' || env.VPS_USER == '' || env.VPS_SSH_KEY == '' || env.VPS_PROJECT_DIR == ''
+        run: |
+          echo "Production deployment skipped because one or more VPS secrets are missing."
+
+      - name: Checkout
+        if: env.VPS_HOST != '' && env.VPS_PORT != '' && env.VPS_USER != '' && env.VPS_SSH_KEY != '' && env.VPS_PROJECT_DIR != ''
+        uses: actions/checkout@v4
+
+      - name: Copy project to VPS
+        if: env.VPS_HOST != '' && env.VPS_PORT != '' && env.VPS_USER != '' && env.VPS_SSH_KEY != '' && env.VPS_PROJECT_DIR != ''
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ env.VPS_HOST }}
+          port: ${{ env.VPS_PORT }}
+          username: ${{ env.VPS_USER }}
+          key: ${{ env.VPS_SSH_KEY }}
+          source: "."
+          target: ${{ env.VPS_PROJECT_DIR }}
+          overwrite: true
+          rm: false
+          exclude: ".git,.github"
+
       - name: Deploy over SSH
+        if: env.VPS_HOST != '' && env.VPS_PORT != '' && env.VPS_USER != '' && env.VPS_SSH_KEY != '' && env.VPS_PROJECT_DIR != ''
         uses: appleboy/ssh-action@v1.2.0
         with:
-          host: ${{ secrets.VPS_HOST }}
-          port: ${{ secrets.VPS_PORT }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
+          host: ${{ env.VPS_HOST }}
+          port: ${{ env.VPS_PORT }}
+          username: ${{ env.VPS_USER }}
+          key: ${{ env.VPS_SSH_KEY }}
           script_stop: true
           script: |
-            cd "${{ secrets.VPS_PROJECT_DIR }}"
-            git fetch origin production
-            git reset --hard origin/production
+            cd "${{ env.VPS_PROJECT_DIR }}"
             docker compose up --build -d
