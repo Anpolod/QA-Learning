@@ -524,7 +524,7 @@ def seed() -> None:
             db.add(admin)
             db.flush()
         else:
-            admin.password_hash = hash_password("Password123")
+            # Do not reset an existing admin's password on re-seed (preserves a changed password).
             admin.role = "admin"
         if not db.query(UserProfile).filter(UserProfile.user_id == admin.id).first():
             db.add(UserProfile(user_id=admin.id, full_name="Admin User", goal="Manage QA learning content"))
