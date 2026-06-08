@@ -24,6 +24,7 @@ export default function RegisterPage() {
       const response = await api.register({ email, password, full_name: fullName });
       localStorage.setItem("qa_learning_token", response.accessToken);
       localStorage.setItem("qa_learning_user", JSON.stringify(response.user));
+      window.dispatchEvent(new Event("auth-change"));
       setStatus(`Account created for ${response.user.email}`);
       const next = new URLSearchParams(window.location.search).get("next");
       router.replace(next || "/dashboard");

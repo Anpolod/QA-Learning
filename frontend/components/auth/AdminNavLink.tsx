@@ -21,7 +21,11 @@ export function AdminNavLink() {
     }
     sync();
     window.addEventListener("storage", sync);
-    return () => window.removeEventListener("storage", sync);
+    window.addEventListener("auth-change", sync);
+    return () => {
+      window.removeEventListener("storage", sync);
+      window.removeEventListener("auth-change", sync);
+    };
   }, [pathname]);
 
   if (!isAdmin) return null;

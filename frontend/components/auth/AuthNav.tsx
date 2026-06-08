@@ -25,13 +25,18 @@ export function AuthNav() {
     }
     sync();
     window.addEventListener("storage", sync);
-    return () => window.removeEventListener("storage", sync);
+    window.addEventListener("auth-change", sync);
+    return () => {
+      window.removeEventListener("storage", sync);
+      window.removeEventListener("auth-change", sync);
+    };
   }, [pathname]);
 
   function logout() {
     localStorage.removeItem("qa_learning_token");
     localStorage.removeItem("qa_learning_user");
     setUser(null);
+    window.dispatchEvent(new Event("auth-change"));
     router.replace("/");
   }
 

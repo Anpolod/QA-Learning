@@ -23,6 +23,7 @@ export default function LoginPage() {
       const response = await api.login({ email, password });
       localStorage.setItem("qa_learning_token", response.accessToken);
       localStorage.setItem("qa_learning_user", JSON.stringify(response.user));
+      window.dispatchEvent(new Event("auth-change"));
       setStatus(`Logged in as ${response.user.email}`);
       const next = new URLSearchParams(window.location.search).get("next");
       router.replace(next || (response.user.role === "admin" ? "/admin" : "/dashboard"));
