@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 // Shows the Admin nav link only to signed-in admins. Reads the cached user from
 // localStorage; the /admin page itself still verifies the role with the backend.
 export function AdminNavLink() {
+  const pathname = usePathname();
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
@@ -20,7 +22,7 @@ export function AdminNavLink() {
     sync();
     window.addEventListener("storage", sync);
     return () => window.removeEventListener("storage", sync);
-  }, []);
+  }, [pathname]);
 
   if (!isAdmin) return null;
   return <Link href="/admin">Admin</Link>;
