@@ -17,7 +17,6 @@ const LINKS: [string, string][] = [
   ["/game", "Game"],
   ["/progress", "Progress"],
   ["/final-projects", "Projects"],
-  ["/profile", "Profile"],
 ];
 
 export function SiteNav() {
