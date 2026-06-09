@@ -16,6 +16,12 @@ export default async function LessonPage({ params }: { params: Promise<{ lessonI
   const { lessonId } = await params;
   const lesson = await api.lesson(lessonId);
   const slides = [...lesson.slides].sort((a, b) => a.order_index - b.order_index);
+  const glossarySlugs = new Set<string>(
+    await api
+      .glossary()
+      .then((terms) => terms.map((t) => t.slug))
+      .catch(() => [])
+  );
   return (
     <RequireAuth>
     <main className="mx-auto max-w-7xl px-4 py-8">
@@ -60,15 +66,22 @@ export default async function LessonPage({ params }: { params: Promise<{ lessonI
                   .split(",")
                   .map((t) => t.trim())
                   .filter(Boolean)
-                  .map((term) => (
-                    <Link
-                      key={term}
-                      href={`/glossary#${glossarySlug(term)}`}
-                      className="rounded-full border border-slate-200 bg-paper px-3 py-1 text-sm text-ink transition hover:border-coral hover:text-coral"
-                    >
-                      {term}
-                    </Link>
-                  ))}
+                  .map((term) => {
+                    const slug = glossarySlug(term);
+                    return glossarySlugs.has(slug) ? (
+                      <Link
+                        key={term}
+                        href={`/glossary#${slug}`}
+                        className="rounded-full border border-slate-200 bg-paper px-3 py-1 text-sm text-ink transition hover:border-coral hover:text-coral"
+                      >
+                        {term}
+                      </Link>
+                    ) : (
+                      <span key={term} className="rounded-full border border-slate-100 bg-paper px-3 py-1 text-sm text-slate-500">
+                        {term}
+                      </span>
+                    );
+                  })}
               </div>
             </section>
           ) : null}
