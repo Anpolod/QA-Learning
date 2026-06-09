@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, Header, HTTPException
 from sqlalchemy import delete, select, update
 from sqlalchemy.orm import Session, selectinload
 
+from app.api.routes.auth import _current_user
 from app.database.session import get_db
 from app.models.entities import (
     AiChatSession,
@@ -113,14 +114,16 @@ def list_final_project_submissions(db: Session = Depends(get_db)) -> list[FinalP
 def submit_final_project(
     project_id: int,
     request: FinalProjectSubmitRequest,
+    authorization: str = Header(default=""),
     db: Session = Depends(get_db),
 ) -> FinalProjectSubmissionRead:
+    user = _current_user(authorization, db)
     project = db.get(FinalProject, project_id)
     if not project:
         raise HTTPException(status_code=404, detail="Final project not found")
     submission = FinalProjectSubmission(
         final_project_id=project_id,
-        user_id=request.user_id,
+        user_id=user.id,
         submission_text=request.submission_text,
         file_url=request.file_url,
     )

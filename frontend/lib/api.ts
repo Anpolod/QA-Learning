@@ -113,7 +113,8 @@ export const api = {
       created_at: string;
     }>(`/api/courses/final-projects/${projectId}/submit`, {
       method: "POST",
-      body: JSON.stringify({ user_id: 1, submission_text: submissionText, file_url: fileUrl })
+      headers: authHeader(),
+      body: JSON.stringify({ submission_text: submissionText, file_url: fileUrl })
     }),
   finalProjectSubmissions: () =>
     request<
@@ -324,13 +325,15 @@ export const api = {
       `/api/quizzes/${quizId}/submit`,
       {
         method: "POST",
-        body: JSON.stringify({ user_id: 1, answers })
+        headers: authHeader(),
+        body: JSON.stringify({ answers })
       }
     ),
   submitHomework: (homeworkId: number, answerText: string) =>
     request<{ status: string; submissionId: number }>(`/api/homework/${homeworkId}/submit`, {
       method: "POST",
-      body: JSON.stringify({ user_id: 1, answer_text: answerText })
+      headers: authHeader(),
+      body: JSON.stringify({ answer_text: answerText })
     }),
   homeworkSubmissions: () =>
     request<

@@ -1,9 +1,10 @@
 import json
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, Header, HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.api.routes.auth import _current_user
 from app.database.session import get_db
 from app.models.entities import Quiz, QuizAnswer, QuizAttempt, QuizQuestion
 from app.schemas.quiz import (
@@ -126,7 +127,13 @@ def get_quiz(lesson_id: int, db: Session = Depends(get_db)) -> dict:
 
 
 @router.post("/{quiz_id}/submit", response_model=QuizSubmitResponse)
-def submit_quiz(quiz_id: int, request: QuizSubmitRequest, db: Session = Depends(get_db)) -> QuizSubmitResponse:
+def submit_quiz(
+    quiz_id: int,
+    request: QuizSubmitRequest,
+    authorization: str = Header(default=""),
+    db: Session = Depends(get_db),
+) -> QuizSubmitResponse:
+    user = _current_user(authorization, db)
     quiz = db.get(Quiz, quiz_id)
     if not quiz:
         raise HTTPException(status_code=404, detail="Quiz not found")
@@ -145,7 +152,7 @@ def submit_quiz(quiz_id: int, request: QuizSubmitRequest, db: Session = Depends(
     db.add(
         QuizAttempt(
             quiz_id=quiz_id,
-            user_id=request.user_id,
+            user_id=user.id,
             score=score,
             total_questions=len(questions),
             answers_json=json.dumps(request.answers),
@@ -153,7 +160,7 @@ def submit_quiz(quiz_id: int, request: QuizSubmitRequest, db: Session = Depends(
     )
     upsert_lesson_progress(
         db,
-        user_id=request.user_id,
+        user_id=user.id,
         lesson_id=quiz.lesson_id,
         opened=True,
         quiz_completed=True,

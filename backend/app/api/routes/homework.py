@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, Header, HTTPException
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.api.routes.auth import _current_user
 from app.database.session import get_db
 from app.models.entities import Homework, HomeworkSubmission, Lesson
 from app.schemas.homework import (
@@ -18,7 +19,7 @@ router = APIRouter()
 
 
 class HomeworkSubmitRequest(BaseModel):
-    user_id: int = 1
+    user_id: int | None = None  # ignored; attributed to the authenticated user
     answer_text: str
 
 
@@ -103,13 +104,19 @@ def get_homework(lesson_id: int, db: Session = Depends(get_db)) -> Homework:
 
 
 @router.post("/{homework_id}/submit")
-def submit_homework(homework_id: int, request: HomeworkSubmitRequest, db: Session = Depends(get_db)) -> dict[str, str | int]:
+def submit_homework(
+    homework_id: int,
+    request: HomeworkSubmitRequest,
+    authorization: str = Header(default=""),
+    db: Session = Depends(get_db),
+) -> dict[str, str | int]:
+    user = _current_user(authorization, db)
     homework = db.get(Homework, homework_id)
     if not homework:
         raise HTTPException(status_code=404, detail="Homework not found")
-    submission = HomeworkSubmission(homework_id=homework_id, user_id=request.user_id, answer_text=request.answer_text)
+    submission = HomeworkSubmission(homework_id=homework_id, user_id=user.id, answer_text=request.answer_text)
     db.add(submission)
-    upsert_lesson_progress(db, user_id=request.user_id, lesson_id=homework.lesson_id, opened=True, homework_submitted=True)
+    upsert_lesson_progress(db, user_id=user.id, lesson_id=homework.lesson_id, opened=True, homework_submitted=True)
     db.commit()
     db.refresh(submission)
     return {"status": "submitted", "submissionId": submission.id}
