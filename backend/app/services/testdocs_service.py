@@ -111,23 +111,28 @@ async def review_submission(
 
     expected = EXPECTED_FIELDS[doc_type]
     label = "test case" if doc_type == "test_case" else "bug report"
-    submission_lines = "\n".join(f"- {k}: {v}" for k, v in fields.items() if str(v).strip())
-    if not submission_lines:
+    # Show EVERY expected field with its value or an explicit (blank) marker so the
+    # reviewer never hallucinates a provided field as missing.
+    field_lines = "\n".join(f"- {name}: {(fields.get(name) or '').strip() or '(blank)'}" for name in expected)
+    if not any((fields.get(name) or "").strip() for name in expected):
         raise HTTPException(status_code=400, detail="Submission is empty.")
 
     system = (
-        f"You are a senior QA reviewer grading a student's {label}. Be strict but constructive and concise. "
+        f"You are a senior QA reviewer grading a student's {label}. Be strict but fair, constructive and concise. "
         "Reply with strict JSON only, no prose, no code fences."
     )
     user = (
         f"Scenario: {scenario.brief}\nContext: {scenario.context}\n\n"
-        f"Expected fields for a good {label}: {', '.join(expected)}.\n\n"
-        f"Student submission:\n{submission_lines}\n\n"
-        "Grade it. Reward clear, specific, reproducible, unambiguous content; penalise vague steps, "
-        "missing expected/actual results, missing severity/priority, and untestable wording. "
+        f"Student submission (every expected field is shown; '(blank)' means the student left it empty):\n"
+        f"{field_lines}\n\n"
+        "Grade it. Rules:\n"
+        "- Rate a field 'missing' ONLY if its value is '(blank)'. Never mark a filled field 'missing'.\n"
+        "- Rate 'good' if the content is clear, specific, and testable; 'weak' if present but vague/incomplete.\n"
+        "- Reward reproducible steps, observable expected/actual results, and sensible severity/priority.\n"
+        "- Read the values carefully before judging; do not invent problems that are not in the text.\n\n"
         'Return JSON: {"score": int 0-100, "summary": str (1-2 sentences), '
         '"fields": [{"name": str, "rating": "good"|"weak"|"missing", "comment": str}] (one entry per expected '
-        'field), "improvements": [str] (2-4 concrete fixes)}.'
+        'field, same names as above), "improvements": [str] (2-4 concrete fixes)}.'
     )
     raw = await _run_text(db, system, user, max_tokens=900)
     data = _extract_json(raw)
