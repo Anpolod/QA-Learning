@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LeaderboardPanel } from "@/components/game/LeaderboardPanel";
 import {
   ArrowRight,
   Award,
@@ -183,6 +184,26 @@ export default async function HomePage() {
               </article>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* Leaderboard */}
+      <section className="mx-auto max-w-7xl px-4 py-16">
+        <div className="grid gap-8 lg:grid-cols-[1fr_1.1fr] lg:items-center">
+          <div>
+            <h2 className="text-3xl font-bold tracking-tight text-ink md:text-4xl">Climb the leaderboard</h2>
+            <p className="mt-3 max-w-md text-slate-600">
+              Earn XP for finishing lessons, passing quizzes, submitting homework, and practising test documentation.
+              Rank up from QA Rookie to QA Champion.
+            </p>
+            <Link
+              href="/game"
+              className="mt-5 inline-flex items-center gap-2 rounded-md bg-ink px-5 py-3 text-sm font-semibold text-white transition hover:bg-ink/90"
+            >
+              Open player hub <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+          <LeaderboardPanel />
         </div>
       </section>
 

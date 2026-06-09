@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Award, CheckCircle2, Crown, Flame, Medal, Rocket, ShieldCheck, Sparkles, Star, Trophy, Users } from "lucide-react";
+import { Award, CheckCircle2, Crown, Flame, Medal, Rocket, ShieldCheck, Sparkles, Star, Trophy } from "lucide-react";
 import { RequireAuth } from "@/components/auth/RequireAuth";
+import { LeaderboardPanel } from "@/components/game/LeaderboardPanel";
 import { api } from "@/lib/api";
 
 type Player = Awaited<ReturnType<typeof api.playerStats>>;
-type Leaderboard = Awaited<ReturnType<typeof api.leaderboard>>;
 
 const iconMap = {
   sparkles: Sparkles,
@@ -24,17 +24,14 @@ const iconMap = {
 
 export default function GamePage() {
   const [player, setPlayer] = useState<Player | null>(null);
-  const [leaderboard, setLeaderboard] = useState<Leaderboard>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let mounted = true;
     (async () => {
       const p = await api.playerStats().catch(() => null);
-      const l = await api.leaderboard().catch(() => []);
       if (!mounted) return;
       setPlayer(p);
-      setLeaderboard(l);
       setLoading(false);
     })();
     return () => {
@@ -159,24 +156,7 @@ export default function GamePage() {
       </section>
 
       <section className="mt-6 grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
-        <article className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="flex items-center gap-2">
-            <Users className="h-5 w-5 text-mint" />
-            <h2 className="text-lg font-semibold text-ink">Leaderboard</h2>
-          </div>
-          <div className="mt-4 space-y-2">
-            {leaderboard.map((row) => (
-              <div key={row.userId} className="grid grid-cols-[42px_1fr_auto] items-center gap-3 rounded-md bg-slate-50 p-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white font-bold text-ink">#{row.position}</div>
-                <div>
-                  <p className="font-semibold text-ink">{row.fullName || row.email}</p>
-                  <p className="text-xs text-slate-500">{row.rank} · {row.completedLessons} lessons</p>
-                </div>
-                <p className="font-bold text-mint">{row.xp} XP</p>
-              </div>
-            ))}
-          </div>
-        </article>
+        <LeaderboardPanel />
 
         <article className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
           <div className="flex items-center gap-2">
