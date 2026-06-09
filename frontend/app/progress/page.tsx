@@ -1,26 +1,40 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { BarChart3, CheckCircle2, ClipboardList, Target } from "lucide-react";
 import { ProgressCard } from "@/components/course/ProgressCard";
+import { RequireAuth } from "@/components/auth/RequireAuth";
 import { api } from "@/lib/api";
 
-export default async function ProgressPage() {
-  const defaultProgress = {
-    completedLessons: 0,
-    openedLessons: 0,
-    quizCompleted: 0,
-    homeworkSubmitted: 0,
-    totalLessons: 9,
-    currentModule: "Manual QA Foundations",
-    currentLesson: "QA / QC / Testing basics",
-    recommendedNextLesson: "QA / QC / Testing basics",
-    recommendedLessonId: 1,
-    aiUsageToday: 0,
-    aiDailyLimit: 50,
-    finalProjectsSubmitted: 0,
-    finalProjectsApproved: 0,
-    totalFinalProjects: 3
-  };
-  const progress = { ...defaultProgress, ...(await api.dashboardProgress().catch(() => ({}))) };
+const defaultProgress = {
+  completedLessons: 0,
+  openedLessons: 0,
+  quizCompleted: 0,
+  homeworkSubmitted: 0,
+  totalLessons: 9,
+  currentModule: "Manual QA Foundations",
+  currentLesson: "QA / QC / Testing basics",
+  recommendedNextLesson: "QA / QC / Testing basics",
+  recommendedLessonId: 1 as number | null,
+  aiUsageToday: 0,
+  aiDailyLimit: 50,
+  finalProjectsSubmitted: 0,
+  finalProjectsApproved: 0,
+  totalFinalProjects: 3
+};
+
+export default function ProgressPage() {
+  const [progress, setProgress] = useState(defaultProgress);
+
+  useEffect(() => {
+    let mounted = true;
+    api.dashboardProgress().then((p) => mounted && setProgress({ ...defaultProgress, ...p })).catch(() => {});
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   const totalLessons = progress.totalLessons || 9;
   const rows = [
     ["Opened lessons", progress.openedLessons, BarChart3],
@@ -30,6 +44,7 @@ export default async function ProgressPage() {
   ] as const;
 
   return (
+    <RequireAuth>
     <main className="mx-auto max-w-7xl px-4 py-8">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
@@ -57,5 +72,6 @@ export default async function ProgressPage() {
         </div>
       </section>
     </main>
+    </RequireAuth>
   );
 }

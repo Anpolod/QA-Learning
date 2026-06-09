@@ -1,6 +1,13 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { Award, CheckCircle2, Crown, Flame, Medal, Rocket, ShieldCheck, Sparkles, Star, Trophy, Users } from "lucide-react";
+import { RequireAuth } from "@/components/auth/RequireAuth";
 import { api } from "@/lib/api";
+
+type Player = Awaited<ReturnType<typeof api.playerStats>>;
+type Leaderboard = Awaited<ReturnType<typeof api.leaderboard>>;
 
 const iconMap = {
   sparkles: Sparkles,
@@ -15,18 +22,36 @@ const iconMap = {
   trophy: Trophy
 };
 
-export default async function GamePage() {
-  const player = await api.playerStats().catch(() => null);
-  const leaderboard = await api.leaderboard().catch(() => []);
+export default function GamePage() {
+  const [player, setPlayer] = useState<Player | null>(null);
+  const [leaderboard, setLeaderboard] = useState<Leaderboard>([]);
+  const [loading, setLoading] = useState(true);
 
-  if (!player) {
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      const p = await api.playerStats().catch(() => null);
+      const l = await api.leaderboard().catch(() => []);
+      if (!mounted) return;
+      setPlayer(p);
+      setLeaderboard(l);
+      setLoading(false);
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  if (loading || !player) {
     return (
-      <main className="mx-auto max-w-5xl px-4 py-10">
-        <section className="rounded-lg border border-slate-200 bg-white p-6">
-          <h1 className="text-2xl font-bold">Game profile is not ready</h1>
-          <p className="mt-2 text-sm text-slate-600">Open the backend and refresh this page to load player stats.</p>
-        </section>
-      </main>
+      <RequireAuth>
+        <main className="mx-auto max-w-5xl px-4 py-10">
+          <section className="rounded-lg border border-slate-200 bg-white p-6">
+            <h1 className="text-2xl font-bold">{loading ? "Loading player hub…" : "Game profile is not ready"}</h1>
+            {!loading ? <p className="mt-2 text-sm text-slate-600">Player stats could not be loaded. Try again later.</p> : null}
+          </section>
+        </main>
+      </RequireAuth>
     );
   }
 
@@ -58,6 +83,7 @@ export default async function GamePage() {
   ];
 
   return (
+    <RequireAuth>
     <main className="mx-auto max-w-7xl px-4 py-8">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
@@ -199,6 +225,7 @@ export default async function GamePage() {
         </div>
       </section>
     </main>
+    </RequireAuth>
   );
 }
 

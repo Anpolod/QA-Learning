@@ -1,26 +1,49 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { BookOpen, Brain, ClipboardCheck, Gamepad2, Trophy } from "lucide-react";
 import { ProgressCard } from "@/components/course/ProgressCard";
+import { RequireAuth } from "@/components/auth/RequireAuth";
 import { api } from "@/lib/api";
 
-export default async function DashboardPage() {
-  const defaultProgress = {
-    completedLessons: 0,
-    openedLessons: 0,
-    quizCompleted: 0,
-    homeworkSubmitted: 0,
-    totalLessons: 9,
-    currentModule: "Manual QA Foundations",
-    currentLesson: "QA / QC / Testing basics",
-    recommendedNextLesson: "QA / QC / Testing basics",
-    recommendedLessonId: 1,
-    aiUsageToday: 0,
-    aiDailyLimit: 50,
-    finalProjectsSubmitted: 0,
-    finalProjectsApproved: 0,
-    totalFinalProjects: 3
-  };
-  const progress = { ...defaultProgress, ...(await api.dashboardProgress().catch(() => ({}))) };
+const defaultProgress = {
+  completedLessons: 0,
+  openedLessons: 0,
+  quizCompleted: 0,
+  homeworkSubmitted: 0,
+  totalLessons: 9,
+  currentModule: "Manual QA Foundations",
+  currentLesson: "QA / QC / Testing basics",
+  recommendedNextLesson: "QA / QC / Testing basics",
+  recommendedLessonId: 1 as number | null,
+  aiUsageToday: 0,
+  aiDailyLimit: 50,
+  finalProjectsSubmitted: 0,
+  finalProjectsApproved: 0,
+  totalFinalProjects: 3
+};
+
+type Player = Awaited<ReturnType<typeof api.playerStats>> | null;
+
+export default function DashboardPage() {
+  const [progress, setProgress] = useState(defaultProgress);
+  const [player, setPlayer] = useState<Player>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      const p = await api.dashboardProgress().catch(() => ({}));
+      const pl = await api.playerStats().catch(() => null);
+      if (!mounted) return;
+      setProgress({ ...defaultProgress, ...p });
+      setPlayer(pl);
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   const totalLessons = progress.totalLessons || 9;
   const lessonProgress = Math.min((progress.completedLessons / totalLessons) * 100, 100);
   const openedProgress = Math.min((progress.openedLessons / totalLessons) * 100, 100);
@@ -32,9 +55,9 @@ export default async function DashboardPage() {
     progress.finalProjectsApproved > 0
       ? `${progress.finalProjectsApproved}/${progress.totalFinalProjects} approved`
       : `${progress.finalProjectsSubmitted}/${progress.totalFinalProjects} submitted`;
-  const player = await api.playerStats().catch(() => null);
 
   return (
+    <RequireAuth>
     <main className="mx-auto max-w-7xl px-4 py-8">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
@@ -80,7 +103,7 @@ export default async function DashboardPage() {
           <ClipboardCheck className="h-5 w-5 text-mint" />
           <h2 className="text-lg font-semibold">Completed lessons</h2>
         </div>
-        <p className="mt-3 text-sm text-slate-600">Progress tracking is connected to the backend foundation and ready for real user auth.</p>
+        <p className="mt-3 text-sm text-slate-600">Your progress is saved to your account as you open lessons, take quizzes, and submit homework.</p>
       </section>
       <section className="mt-6 grid gap-3 md:grid-cols-3">
         <Link href="/progress" className="rounded-lg border border-slate-200 bg-white p-4 text-sm font-medium hover:border-mint">
@@ -94,5 +117,6 @@ export default async function DashboardPage() {
         </Link>
       </section>
     </main>
+    </RequireAuth>
   );
 }

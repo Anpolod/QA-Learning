@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Header
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app.api.routes.auth import _current_user
 from app.database.session import get_db
 from app.models.entities import Achievement, Lesson, User, UserAchievement, UserGameStats, UserProfile, UserProgress
 from app.schemas.gamification import AchievementRead, LeaderboardRow, PlayerStatsRead, RankRead
@@ -80,6 +81,14 @@ def _player_payload(user_id: int, db: Session) -> PlayerStatsRead:
             for achievement in achievements
         ],
     )
+
+
+@router.get("/player/me", response_model=PlayerStatsRead)
+def player_stats_me(authorization: str = Header(default=""), db: Session = Depends(get_db)) -> PlayerStatsRead:
+    user = _current_user(authorization, db)
+    seed_achievements(db)
+    db.commit()
+    return _player_payload(user.id, db)
 
 
 @router.get("/player/{user_id}", response_model=PlayerStatsRead)

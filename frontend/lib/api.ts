@@ -288,7 +288,7 @@ export const api = {
         body: JSON.stringify(body)
       }
     ),
-  dashboardProgress: (userId = 1) =>
+  dashboardProgress: () =>
     request<{
       completedLessons: number;
       openedLessons: number;
@@ -304,7 +304,7 @@ export const api = {
       finalProjectsSubmitted: number;
       finalProjectsApproved: number;
       totalFinalProjects: number;
-    }>(`/api/progress/dashboard/${userId}`),
+    }>(`/api/progress/dashboard/me`, { headers: authHeader() }),
   adminStudentProgress: () =>
     request<
       {
@@ -366,9 +366,10 @@ export const api = {
   }) =>
     request<{ status: string }>("/api/progress/lesson", {
       method: "POST",
-      body: JSON.stringify({ user_id: 1, ...body })
+      headers: authHeader(),
+      body: JSON.stringify(body)
     }),
-  playerStats: (userId = 1) =>
+  playerStats: () =>
     request<{
       userId: number;
       email: string;
@@ -401,7 +402,7 @@ export const api = {
         unlocked: boolean;
         unlockedAt: string | null;
       }[];
-    }>(`/api/gamification/player/${userId}`),
+    }>(`/api/gamification/player/me`, { headers: authHeader() }),
   leaderboard: () =>
     request<
       {

@@ -1,43 +1,44 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { Award, CheckCircle2, ClipboardCheck, ClipboardList, Target } from "lucide-react";
 import { ProgressCard } from "@/components/course/ProgressCard";
+import { RequireAuth } from "@/components/auth/RequireAuth";
 import { api } from "@/lib/api";
 
 const totalFinalProjects = 3;
 
-export default async function CertificatePage() {
-  const defaultProgress = {
-    completedLessons: 0,
-    openedLessons: 0,
-    quizCompleted: 0,
-    homeworkSubmitted: 0,
-    totalLessons: 9,
-    currentModule: "Manual QA Foundations",
-    currentLesson: "QA / QC / Testing basics",
-    recommendedNextLesson: "QA / QC / Testing basics",
-    recommendedLessonId: 1,
-    aiUsageToday: 0,
-    aiDailyLimit: 50,
-    finalProjectsSubmitted: 0,
-    finalProjectsApproved: 0,
-    totalFinalProjects: 3
-  };
-  const [progressResult, submissions] = await Promise.all([
-    api.dashboardProgress().catch(() => ({
-      completedLessons: 0,
-      openedLessons: 0,
-      quizCompleted: 0,
-      homeworkSubmitted: 0,
-      recommendedNextLesson: "QA / QC / Testing basics"
-    })),
-    api.finalProjectSubmissions().catch(() => [])
-  ]);
-  const progress = { ...defaultProgress, ...progressResult };
-  const totalLessons = progress.totalLessons || 9;
+const defaultProgress = {
+  completedLessons: 0,
+  openedLessons: 0,
+  quizCompleted: 0,
+  homeworkSubmitted: 0,
+  totalLessons: 9,
+  currentModule: "Manual QA Foundations",
+  currentLesson: "QA / QC / Testing basics",
+  recommendedNextLesson: "QA / QC / Testing basics",
+  recommendedLessonId: 1 as number | null,
+  aiUsageToday: 0,
+  aiDailyLimit: 50,
+  finalProjectsSubmitted: 0,
+  finalProjectsApproved: 0,
+  totalFinalProjects: 3
+};
 
-  const approvedFinalProjects = new Set(
-    submissions.filter((submission) => submission.user_id === 1 && submission.status === "approved").map((submission) => submission.final_project_id)
-  ).size;
+export default function CertificatePage() {
+  const [progress, setProgress] = useState(defaultProgress);
+
+  useEffect(() => {
+    let mounted = true;
+    api.dashboardProgress().then((p) => mounted && setProgress({ ...defaultProgress, ...p })).catch(() => {});
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const totalLessons = progress.totalLessons || 9;
+  const approvedFinalProjects = progress.finalProjectsApproved;
   const ready =
     progress.completedLessons >= totalLessons &&
     progress.quizCompleted >= totalLessons &&
@@ -52,6 +53,7 @@ export default async function CertificatePage() {
   ] as const;
 
   return (
+    <RequireAuth>
     <main className="mx-auto max-w-5xl px-4 py-10">
       <section className="rounded-lg border border-slate-200 bg-white p-8 text-center shadow-sm">
         <Award className="mx-auto h-12 w-12 text-amber" />
@@ -85,5 +87,6 @@ export default async function CertificatePage() {
         </div>
       </section>
     </main>
+    </RequireAuth>
   );
 }
