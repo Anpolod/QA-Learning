@@ -349,3 +349,28 @@ class GlossaryTerm(Base):
     definition: Mapped[str] = mapped_column(Text)
     category: Mapped[str] = mapped_column(String(60), default="")
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class DocScenario(Base):
+    __tablename__ = "doc_scenarios"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    doc_type: Mapped[str] = mapped_column(String(20))  # test_case | bug_report
+    title: Mapped[str] = mapped_column(String(200))
+    brief: Mapped[str] = mapped_column(Text)
+    context: Mapped[str] = mapped_column(Text, default="")
+    source: Mapped[str] = mapped_column(String(20), default="seed")  # seed | ai
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class DocAttempt(Base):
+    __tablename__ = "doc_attempts"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    scenario_id: Mapped[int] = mapped_column(ForeignKey("doc_scenarios.id"))
+    doc_type: Mapped[str] = mapped_column(String(20))
+    submission_json: Mapped[str] = mapped_column(Text)
+    score: Mapped[int] = mapped_column(Integer, default=0)
+    feedback_json: Mapped[str] = mapped_column(Text, default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)

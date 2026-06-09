@@ -27,10 +27,44 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     cache: "no-store"
   });
   if (!response.ok) {
-    throw new Error(`API request failed: ${response.status}`);
+    let detail = "";
+    try {
+      const body = await response.json();
+      detail = typeof body?.detail === "string" ? body.detail : "";
+    } catch {
+      // non-JSON error body
+    }
+    throw new Error(detail || `API request failed: ${response.status}`);
   }
   return response.json() as Promise<T>;
 }
+
+export type DocScenario = {
+  id: number;
+  doc_type: "test_case" | "bug_report";
+  title: string;
+  brief: string;
+  context: string;
+  source: string;
+};
+
+export type DocReview = {
+  attempt_id: number;
+  score: number;
+  summary: string;
+  fields: { name: string; rating: string; comment: string }[];
+  improvements: string[];
+};
+
+export type DocAttempt = {
+  id: number;
+  scenario_id: number;
+  scenario_title: string;
+  doc_type: "test_case" | "bug_report";
+  score: number;
+  summary: string;
+  created_at: string;
+};
 
 export function publicApiBase() {
   return publicApiUrl;
@@ -82,6 +116,13 @@ export const api = {
     }),
   glossary: () =>
     request<{ slug: string; term: string; definition: string; category: string }[]>("/api/glossary"),
+  docScenarios: (type: "test_case" | "bug_report") =>
+    request<DocScenario[]>(`/api/test-docs/scenarios?type=${type}`),
+  generateDocScenario: (doc_type: "test_case" | "bug_report") =>
+    request<DocScenario>("/api/test-docs/generate", { method: "POST", body: JSON.stringify({ doc_type }) }),
+  reviewDoc: (payload: { scenario_id: number; doc_type: string; fields: Record<string, string> }) =>
+    request<DocReview>("/api/test-docs/review", { method: "POST", body: JSON.stringify(payload) }),
+  docAttempts: () => request<DocAttempt[]>("/api/test-docs/attempts"),
   courses: () => request<Course[]>("/api/courses"),
   course: (id: string) => request<Course>(`/api/courses/${id}`),
   module: (id: string) => request<Module>(`/api/courses/modules/${id}`),

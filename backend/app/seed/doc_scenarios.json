@@ -1,0 +1,98 @@
+[
+  {
+    "doc_type": "test_case",
+    "title": "Login with valid credentials",
+    "brief": "Write a test case verifying that a registered user can log in with a correct email and password.",
+    "context": "Login page has Email, Password fields and a Sign in button. On success the user lands on the dashboard."
+  },
+  {
+    "doc_type": "test_case",
+    "title": "Password reset via email link",
+    "brief": "Write a test case for the 'Forgot password' flow where the user requests a reset link and sets a new password.",
+    "context": "User enters their email, receives a reset link valid for 60 minutes, opens it, and submits a new password twice."
+  },
+  {
+    "doc_type": "test_case",
+    "title": "Add item to cart and change quantity",
+    "brief": "Write a test case that adds a product to the cart and updates its quantity from 1 to 3.",
+    "context": "Product page has an 'Add to cart' button. Cart shows quantity stepper and a recalculated subtotal."
+  },
+  {
+    "doc_type": "test_case",
+    "title": "Upload a profile photo within the size limit",
+    "brief": "Write a test case for uploading a JPG profile photo under the 5 MB limit.",
+    "context": "Profile settings allow JPG/PNG up to 5 MB. After upload the new photo replaces the old avatar."
+  },
+  {
+    "doc_type": "test_case",
+    "title": "Search products with a category filter",
+    "brief": "Write a test case for searching 'shoes' and narrowing results with the 'Men' category filter.",
+    "context": "Catalog page has a search box and category filters. Results update without a full page reload."
+  },
+  {
+    "doc_type": "test_case",
+    "title": "Registration rejects an invalid email format",
+    "brief": "Write a negative test case verifying the registration form blocks an email without an @ symbol.",
+    "context": "Registration form validates email format inline and shows an error message under the field."
+  },
+  {
+    "doc_type": "test_case",
+    "title": "Apply a valid discount coupon at checkout",
+    "brief": "Write a test case for applying the coupon 'SAVE10' that gives a 10% discount at checkout.",
+    "context": "Checkout has a coupon input and an 'Apply' button. The order total drops by 10% when a valid coupon is applied."
+  },
+  {
+    "doc_type": "test_case",
+    "title": "Change account email address",
+    "brief": "Write a test case for updating the account email from the profile page, including the confirmation step.",
+    "context": "Profile page lets the user enter a new email; a confirmation link is sent to the new address before the change takes effect."
+  },
+  {
+    "doc_type": "bug_report",
+    "title": "Add to cart does nothing on mobile",
+    "brief": "Write a bug report: tapping 'Add to cart' on a phone does not add the product and shows no feedback.",
+    "context": "Happens on iPhone Safari, app version 3.4.1. The same action works on desktop Chrome."
+  },
+  {
+    "doc_type": "bug_report",
+    "title": "App crashes uploading a large PDF",
+    "brief": "Write a bug report: the app freezes and crashes when uploading a 12 MB PDF to a support ticket.",
+    "context": "Stated limit is 20 MB. Smaller PDFs (2 MB) upload fine. Reproduced on Windows 11, Chrome 124."
+  },
+  {
+    "doc_type": "bug_report",
+    "title": "Cart total wrong after removing an item",
+    "brief": "Write a bug report: after removing one of three items, the cart total still includes the removed item's price.",
+    "context": "Cart had 3 items totalling $90 ($30 each). After removing one, it shows $90 instead of $60."
+  },
+  {
+    "doc_type": "bug_report",
+    "title": "Search returns results for an empty query",
+    "brief": "Write a bug report: pressing Search with an empty field returns the entire product catalog instead of asking for input.",
+    "context": "Expected behaviour is a validation message. Instead all 1,200 products load. Web app, Chrome 124."
+  },
+  {
+    "doc_type": "bug_report",
+    "title": "Password reset email never arrives",
+    "brief": "Write a bug report: requesting a password reset shows a success message but no email is delivered.",
+    "context": "Tried twice, waited 15 minutes, checked spam. Account email is valid and receives other notifications."
+  },
+  {
+    "doc_type": "bug_report",
+    "title": "Booking allows selecting a past date",
+    "brief": "Write a bug report: the booking date picker lets the user pick yesterday and proceed to payment.",
+    "context": "Only today or later should be selectable. Reproduced on the booking page, any browser."
+  },
+  {
+    "doc_type": "bug_report",
+    "title": "Profile photo not updating after upload",
+    "brief": "Write a bug report: after uploading a new avatar the old photo still shows until a hard refresh.",
+    "context": "Upload reports success, but the header avatar keeps the previous image. Cache issue suspected."
+  },
+  {
+    "doc_type": "bug_report",
+    "title": "Wrong currency symbol after switching language",
+    "brief": "Write a bug report: switching the UI from English to German keeps prices in '$' instead of '€'.",
+    "context": "Prices should localise to euro for the German locale. Numbers are correct, only the symbol is wrong."
+  }
+]

@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from app.models.entities import (
     Achievement,
     AiUsageLog,
+    DocAttempt,
     FinalProjectSubmission,
     Lesson,
     QuizAttempt,
@@ -229,6 +230,8 @@ def sync_user_gamification(db: Session, user_id: int) -> UserGameStats:
         if achievement.id not in existing:
             db.add(UserAchievement(user_id=user_id, achievement_id=achievement.id))
 
+    doc_attempts = int(db.scalar(select(func.count(DocAttempt.id)).where(DocAttempt.user_id == user_id)) or 0)
+
     xp = (
         opened_lessons * 5
         + completed_lessons * 25
@@ -236,6 +239,7 @@ def sync_user_gamification(db: Session, user_id: int) -> UserGameStats:
         + homework_submitted * 35
         + quiz_attempts * 5
         + final_projects_submitted * 150
+        + doc_attempts * 15
         + achievement_xp
     )
 
