@@ -24,6 +24,7 @@ export default async function LessonPage({ params }: { params: Promise<{ lessonI
           <Link href={`/homework/${lesson.id}`} className="flex items-center gap-2 rounded-md border bg-white px-3 py-2 text-sm">
             <ClipboardList className="h-4 w-4 text-mint" /> Homework
           </Link>
+          <LessonSlideDrawer lessonTitle={lesson.title} slides={slides} />
         </aside>
         <article className="space-y-6">
           <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
@@ -108,7 +109,6 @@ export default async function LessonPage({ params }: { params: Promise<{ lessonI
           </div>
         </article>
       </div>
-      <LessonSlideDrawer lessonTitle={lesson.title} slides={slides} />
       <AiAssistant lessonId={lessonId} />
     </main>
     </RequireAuth>
