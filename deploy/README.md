@@ -25,6 +25,30 @@ cp .env.example .env
 
 Never commit `.env`. `.env.example` holds placeholders only.
 
+## Database migrations (Alembic)
+
+Schema is now tracked with Alembic (`backend/migrations/`, baseline
+`5b29e73e567b`). `app/main.py` still runs `create_all` for a fresh DB, but
+schema CHANGES go through migrations (create_all never alters existing tables).
+
+One-time adoption on a database that already has the schema (created via
+create_all) — mark the baseline as applied without re-running it:
+
+```bash
+cd backend && DATABASE_URL=... alembic stamp head
+```
+
+Workflow for a model change:
+
+```bash
+cd backend
+alembic revision --autogenerate -m "describe change"   # review the generated file
+alembic upgrade head                                    # apply locally
+# commit the migration; apply on prod with: docker compose exec backend alembic upgrade head
+```
+
+Run `alembic check` to confirm models and migrations are in sync (CI-friendly).
+
 ## Backend Swagger / ReDoc
 
 Served from self-hosted assets (no CDN) at `/api/docs` and `/api/redoc`

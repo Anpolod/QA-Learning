@@ -10,6 +10,10 @@ on:
       - main
       - production
 
+# Run JS-based actions on Node 24 (Node 20 is deprecated / removed on the runners).
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 jobs:
   backend-check:
     name: Backend check
