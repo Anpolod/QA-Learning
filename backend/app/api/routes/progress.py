@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.api.routes.auth import _current_user
+from app.api.routes.auth import _current_user, _require_admin
 from app.core.config import settings
 from app.database.session import get_db
 from app.models.entities import AiUsageLog, FinalProjectSubmission, Lesson, Module, User, UserProgress
@@ -79,12 +79,14 @@ def dashboard_progress_me(authorization: str = Header(default=""), db: Session =
 
 
 @router.get("/dashboard/{user_id}")
-def dashboard_progress(user_id: int, db: Session = Depends(get_db)) -> dict:
+def dashboard_progress(user_id: int, authorization: str = Header(default=""), db: Session = Depends(get_db)) -> dict:
+    _require_admin(authorization, db)
     return _dashboard_payload(db, user_id)
 
 
 @router.get("/admin/students", response_model=list[AdminProgressRow])
-def admin_student_progress(db: Session = Depends(get_db)) -> list[AdminProgressRow]:
+def admin_student_progress(authorization: str = Header(default=""), db: Session = Depends(get_db)) -> list[AdminProgressRow]:
+    _require_admin(authorization, db)
     stmt = (
         select(UserProgress, User, Lesson)
         .join(User, User.id == UserProgress.user_id)

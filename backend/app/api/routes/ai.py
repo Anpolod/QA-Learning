@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Header
 from sqlalchemy.orm import Session
 
-from app.api.routes.auth import _require_admin
+from app.api.routes.auth import _current_user, _require_admin
 from app.database.session import get_db
 from app.schemas.ai import (
     AiChatRequest,
@@ -30,17 +30,28 @@ router = APIRouter()
 
 
 @router.post("/chat", response_model=AiChatResponse)
-async def ai_chat(request: AiChatRequest, db: Session = Depends(get_db)) -> AiChatResponse:
-    return await chat_with_tutor(db, request)
+async def ai_chat(
+    request: AiChatRequest,
+    authorization: str = Header(default=""),
+    db: Session = Depends(get_db),
+) -> AiChatResponse:
+    user = _current_user(authorization, db)
+    return await chat_with_tutor(db, request, user_id=user.id)
 
 
 @router.post("/images/generate", response_model=AiImageGenerateResponse)
-async def ai_image_generate(request: AiImageGenerateRequest, db: Session = Depends(get_db)) -> AiImageGenerateResponse:
-    return await generate_image(db, request)
+async def ai_image_generate(
+    request: AiImageGenerateRequest,
+    authorization: str = Header(default=""),
+    db: Session = Depends(get_db),
+) -> AiImageGenerateResponse:
+    user = _current_user(authorization, db)
+    return await generate_image(db, request, user_id=user.id, is_admin=user.role == "admin")
 
 
 @router.get("/admin/settings", response_model=AiSettingsRead)
-def ai_admin_settings(db: Session = Depends(get_db)) -> AiSettingsRead:
+def ai_admin_settings(authorization: str = Header(default=""), db: Session = Depends(get_db)) -> AiSettingsRead:
+    _require_admin(authorization, db)
     return get_ai_settings(db)
 
 
@@ -56,7 +67,8 @@ def ai_admin_settings_update(
 
 
 @router.get("/admin/usage", response_model=AiUsageSummary)
-def ai_admin_usage(db: Session = Depends(get_db)) -> AiUsageSummary:
+def ai_admin_usage(authorization: str = Header(default=""), db: Session = Depends(get_db)) -> AiUsageSummary:
+    _require_admin(authorization, db)
     return get_ai_usage_summary(db)
 
 

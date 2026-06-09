@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.api.routes.auth import _current_user
+from app.api.routes.auth import _current_user, _require_admin
 from app.database.session import get_db
 from app.models.entities import Homework, HomeworkSubmission, Lesson
 from app.schemas.homework import (
@@ -36,13 +36,22 @@ def _submission_read(submission: HomeworkSubmission) -> HomeworkSubmissionRead:
 
 
 @router.get("/submissions", response_model=list[HomeworkSubmissionRead])
-def list_homework_submissions(db: Session = Depends(get_db)) -> list[HomeworkSubmissionRead]:
+def list_homework_submissions(
+    authorization: str = Header(default=""),
+    db: Session = Depends(get_db),
+) -> list[HomeworkSubmissionRead]:
+    _require_admin(authorization, db)
     submissions = db.scalars(select(HomeworkSubmission).order_by(HomeworkSubmission.created_at.desc()).limit(50)).all()
     return [_submission_read(submission) for submission in submissions]
 
 
 @router.post("/admin", response_model=HomeworkRead)
-def create_homework(request: HomeworkCreateRequest, db: Session = Depends(get_db)) -> Homework:
+def create_homework(
+    request: HomeworkCreateRequest,
+    authorization: str = Header(default=""),
+    db: Session = Depends(get_db),
+) -> Homework:
+    _require_admin(authorization, db)
     lesson = db.get(Lesson, request.lesson_id)
     if not lesson:
         raise HTTPException(status_code=404, detail="Lesson not found")
@@ -67,7 +76,13 @@ def create_homework(request: HomeworkCreateRequest, db: Session = Depends(get_db
 
 
 @router.patch("/admin/{homework_id}", response_model=HomeworkRead)
-def update_homework(homework_id: int, request: HomeworkUpdateRequest, db: Session = Depends(get_db)) -> Homework:
+def update_homework(
+    homework_id: int,
+    request: HomeworkUpdateRequest,
+    authorization: str = Header(default=""),
+    db: Session = Depends(get_db),
+) -> Homework:
+    _require_admin(authorization, db)
     homework = db.get(Homework, homework_id)
     if not homework:
         raise HTTPException(status_code=404, detail="Homework not found")
@@ -82,8 +97,10 @@ def update_homework(homework_id: int, request: HomeworkUpdateRequest, db: Sessio
 def review_homework_submission(
     submission_id: int,
     request: HomeworkReviewRequest,
+    authorization: str = Header(default=""),
     db: Session = Depends(get_db),
 ) -> HomeworkSubmissionRead:
+    _require_admin(authorization, db)
     if request.status not in {"approved", "needs_changes", "submitted"}:
         raise HTTPException(status_code=422, detail="Invalid homework review status.")
     submission = db.get(HomeworkSubmission, submission_id)

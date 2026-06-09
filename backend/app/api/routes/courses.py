@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Header, HTTPException
 from sqlalchemy import delete, select, update
 from sqlalchemy.orm import Session, selectinload
 
-from app.api.routes.auth import _current_user
+from app.api.routes.auth import _current_user, _require_admin
 from app.database.session import get_db
 from app.models.entities import (
     AiChatSession,
@@ -105,7 +105,11 @@ def _final_project_submission_read(submission: FinalProjectSubmission) -> FinalP
 
 
 @router.get("/final-projects/submissions", response_model=list[FinalProjectSubmissionRead])
-def list_final_project_submissions(db: Session = Depends(get_db)) -> list[FinalProjectSubmissionRead]:
+def list_final_project_submissions(
+    authorization: str = Header(default=""),
+    db: Session = Depends(get_db),
+) -> list[FinalProjectSubmissionRead]:
+    _require_admin(authorization, db)
     rows = db.scalars(select(FinalProjectSubmission).order_by(FinalProjectSubmission.created_at.desc()).limit(50)).all()
     return [_final_project_submission_read(row) for row in rows]
 
@@ -137,8 +141,10 @@ def submit_final_project(
 def review_final_project_submission(
     submission_id: int,
     request: FinalProjectReviewRequest,
+    authorization: str = Header(default=""),
     db: Session = Depends(get_db),
 ) -> FinalProjectSubmissionRead:
+    _require_admin(authorization, db)
     if request.status not in {"approved", "needs_changes", "submitted"}:
         raise HTTPException(status_code=422, detail="Invalid final project review status.")
     submission = db.get(FinalProjectSubmission, submission_id)
@@ -151,7 +157,12 @@ def review_final_project_submission(
 
 
 @router.post("/admin/modules", response_model=ModuleRead)
-def create_module(request: ModuleCreateRequest, db: Session = Depends(get_db)) -> Module:
+def create_module(
+    request: ModuleCreateRequest,
+    authorization: str = Header(default=""),
+    db: Session = Depends(get_db),
+) -> Module:
+    _require_admin(authorization, db)
     course = db.get(Course, request.course_id)
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
@@ -168,7 +179,13 @@ def create_module(request: ModuleCreateRequest, db: Session = Depends(get_db)) -
 
 
 @router.patch("/admin/modules/{module_id}", response_model=ModuleRead)
-def update_module(module_id: int, request: ModuleUpdateRequest, db: Session = Depends(get_db)) -> Module:
+def update_module(
+    module_id: int,
+    request: ModuleUpdateRequest,
+    authorization: str = Header(default=""),
+    db: Session = Depends(get_db),
+) -> Module:
+    _require_admin(authorization, db)
     module = db.get(Module, module_id)
     if not module:
         raise HTTPException(status_code=404, detail="Module not found")
@@ -180,7 +197,12 @@ def update_module(module_id: int, request: ModuleUpdateRequest, db: Session = De
 
 
 @router.delete("/admin/modules/{module_id}")
-def delete_module(module_id: int, db: Session = Depends(get_db)) -> dict[str, str | int]:
+def delete_module(
+    module_id: int,
+    authorization: str = Header(default=""),
+    db: Session = Depends(get_db),
+) -> dict[str, str | int]:
+    _require_admin(authorization, db)
     module = db.get(Module, module_id)
     if not module:
         raise HTTPException(status_code=404, detail="Module not found")
@@ -193,7 +215,12 @@ def delete_module(module_id: int, db: Session = Depends(get_db)) -> dict[str, st
 
 
 @router.post("/admin/lessons", response_model=LessonRead)
-def create_lesson(request: LessonCreateRequest, db: Session = Depends(get_db)) -> Lesson:
+def create_lesson(
+    request: LessonCreateRequest,
+    authorization: str = Header(default=""),
+    db: Session = Depends(get_db),
+) -> Lesson:
+    _require_admin(authorization, db)
     module = db.get(Module, request.module_id)
     if not module:
         raise HTTPException(status_code=404, detail="Module not found")
@@ -218,7 +245,13 @@ def create_lesson(request: LessonCreateRequest, db: Session = Depends(get_db)) -
 
 
 @router.patch("/admin/lessons/{lesson_id}", response_model=LessonRead)
-def update_lesson(lesson_id: int, request: LessonUpdateRequest, db: Session = Depends(get_db)) -> Lesson:
+def update_lesson(
+    lesson_id: int,
+    request: LessonUpdateRequest,
+    authorization: str = Header(default=""),
+    db: Session = Depends(get_db),
+) -> Lesson:
+    _require_admin(authorization, db)
     lesson = db.get(Lesson, lesson_id)
     if not lesson:
         raise HTTPException(status_code=404, detail="Lesson not found")
@@ -230,7 +263,12 @@ def update_lesson(lesson_id: int, request: LessonUpdateRequest, db: Session = De
 
 
 @router.delete("/admin/lessons/{lesson_id}")
-def delete_lesson(lesson_id: int, db: Session = Depends(get_db)) -> dict[str, str | int]:
+def delete_lesson(
+    lesson_id: int,
+    authorization: str = Header(default=""),
+    db: Session = Depends(get_db),
+) -> dict[str, str | int]:
+    _require_admin(authorization, db)
     lesson = db.get(Lesson, lesson_id)
     if not lesson:
         raise HTTPException(status_code=404, detail="Lesson not found")
@@ -241,7 +279,12 @@ def delete_lesson(lesson_id: int, db: Session = Depends(get_db)) -> dict[str, st
 
 
 @router.post("/admin/slides", response_model=SlideRead)
-def create_slide(request: SlideCreateRequest, db: Session = Depends(get_db)) -> LessonSlide:
+def create_slide(
+    request: SlideCreateRequest,
+    authorization: str = Header(default=""),
+    db: Session = Depends(get_db),
+) -> LessonSlide:
+    _require_admin(authorization, db)
     lesson = db.get(Lesson, request.lesson_id)
     if not lesson:
         raise HTTPException(status_code=404, detail="Lesson not found")
@@ -259,7 +302,13 @@ def create_slide(request: SlideCreateRequest, db: Session = Depends(get_db)) -> 
 
 
 @router.patch("/admin/slides/{slide_id}", response_model=SlideRead)
-def update_slide(slide_id: int, request: SlideUpdateRequest, db: Session = Depends(get_db)) -> LessonSlide:
+def update_slide(
+    slide_id: int,
+    request: SlideUpdateRequest,
+    authorization: str = Header(default=""),
+    db: Session = Depends(get_db),
+) -> LessonSlide:
+    _require_admin(authorization, db)
     slide = db.get(LessonSlide, slide_id)
     if not slide:
         raise HTTPException(status_code=404, detail="Slide not found")
@@ -271,7 +320,12 @@ def update_slide(slide_id: int, request: SlideUpdateRequest, db: Session = Depen
 
 
 @router.post("/admin/examples", response_model=ExampleRead)
-def create_example(request: ExampleCreateRequest, db: Session = Depends(get_db)) -> LessonExample:
+def create_example(
+    request: ExampleCreateRequest,
+    authorization: str = Header(default=""),
+    db: Session = Depends(get_db),
+) -> LessonExample:
+    _require_admin(authorization, db)
     lesson = db.get(Lesson, request.lesson_id)
     if not lesson:
         raise HTTPException(status_code=404, detail="Lesson not found")
@@ -283,7 +337,13 @@ def create_example(request: ExampleCreateRequest, db: Session = Depends(get_db))
 
 
 @router.patch("/admin/examples/{example_id}", response_model=ExampleRead)
-def update_example(example_id: int, request: ExampleUpdateRequest, db: Session = Depends(get_db)) -> LessonExample:
+def update_example(
+    example_id: int,
+    request: ExampleUpdateRequest,
+    authorization: str = Header(default=""),
+    db: Session = Depends(get_db),
+) -> LessonExample:
+    _require_admin(authorization, db)
     example = db.get(LessonExample, example_id)
     if not example:
         raise HTTPException(status_code=404, detail="Example not found")
@@ -295,7 +355,12 @@ def update_example(example_id: int, request: ExampleUpdateRequest, db: Session =
 
 
 @router.post("/admin/interactive-tasks", response_model=InteractiveTaskRead)
-def create_interactive_task(request: InteractiveTaskCreateRequest, db: Session = Depends(get_db)) -> LessonInteractiveTask:
+def create_interactive_task(
+    request: InteractiveTaskCreateRequest,
+    authorization: str = Header(default=""),
+    db: Session = Depends(get_db),
+) -> LessonInteractiveTask:
+    _require_admin(authorization, db)
     lesson = db.get(Lesson, request.lesson_id)
     if not lesson:
         raise HTTPException(status_code=404, detail="Lesson not found")
@@ -315,8 +380,10 @@ def create_interactive_task(request: InteractiveTaskCreateRequest, db: Session =
 def update_interactive_task(
     task_id: int,
     request: InteractiveTaskUpdateRequest,
+    authorization: str = Header(default=""),
     db: Session = Depends(get_db),
 ) -> LessonInteractiveTask:
+    _require_admin(authorization, db)
     task = db.get(LessonInteractiveTask, task_id)
     if not task:
         raise HTTPException(status_code=404, detail="Interactive task not found")

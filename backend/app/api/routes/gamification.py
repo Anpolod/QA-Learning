@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Header
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.api.routes.auth import _current_user
+from app.api.routes.auth import _current_user, _require_admin
 from app.database.session import get_db
 from app.models.entities import Achievement, Lesson, User, UserAchievement, UserGameStats, UserProfile, UserProgress
 from app.schemas.gamification import AchievementRead, LeaderboardRow, PlayerStatsRead, RankRead
@@ -92,14 +92,16 @@ def player_stats_me(authorization: str = Header(default=""), db: Session = Depen
 
 
 @router.get("/player/{user_id}", response_model=PlayerStatsRead)
-def player_stats(user_id: int, db: Session = Depends(get_db)) -> PlayerStatsRead:
+def player_stats(user_id: int, authorization: str = Header(default=""), db: Session = Depends(get_db)) -> PlayerStatsRead:
+    _require_admin(authorization, db)
     seed_achievements(db)
     db.commit()
     return _player_payload(user_id, db)
 
 
 @router.post("/sync/{user_id}", response_model=PlayerStatsRead)
-def sync_player_stats(user_id: int, db: Session = Depends(get_db)) -> PlayerStatsRead:
+def sync_player_stats(user_id: int, authorization: str = Header(default=""), db: Session = Depends(get_db)) -> PlayerStatsRead:
+    _require_admin(authorization, db)
     return _player_payload(user_id, db)
 
 

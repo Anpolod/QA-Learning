@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, Header, HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.api.routes.auth import _current_user
+from app.api.routes.auth import _current_user, _require_admin
 from app.database.session import get_db
 from app.models.entities import Quiz, QuizAnswer, QuizAttempt, QuizQuestion
 from app.schemas.quiz import (
@@ -21,7 +21,8 @@ router = APIRouter()
 
 
 @router.post("/admin/questions", response_model=QuizQuestionCreateResponse)
-def create_quiz_question(request: QuizQuestionCreateRequest, db: Session = Depends(get_db)) -> QuizQuestionCreateResponse:
+def create_quiz_question(request: QuizQuestionCreateRequest, authorization: str = Header(default=""), db: Session = Depends(get_db)) -> QuizQuestionCreateResponse:
+    _require_admin(authorization, db)
     if len(request.answers) < 2:
         raise HTTPException(status_code=422, detail="A quiz question needs at least two answers.")
     if not any(answer.is_correct for answer in request.answers):
@@ -50,7 +51,8 @@ def create_quiz_question(request: QuizQuestionCreateRequest, db: Session = Depen
 
 
 @router.patch("/admin/questions/{question_id}", response_model=QuizQuestionRead)
-def update_quiz_question(question_id: int, request: QuizQuestionUpdateRequest, db: Session = Depends(get_db)) -> QuizQuestionRead:
+def update_quiz_question(question_id: int, request: QuizQuestionUpdateRequest, authorization: str = Header(default=""), db: Session = Depends(get_db)) -> QuizQuestionRead:
+    _require_admin(authorization, db)
     question = db.get(QuizQuestion, question_id)
     if not question:
         raise HTTPException(status_code=404, detail="Quiz question not found")
@@ -90,7 +92,8 @@ def update_quiz_question(question_id: int, request: QuizQuestionUpdateRequest, d
 
 
 @router.delete("/admin/questions/{question_id}")
-def delete_quiz_question(question_id: int, db: Session = Depends(get_db)) -> dict[str, str | int]:
+def delete_quiz_question(question_id: int, authorization: str = Header(default=""), db: Session = Depends(get_db)) -> dict[str, str | int]:
+    _require_admin(authorization, db)
     question = db.get(QuizQuestion, question_id)
     if not question:
         raise HTTPException(status_code=404, detail="Quiz question not found")

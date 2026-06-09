@@ -27,6 +27,9 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     ...init,
     headers: {
       "Content-Type": "application/json",
+      // Attach the bearer token (when signed in) to every request so admin/personal
+      // endpoints work. An explicit Authorization in init.headers overrides this.
+      ...authHeader(),
       ...init?.headers
     },
     cache: "no-store"
