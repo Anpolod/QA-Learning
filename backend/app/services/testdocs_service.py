@@ -8,7 +8,13 @@ from sqlalchemy.orm import Session
 
 from app.ai.providers import get_text_provider
 from app.models.entities import AiUsageLog, DocAttempt, DocScenario
-from app.services.ai_service import _effective_ai_settings, _effective_secret
+from app.services.ai_service import _daily_count, _effective_ai_settings, _effective_secret
+
+
+def _enforce_daily_limit(db: Session, user_id: int) -> None:
+    effective = _effective_ai_settings(db)
+    if _daily_count(db, user_id, "text") >= int(effective["dailyTextLimitPerUser"]):
+        raise HTTPException(status_code=429, detail="Daily AI request limit reached. Try again tomorrow.")
 
 # Fields learners are expected to fill, per document type. Used to steer the review.
 EXPECTED_FIELDS = {
@@ -74,6 +80,7 @@ def list_scenarios(db: Session, doc_type: str) -> list[DocScenario]:
 
 async def generate_scenario(db: Session, doc_type: str, user_id: int) -> DocScenario:
     _validate_type(doc_type)
+    _enforce_daily_limit(db, user_id)
     label = "test case" if doc_type == "test_case" else "bug report"
     system = (
         "You design realistic QA practice scenarios for students learning to write test documentation. "
@@ -105,6 +112,7 @@ async def review_submission(
     db: Session, user_id: int, scenario_id: int, doc_type: str, fields: dict[str, str]
 ) -> tuple[DocAttempt, dict]:
     _validate_type(doc_type)
+    _enforce_daily_limit(db, user_id)
     scenario = db.get(DocScenario, scenario_id)
     if scenario is None or scenario.doc_type != doc_type:
         raise HTTPException(status_code=404, detail="Scenario not found.")
