@@ -17,7 +17,7 @@ export default async function LessonPage({ params }: { params: Promise<{ lessonI
       <BackLink label="Back" />
       <LessonProgressTracker lessonId={lesson.id} />
       <div className="grid gap-8 lg:grid-cols-[260px_1fr]">
-        <aside className="space-y-3">
+        <aside className="space-y-3 lg:sticky lg:top-6 lg:self-start">
           <Link href={`/quiz/${lesson.id}`} className="flex items-center gap-2 rounded-md border bg-white px-3 py-2 text-sm">
             <Target className="h-4 w-4 text-coral" /> Quiz
           </Link>
