@@ -80,6 +80,8 @@ export const api = {
     request<{ status: string; userId: number }>(`/api/auth/admin/users/${userId}`, {
       method: "DELETE"
     }),
+  glossary: () =>
+    request<{ slug: string; term: string; definition: string; category: string }[]>("/api/glossary"),
   courses: () => request<Course[]>("/api/courses"),
   course: (id: string) => request<Course>(`/api/courses/${id}`),
   module: (id: string) => request<Module>(`/api/courses/modules/${id}`),

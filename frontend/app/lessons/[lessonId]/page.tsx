@@ -7,6 +7,11 @@ import { LessonSlideDrawer } from "@/components/course/LessonSlideDrawer";
 import { BackLink } from "@/components/ui/BackLink";
 import { api, mediaUrl } from "@/lib/api";
 
+// Must match the backend slug derivation in app/seed/apply_glossary.py.
+function glossarySlug(term: string): string {
+  return term.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "term";
+}
+
 export default async function LessonPage({ params }: { params: Promise<{ lessonId: string }> }) {
   const { lessonId } = await params;
   const lesson = await api.lesson(lessonId);
@@ -35,7 +40,6 @@ export default async function LessonPage({ params }: { params: Promise<{ lessonI
           {[
             ["Learning goals", lesson.learning_goals],
             ["Theory explanation", lesson.theory],
-            ["Key terms", lesson.key_terms],
             ["Real-world example", lesson.real_world_example],
             ["Step-by-step explanation", lesson.step_by_step],
             ["Common mistakes", lesson.common_mistakes],
@@ -47,6 +51,27 @@ export default async function LessonPage({ params }: { params: Promise<{ lessonI
               <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-700">{body}</p>
             </section>
           ))}
+          {lesson.key_terms ? (
+            <section className="rounded-lg border border-slate-200 bg-white p-5">
+              <h2 className="text-lg font-semibold">Key terms</h2>
+              <p className="mt-1 text-xs text-slate-500">Tap a term to open its glossary definition.</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {lesson.key_terms
+                  .split(",")
+                  .map((t) => t.trim())
+                  .filter(Boolean)
+                  .map((term) => (
+                    <Link
+                      key={term}
+                      href={`/glossary#${glossarySlug(term)}`}
+                      className="rounded-full border border-slate-200 bg-paper px-3 py-1 text-sm text-ink transition hover:border-coral hover:text-coral"
+                    >
+                      {term}
+                    </Link>
+                  ))}
+              </div>
+            </section>
+          ) : null}
           <section className="rounded-lg border border-slate-200 bg-white p-5">
             <div className="flex items-center gap-2">
               <Layers className="h-5 w-5 text-amber" />

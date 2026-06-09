@@ -1,0 +1,887 @@
+[
+  {
+    "term": "acceptance criteria",
+    "definition": "The conditions that a software product or feature must satisfy to be accepted by a user, customer, or other stakeholder. They define when a user story or requirement is considered done.",
+    "category": "Documentation"
+  },
+  {
+    "term": "acceptance test-driven development (ATDD)",
+    "definition": "A collaborative practice where acceptance tests are written from acceptance criteria before development begins, using input from business, development, and testing roles. These tests guide implementation and confirm the feature meets agreed expectations.",
+    "category": "Process & Agile"
+  },
+  {
+    "term": "acceptance testing",
+    "definition": "A level of testing that validates whether a system meets business needs and acceptance criteria, typically performed by or on behalf of users or customers. Its goal is to establish confidence and decide readiness for release.",
+    "category": "Test Types"
+  },
+  {
+    "term": "action",
+    "definition": "A single step or operation performed during a test, such as clicking a button, entering text, or navigating to a page. Actions are the building blocks of test steps and automated scripts.",
+    "category": "Automation"
+  },
+  {
+    "term": "Agile",
+    "definition": "An iterative and incremental approach to software development that delivers working software in short cycles with continuous feedback and collaboration. Testing is integrated throughout rather than performed only at the end.",
+    "category": "Process & Agile"
+  },
+  {
+    "term": "ambiguity",
+    "definition": "A lack of clarity in a requirement or specification that allows it to be interpreted in more than one way. Ambiguity is a common source of defects and disagreements between stakeholders.",
+    "category": "Documentation"
+  },
+  {
+    "term": "anomaly",
+    "definition": "Any condition that deviates from expectation, based on requirements, specifications, design documents, or a person's experience. An anomaly may or may not turn out to be an actual defect.",
+    "category": "Fundamentals"
+  },
+  {
+    "term": "assertion",
+    "definition": "A check in a test that verifies an actual result matches the expected result, causing the test to pass or fail. Assertions are how automated tests determine whether the software behaves correctly.",
+    "category": "Automation"
+  },
+  {
+    "term": "attribute",
+    "definition": "A named property of an HTML element that provides additional information or configuration, such as id, class, href, or value. Attributes are commonly used to locate and interact with elements during testing.",
+    "category": "API & Web"
+  },
+  {
+    "term": "attribute selector",
+    "definition": "A way to locate an element on a web page based on one of its attributes and value, for example [name='email'] or [data-testid='login']. It is widely used in CSS and test automation to target elements reliably.",
+    "category": "API & Web"
+  },
+  {
+    "term": "auto-waiting",
+    "definition": "A feature in modern test automation tools that automatically waits for an element to be ready (visible, enabled, stable) before acting on it. It reduces flaky tests by removing the need for manual fixed delays.",
+    "category": "Automation"
+  },
+  {
+    "term": "baseURL",
+    "definition": "A configured base address for an application under test, allowing test scripts to use relative paths instead of full URLs. It makes tests easier to run against different environments such as staging or production.",
+    "category": "Automation"
+  },
+  {
+    "term": "black-box test technique",
+    "definition": "A test design technique based on analyzing the specification or behavior of a component or system without reference to its internal structure or code. Examples include equivalence partitioning and boundary value analysis.",
+    "category": "Test Design"
+  },
+  {
+    "term": "black-box testing",
+    "definition": "Testing that evaluates a system's functionality based on inputs and expected outputs without knowledge of its internal code or structure. The tester focuses on what the software does, not how it does it.",
+    "category": "Test Types"
+  },
+  {
+    "term": "boolean",
+    "definition": "A data type that can hold only one of two values, true or false. Booleans are commonly used in conditions, flags, and assertions to represent yes/no or pass/fail states.",
+    "category": "Fundamentals"
+  },
+  {
+    "term": "boundary",
+    "definition": "An edge of an equivalence partition, representing where the behavior of a system is expected to change, such as a minimum or maximum allowed value. Boundaries are common locations for defects.",
+    "category": "Test Design"
+  },
+  {
+    "term": "boundary value",
+    "definition": "An input value that lies on or immediately adjacent to a boundary of an equivalence partition, such as the smallest or largest valid value. Testing these values is effective because defects often cluster at boundaries.",
+    "category": "Test Design"
+  },
+  {
+    "term": "boundary value analysis",
+    "definition": "A black-box test design technique that derives test cases from the boundary values of equivalence partitions, including values just below, at, and just above each boundary. It targets the edges where errors are most likely to occur.",
+    "category": "Test Design"
+  },
+  {
+    "term": "branch",
+    "definition": "In version control, a separate line of development that lets you work on changes in isolation before merging them back. In code coverage, it refers to an outcome of a decision point such as the true or false path of an if statement.",
+    "category": "Tools & CI"
+  },
+  {
+    "term": "bug lifecycle",
+    "definition": "The sequence of states a defect passes through from discovery to closure, such as New, Assigned, Open, Fixed, Retested, and Closed. It defines how bugs are tracked and managed in a defect management tool.",
+    "category": "Process & Agile"
+  },
+  {
+    "term": "checklist",
+    "definition": "A list of items, conditions, or actions used to guide testing and ensure important areas are not overlooked. Checklists support consistency and are often used in exploratory or experience-based testing.",
+    "category": "Documentation"
+  },
+  {
+    "term": "CI integration",
+    "definition": "Connecting automated tests to a continuous integration system so they run automatically whenever code is committed or built. This provides fast feedback on whether new changes break existing functionality.",
+    "category": "Tools & CI"
+  },
+  {
+    "term": "CI/CD pipeline",
+    "definition": "An automated workflow that builds, tests, and delivers or deploys software changes, combining Continuous Integration with Continuous Delivery or Deployment. Tests are run as stages to catch defects before code reaches production.",
+    "category": "Tools & CI"
+  },
+  {
+    "term": "class",
+    "definition": "In object-oriented programming, a blueprint that defines the data and behavior for objects of a given type. In web testing, it can also refer to an element's class attribute used as a CSS locator with a dot prefix, such as .btn-primary.",
+    "category": "API & Web"
+  },
+  {
+    "term": "codegen",
+    "definition": "A tool feature that automatically generates test automation code by recording a user's interactions with an application. It speeds up writing tests and helps beginners learn the syntax of a framework.",
+    "category": "Automation"
+  },
+  {
+    "term": "combinatorial explosion",
+    "definition": "The rapid growth in the number of possible test combinations as the number of input parameters and their values increases. It makes exhaustive testing impractical and motivates techniques like pairwise testing.",
+    "category": "Test Design"
+  },
+  {
+    "term": "condition",
+    "definition": "A logical expression that evaluates to true or false and controls the flow of a program, such as the test in an if statement. In coverage, condition testing checks that each such expression is exercised with both outcomes.",
+    "category": "Test Design"
+  },
+  {
+    "term": "confirmation testing",
+    "definition": "Re-running a test that previously failed in order to confirm that a defect has been successfully fixed. Also known as re-testing, it verifies the specific change rather than the wider system.",
+    "category": "Test Types"
+  },
+  {
+    "term": "contract testing",
+    "definition": "A technique that verifies that two services, such as an API provider and its consumer, agree on the format and content of the messages they exchange. It catches integration breakages early without running both services together.",
+    "category": "API & Web"
+  },
+  {
+    "term": "coverage",
+    "definition": "A measure of the degree to which specified items, such as code lines, branches, or requirements, have been exercised by a set of tests, usually expressed as a percentage. It indicates how thorough testing has been against a chosen criterion.",
+    "category": "Fundamentals"
+  },
+  {
+    "term": "coverage item",
+    "definition": "A specific attribute or combination of attributes derived from test conditions that is used to measure thoroughness, such as a statement, branch, or requirement to be exercised by testing.",
+    "category": "Test Design"
+  },
+  {
+    "term": "critical path",
+    "definition": "The most important sequence of steps or features a user takes to achieve a core goal in the application, which must work correctly and is prioritized for testing.",
+    "category": "Test Design"
+  },
+  {
+    "term": "CSS selector",
+    "definition": "A pattern used to target HTML elements by their tag, class, id, attributes, or position, commonly used in automation to locate elements on a page.",
+    "category": "API & Web"
+  },
+  {
+    "term": "data-driven testing",
+    "definition": "A testing approach where test inputs and expected results are stored in external data sources, and the same test logic runs repeatedly with different data sets.",
+    "category": "Automation"
+  },
+  {
+    "term": "data-testid",
+    "definition": "A custom HTML attribute added to elements specifically to give automated tests a stable, unique locator that does not change with styling or content.",
+    "category": "API & Web"
+  },
+  {
+    "term": "decision table",
+    "definition": "A test design technique that maps combinations of input conditions to their corresponding actions or outputs, ensuring every relevant combination of business rules is tested.",
+    "category": "Test Design"
+  },
+  {
+    "term": "defect",
+    "definition": "A flaw in a component or system that can cause it to fail to perform its required function, also known as a bug or fault.",
+    "category": "Fundamentals"
+  },
+  {
+    "term": "defect clustering",
+    "definition": "The observation that a small number of modules usually contain most of the defects, so testing effort is concentrated where defects are most likely to be found.",
+    "category": "Fundamentals"
+  },
+  {
+    "term": "defect density",
+    "definition": "A metric expressing the number of defects found in a component or system relative to its size, such as defects per thousand lines of code or per requirement.",
+    "category": "Fundamentals"
+  },
+  {
+    "term": "defect prevention",
+    "definition": "Activities aimed at identifying and removing the root causes of defects early, such as reviews and improved processes, so defects are avoided rather than just detected.",
+    "category": "Process & Agile"
+  },
+  {
+    "term": "defect report",
+    "definition": "A document recording a found defect, typically including a summary, steps to reproduce, expected and actual results, severity, and environment details.",
+    "category": "Documentation"
+  },
+  {
+    "term": "Definition of Done",
+    "definition": "A shared, agreed-upon checklist of criteria that a work item must satisfy to be considered complete, such as code reviewed, tested, and documented.",
+    "category": "Process & Agile"
+  },
+  {
+    "term": "deliverables",
+    "definition": "The tangible work products produced and handed over during testing, such as test plans, test cases, defect reports, and test summary reports.",
+    "category": "Documentation"
+  },
+  {
+    "term": "DOM",
+    "definition": "The Document Object Model is a tree-structured, programmatic representation of an HTML page that browsers and automation tools use to read and manipulate elements.",
+    "category": "API & Web"
+  },
+  {
+    "term": "driver.quit()",
+    "definition": "A Selenium WebDriver command that closes all browser windows opened by the session and ends the WebDriver process, freeing associated resources.",
+    "category": "Automation"
+  },
+  {
+    "term": "dynamic testing",
+    "definition": "Testing that involves executing the software with test inputs to evaluate its behavior, as opposed to static testing which examines artifacts without running the code.",
+    "category": "Test Types"
+  },
+  {
+    "term": "edge case",
+    "definition": "A test scenario at the extreme boundary or an unusual condition of input or operation, where defects are more likely to occur.",
+    "category": "Test Design"
+  },
+  {
+    "term": "encapsulation",
+    "definition": "An object-oriented programming principle that bundles data with the methods that operate on it and hides internal details, exposing only a controlled interface.",
+    "category": "Automation"
+  },
+  {
+    "term": "entry criteria",
+    "definition": "The conditions that must be met before a test activity or phase can begin, such as a stable build, ready test environment, and available test data.",
+    "category": "Process & Agile"
+  },
+  {
+    "term": "environment",
+    "definition": "The configured setup of hardware, software, network, and data on which the application is deployed and tested, such as development, staging, or production.",
+    "category": "Tools & CI"
+  },
+  {
+    "term": "environment variable",
+    "definition": "A named value stored outside the code in the operating system or runtime, used to configure behavior such as URLs, credentials, or feature flags without changing source.",
+    "category": "Tools & CI"
+  },
+  {
+    "term": "equivalence partition",
+    "definition": "A group of input values that the system is expected to treat the same way, so testing one representative value from the partition stands in for the whole group.",
+    "category": "Test Design"
+  },
+  {
+    "term": "equivalence partitioning",
+    "definition": "A test design technique that divides input data into partitions of equivalent values and selects one representative from each, reducing the number of test cases while maintaining coverage.",
+    "category": "Test Design"
+  },
+  {
+    "term": "error",
+    "definition": "A human action that produces an incorrect result, such as a mistake by a developer that introduces a defect into the code.",
+    "category": "Fundamentals"
+  },
+  {
+    "term": "event",
+    "definition": "An action or occurrence detected by the application, such as a click, key press, page load, or message, which can trigger handling logic.",
+    "category": "API & Web"
+  },
+  {
+    "term": "exhaustive testing",
+    "definition": "A theoretical approach that tests all possible combinations of inputs and preconditions, which is generally impractical except for trivial cases, so risk-based prioritization is used instead.",
+    "category": "Fundamentals"
+  },
+  {
+    "term": "exit criteria",
+    "definition": "The conditions that must be met to declare a test activity or phase complete, such as planned tests executed, coverage achieved, and no open critical defects.",
+    "category": "Process & Agile"
+  },
+  {
+    "term": "expected result",
+    "definition": "The predicted behavior or output of the system for a given test input under specified conditions, defined before execution and compared against the actual result.",
+    "category": "Test Design"
+  },
+  {
+    "term": "expected vs actual",
+    "definition": "The comparison between what the system was predicted to do and what it actually did during a test; a mismatch indicates a potential defect.",
+    "category": "Fundamentals"
+  },
+  {
+    "term": "expected vs actual result",
+    "definition": "A documented comparison of the predicted outcome against the observed outcome of a test, where a discrepancy signals a failure and is the basis for raising a defect.",
+    "category": "Documentation"
+  },
+  {
+    "term": "expected_conditions",
+    "definition": "In Selenium, a set of predefined conditions (e.g., element is clickable, visible, or present) used with explicit waits to pause a test until the condition is met. It helps synchronize tests with dynamic page state.",
+    "category": "Automation"
+  },
+  {
+    "term": "experience-based test technique",
+    "definition": "A test design approach where cases are derived from the tester's knowledge, intuition, and experience rather than formal specifications or coverage models. Examples include exploratory testing and error guessing.",
+    "category": "Test Design"
+  },
+  {
+    "term": "explicit wait",
+    "definition": "An automation technique that pauses a test until a specific condition is satisfied or a timeout expires, applied only to a targeted element. It makes tests more reliable against dynamic loading without slowing the whole suite.",
+    "category": "Automation"
+  },
+  {
+    "term": "exploratory testing",
+    "definition": "An approach in which test design, execution, and learning happen simultaneously, with the tester actively investigating the application rather than following predefined scripts. It is effective for finding defects that scripted testing might miss.",
+    "category": "Test Types"
+  },
+  {
+    "term": "failure",
+    "definition": "An observable deviation of the software's actual behavior from its expected behavior during execution. A failure is caused by a defect (fault) in the code being triggered.",
+    "category": "Fundamentals"
+  },
+  {
+    "term": "Faker",
+    "definition": "A library that generates realistic fake data such as names, emails, addresses, and dates for use in tests and demos. It helps create varied test data without hardcoding values.",
+    "category": "Automation"
+  },
+  {
+    "term": "fixture",
+    "definition": "A fixed setup of preconditions, data, or environment state established before a test runs and torn down afterward, ensuring tests start from a known, consistent state. Frameworks like pytest provide fixtures as reusable setup functions.",
+    "category": "Automation"
+  },
+  {
+    "term": "fixtures",
+    "definition": "Reusable setup and teardown components that prepare the preconditions, test data, or environment needed for tests to run reliably and in isolation. In frameworks like pytest they are defined once and shared across multiple tests.",
+    "category": "Automation"
+  },
+  {
+    "term": "flakiness",
+    "definition": "The tendency of a test to produce inconsistent results (sometimes passing, sometimes failing) without any change to the code under test. It is often caused by timing issues, shared state, or environment instability.",
+    "category": "Automation"
+  },
+  {
+    "term": "flaky test",
+    "definition": "A test that yields different outcomes (pass or fail) across runs despite no change in the code being tested, making results unreliable. Common causes include race conditions, improper waits, and test-order dependencies.",
+    "category": "Automation"
+  },
+  {
+    "term": "foreign key",
+    "definition": "A column (or set of columns) in a database table that references the primary key of another table, enforcing a relationship between the two. It maintains referential integrity by preventing orphaned or invalid links.",
+    "category": "SQL & Data"
+  },
+  {
+    "term": "functional testing",
+    "definition": "Testing that verifies the software does what it is supposed to do, evaluating features and behavior against functional requirements. It focuses on what the system does rather than how well it performs.",
+    "category": "Test Types"
+  },
+  {
+    "term": "Given/When/Then",
+    "definition": "A structured format from Behavior-Driven Development for writing scenarios, where Given sets up context, When describes an action, and Then states the expected outcome. It makes test cases readable and shared across technical and business stakeholders.",
+    "category": "Documentation"
+  },
+  {
+    "term": "guard condition",
+    "definition": "A boolean expression attached to a transition in a state or decision model that must be true for that transition to be taken. It controls which path the system follows when an event occurs.",
+    "category": "Test Design"
+  },
+  {
+    "term": "hallucination",
+    "definition": "When an AI model generates output that is plausible-sounding but factually incorrect, fabricated, or not grounded in its input or source data. In QA, it is a key risk to validate for when testing AI-generated content or test artifacts.",
+    "category": "AI for QA"
+  },
+  {
+    "term": "HTTP status code",
+    "definition": "A three-digit number returned by a server indicating the result of an HTTP request, grouped into classes such as 2xx (success), 4xx (client error), and 5xx (server error). Testers assert on these codes to verify API responses.",
+    "category": "API & Web"
+  },
+  {
+    "term": "idempotency",
+    "definition": "A property where performing the same operation multiple times produces the same result as performing it once, with no additional side effects. It is important for safely retrying API requests such as PUT or DELETE.",
+    "category": "API & Web"
+  },
+  {
+    "term": "IEEE 829",
+    "definition": "A standard for software test documentation that defines templates for artifacts such as test plans, test cases, test logs, and test summary reports. It provides a common structure for documenting testing activities.",
+    "category": "Documentation"
+  },
+  {
+    "term": "impact analysis",
+    "definition": "The assessment of how a change to the software affects other parts of the system, used to determine what needs to be re-tested. It helps scope regression testing efficiently.",
+    "category": "Process & Agile"
+  },
+  {
+    "term": "index",
+    "definition": "A database structure that speeds up data retrieval on one or more columns, much like an index in a book. It improves query performance at the cost of extra storage and slower writes.",
+    "category": "SQL & Data"
+  },
+  {
+    "term": "inheritance",
+    "definition": "An object-oriented programming concept where a class derives properties and behavior from a parent class, enabling code reuse. In test automation it is often used to share common setup and helper methods across test classes or page objects.",
+    "category": "Automation"
+  },
+  {
+    "term": "invalid partition",
+    "definition": "In equivalence partitioning, a group of input values that the system is expected to reject or handle as erroneous. Testing one value from this partition verifies the software's negative-path handling.",
+    "category": "Test Design"
+  },
+  {
+    "term": "INVEST",
+    "definition": "An acronym for the qualities of a well-formed user story: Independent, Negotiable, Valuable, Estimable, Small, and Testable. It helps teams assess whether a story is ready for development.",
+    "category": "Process & Agile"
+  },
+  {
+    "term": "JSON schema validation",
+    "definition": "Checking that a JSON payload conforms to a defined schema specifying required fields, data types, and structure. It is commonly used in API testing to verify response contracts.",
+    "category": "API & Web"
+  },
+  {
+    "term": "locator",
+    "definition": "A strategy or expression used in UI automation to find and identify an element on a page, such as an ID, CSS selector, or XPath. Reliable locators are essential for stable automated tests.",
+    "category": "Automation"
+  },
+  {
+    "term": "maintainability",
+    "definition": "A non-functional quality characteristic describing how easily software can be modified to fix defects, improve, or adapt it to a changed environment. Higher maintainability lowers the cost and risk of future changes.",
+    "category": "Fundamentals"
+  },
+  {
+    "term": "negative testing",
+    "definition": "Testing that uses invalid, unexpected, or boundary-breaking inputs to verify the software handles errors gracefully rather than crashing or behaving incorrectly. It confirms the system rejects what it should reject.",
+    "category": "Test Types"
+  },
+  {
+    "term": "non-functional testing",
+    "definition": "Testing that evaluates how well a system performs rather than what it does, covering attributes such as performance, security, usability, and reliability. It verifies quality characteristics against non-functional requirements.",
+    "category": "Test Types"
+  },
+  {
+    "term": "off-by-one",
+    "definition": "A common mistake where a count, loop boundary, or index is wrong by exactly one, such as iterating one time too many or too few. It frequently appears at boundaries, which is why boundary value testing targets it.",
+    "category": "Test Design"
+  },
+  {
+    "term": "off-by-one error",
+    "definition": "A logic defect in which a value at a boundary is off by exactly one, for example using <= instead of < or starting a loop at the wrong index. Boundary value analysis is designed to catch this class of error.",
+    "category": "Test Design"
+  },
+  {
+    "term": "OpenAPI/Swagger",
+    "definition": "A standard, machine-readable specification format for describing REST APIs, including endpoints, request/response schemas, and authentication. Swagger is the original tooling and UI built around the OpenAPI Specification.",
+    "category": "API & Web"
+  },
+  {
+    "term": "Page Object Model",
+    "definition": "A test automation design pattern where each web page (or component) is represented by a class that encapsulates its locators and actions, keeping tests readable and easier to maintain when the UI changes.",
+    "category": "Automation"
+  },
+  {
+    "term": "parameter",
+    "definition": "A named input value passed to a function, API request, or test that affects its behavior or output. In testing, parameters define the specific data a test case operates on.",
+    "category": "Fundamentals"
+  },
+  {
+    "term": "parametrization",
+    "definition": "Running the same test logic multiple times with different sets of input data, so one test definition covers many cases. It reduces duplication and improves data coverage in automated tests.",
+    "category": "Automation"
+  },
+  {
+    "term": "pass rate",
+    "definition": "The percentage of executed test cases that passed, calculated as passed tests divided by total executed tests. It is a common metric for tracking test execution health and build quality.",
+    "category": "Process & Agile"
+  },
+  {
+    "term": "payload",
+    "definition": "The actual data carried in the body of an API request or response, typically formatted as JSON or XML. It excludes headers and metadata, containing the meaningful content being sent or received.",
+    "category": "API & Web"
+  },
+  {
+    "term": "pesticide paradox",
+    "definition": "The principle that repeating the same tests over time stops finding new defects because the code becomes immune to those tests. It implies tests must be regularly reviewed and updated to remain effective.",
+    "category": "Fundamentals"
+  },
+  {
+    "term": "positive testing",
+    "definition": "Testing that verifies the system behaves correctly when given valid, expected inputs and used as intended. It confirms the application does what it is supposed to do under normal conditions.",
+    "category": "Test Types"
+  },
+  {
+    "term": "precondition",
+    "definition": "The state or set of conditions that must be true before a test case can be executed, such as a logged-in user or seeded test data. It defines the required starting context for the test.",
+    "category": "Test Design"
+  },
+  {
+    "term": "priority",
+    "definition": "A ranking that indicates how soon a defect should be fixed or a test should be run, based on business urgency rather than technical impact. Higher priority items are addressed first.",
+    "category": "Process & Agile"
+  },
+  {
+    "term": "priority (P1/P2/P3)",
+    "definition": "A labeled scale for ordering defect fixes by urgency, where P1 is critical and must be fixed immediately, P2 is important but can wait, and P3 is low and can be deferred.",
+    "category": "Documentation"
+  },
+  {
+    "term": "Quality Assurance",
+    "definition": "The process-focused discipline of preventing defects by defining, improving, and following standards and processes throughout the software lifecycle. QA is about building quality in rather than checking it at the end.",
+    "category": "Fundamentals"
+  },
+  {
+    "term": "Quality Control",
+    "definition": "The product-focused activity of detecting defects in a finished or in-progress product through testing, inspection, and reviews. QC checks whether the actual output meets the required quality standards.",
+    "category": "Fundamentals"
+  },
+  {
+    "term": "regression",
+    "definition": "A defect where previously working functionality breaks after a code change, fix, or new feature. It indicates that a recent modification unintentionally degraded existing behavior.",
+    "category": "Fundamentals"
+  },
+  {
+    "term": "regression testing",
+    "definition": "Re-running existing tests after a code change to confirm that previously working features still function correctly and that no new defects were introduced. It guards against unintended side effects of changes.",
+    "category": "Test Types"
+  },
+  {
+    "term": "release recommendation",
+    "definition": "A QA judgment on whether a build is ready to be released, based on test results, open defects, and remaining risk. It is typically a go, no-go, or conditional-go decision communicated to stakeholders.",
+    "category": "Process & Agile"
+  },
+  {
+    "term": "reproducibility",
+    "definition": "The degree to which a defect can be reliably triggered again by following the same steps. A reproducible bug has consistent, documented steps that make it easy for developers to investigate and fix.",
+    "category": "Documentation"
+  },
+  {
+    "term": "request",
+    "definition": "A message a client sends to a server to perform an action or retrieve data, typically including a method, URL, headers, and an optional body. In APIs, the request specifies what the client wants.",
+    "category": "API & Web"
+  },
+  {
+    "term": "residual risk",
+    "definition": "The risk that remains after testing and mitigation actions have been completed, representing the chance of undetected defects in the released product. It is the risk the team knowingly accepts at release.",
+    "category": "Process & Agile"
+  },
+  {
+    "term": "responsive layout",
+    "definition": "A web design approach where the page layout automatically adapts to different screen sizes and devices, such as phones, tablets, and desktops. Testing it ensures content remains usable and correctly arranged across breakpoints.",
+    "category": "API & Web"
+  },
+  {
+    "term": "REST",
+    "definition": "An architectural style for web APIs that uses standard HTTP methods (GET, POST, PUT, DELETE) to operate on resources identified by URLs, usually exchanging data as JSON. It is stateless and widely used for web services.",
+    "category": "API & Web"
+  },
+  {
+    "term": "retries",
+    "definition": "Automatically re-running a failed test or operation one or more times to determine whether the failure is consistent or caused by intermittent flakiness. They help distinguish real defects from unstable conditions.",
+    "category": "Automation"
+  },
+  {
+    "term": "review",
+    "definition": "A static testing activity where work products such as requirements, designs, or code are examined by people to find defects and improve quality before execution. Examples include walkthroughs, inspections, and peer reviews.",
+    "category": "Test Types"
+  },
+  {
+    "term": "risk and mitigation",
+    "definition": "The practice of identifying potential problems that could threaten a project or product and defining actions to reduce their likelihood or impact. It guides where testing and preventive effort should be focused.",
+    "category": "Process & Agile"
+  },
+  {
+    "term": "risk-based testing",
+    "definition": "A testing approach that prioritizes test effort according to the likelihood and impact of failures, focusing first on the highest-risk areas. It allocates limited testing time where defects would be most damaging.",
+    "category": "Test Design"
+  },
+  {
+    "term": "root cause",
+    "definition": "The underlying reason a defect occurred, as opposed to its visible symptom. Identifying the root cause through analysis helps fix the real problem and prevent similar defects from recurring.",
+    "category": "Process & Agile"
+  },
+  {
+    "term": "rule",
+    "definition": "A condition or constraint that defines required system behavior, such as a business rule or validation rule. In testing, rules guide the expected outcomes that test cases verify.",
+    "category": "Test Design"
+  },
+  {
+    "term": "scope",
+    "definition": "The defined boundaries of what is and is not included in a testing effort, covering features, environments, and activities to be tested. It clarifies what the team is responsible for verifying.",
+    "category": "Documentation"
+  },
+  {
+    "term": "scope (in/out)",
+    "definition": "An explicit listing of which items are included (in scope) and excluded (out of scope) from a test effort. It prevents misunderstandings about what will and will not be tested.",
+    "category": "Documentation"
+  },
+  {
+    "term": "Scrum",
+    "definition": "An agile framework for delivering work in short, fixed iterations called sprints, using roles (Product Owner, Scrum Master, Developers) and events like sprint planning, daily standups, reviews, and retrospectives. Testing is integrated continuously within each sprint.",
+    "category": "Process & Agile"
+  },
+  {
+    "term": "SELECT",
+    "definition": "A SQL statement used to query and retrieve rows of data from one or more database tables, optionally filtering, sorting, and joining the results. Testers use it to verify that an application stored the correct data.",
+    "category": "SQL & Data"
+  },
+  {
+    "term": "session-based test management",
+    "definition": "An exploratory testing approach that organizes work into time-boxed, uninterrupted sessions guided by a charter, with the tester recording findings and debrief notes afterward. It makes unscripted testing measurable and accountable.",
+    "category": "Test Types"
+  },
+  {
+    "term": "severity",
+    "definition": "A measure of how seriously a defect affects the operation or quality of the product from a technical standpoint, independent of business urgency. It ranges from cosmetic to critical (e.g., a crash or data loss).",
+    "category": "Fundamentals"
+  },
+  {
+    "term": "shift-left",
+    "definition": "The practice of moving testing and quality activities earlier in the software lifecycle so defects are found and prevented sooner. It involves testers engaging during requirements and design rather than only at the end.",
+    "category": "Process & Agile"
+  },
+  {
+    "term": "single responsibility",
+    "definition": "A design principle stating that a module, class, or function should have only one reason to change, meaning it should do one well-defined job. In testing it leads to clearer, more maintainable test code where each test checks one thing.",
+    "category": "Automation"
+  },
+  {
+    "term": "smoke test",
+    "definition": "A quick, shallow set of tests run on a new build to confirm that the most critical functions work before deeper testing begins. If the smoke test fails, the build is rejected without spending effort on full testing.",
+    "category": "Test Types"
+  },
+  {
+    "term": "specificity",
+    "definition": "In a binary classifier or detection model, the proportion of actual negatives that are correctly identified as negative (the true negative rate). It indicates how well the model avoids false alarms.",
+    "category": "AI for QA"
+  },
+  {
+    "term": "sprint",
+    "definition": "A fixed, short time-box (commonly one to four weeks) in Scrum during which a team builds a potentially shippable increment of working software. Testing happens continuously within the sprint alongside development.",
+    "category": "Process & Agile"
+  },
+  {
+    "term": "stack trace",
+    "definition": "A report showing the sequence of function or method calls that led to an error or exception at the moment it occurred. Testers and developers use it to pinpoint where and why a failure happened in the code.",
+    "category": "Tools & CI"
+  },
+  {
+    "term": "StaleElementReferenceException",
+    "definition": "A Selenium error thrown when a previously located web element is no longer attached to the page's DOM, typically because the page reloaded or re-rendered. It is fixed by re-locating the element before interacting with it.",
+    "category": "Automation"
+  },
+  {
+    "term": "state",
+    "definition": "A specific condition or mode of a system at a given moment, determined by the data it holds and what it is currently doing (e.g., logged-in, empty cart, processing). Behavior often depends on which state the system is in.",
+    "category": "Test Design"
+  },
+  {
+    "term": "state transition diagram",
+    "definition": "A graphical model showing the states a system can be in, the events that trigger moves between them, and the resulting transitions. It helps testers visualize valid and invalid paths through the system.",
+    "category": "Test Design"
+  },
+  {
+    "term": "state transition table",
+    "definition": "A grid that lists every combination of state and input event, showing the resulting next state and any output, including invalid or undefined transitions. It helps testers derive test cases that cover both valid and invalid behavior.",
+    "category": "Test Design"
+  },
+  {
+    "term": "state transition testing",
+    "definition": "A black-box test design technique that derives test cases from a model of the system's states, events, and transitions. It targets valid paths, invalid paths, and unexpected events between states.",
+    "category": "Test Design"
+  },
+  {
+    "term": "static analysis",
+    "definition": "The automated examination of source code, configuration, or other artifacts without executing them, used to detect defects, code smells, and standards violations. Tools like linters and SAST scanners perform it.",
+    "category": "Test Types"
+  },
+  {
+    "term": "static testing",
+    "definition": "Testing that evaluates work products such as code, requirements, or designs without running the software, typically through reviews and static analysis. It finds defects early, often before any code is executed.",
+    "category": "Test Types"
+  },
+  {
+    "term": "steps to reproduce",
+    "definition": "The clear, numbered sequence of actions in a bug report that lets anyone recreate the defect reliably. Good steps to reproduce make a defect faster to confirm and fix.",
+    "category": "Documentation"
+  },
+  {
+    "term": "string",
+    "definition": "A data type representing a sequence of characters, such as text, used to store values like names or messages. Testers probe strings with edge cases like empty values, special characters, and length limits.",
+    "category": "SQL & Data"
+  },
+  {
+    "term": "synthetic data",
+    "definition": "Artificially generated data that mimics the structure and patterns of real data but contains no actual production records. It lets testers cover scenarios safely without exposing sensitive personal information.",
+    "category": "SQL & Data"
+  },
+  {
+    "term": "test automation",
+    "definition": "The use of software tools and scripts to execute tests, manage test data, and compare actual outcomes against expected results without manual effort. It speeds up repetitive checks and supports frequent regression testing.",
+    "category": "Automation"
+  },
+  {
+    "term": "test basis",
+    "definition": "The body of knowledge used as the foundation for designing tests, such as requirements, specifications, user stories, or risk analyses. Tests are traced back to the test basis to ensure adequate coverage.",
+    "category": "Documentation"
+  },
+  {
+    "term": "test case",
+    "definition": "A defined set of preconditions, inputs, actions, and expected results created to verify whether a specific aspect of the system behaves correctly. Running it produces a pass or fail outcome.",
+    "category": "Test Design"
+  },
+  {
+    "term": "test case design",
+    "definition": "The activity of deriving and specifying test cases from the test basis using techniques such as equivalence partitioning, boundary value analysis, or state transition testing. The goal is effective coverage with a manageable number of tests.",
+    "category": "Test Design"
+  },
+  {
+    "term": "test completion",
+    "definition": "The activity at the end of a test phase or project where results are summarized, test artifacts are archived, lessons learned are captured, and a completion report is produced. It confirms exit criteria are met before closing out testing.",
+    "category": "Process & Agile"
+  },
+  {
+    "term": "test condition",
+    "definition": "A testable aspect of a component or system, such as a function, feature, or requirement, that could be checked by one or more test cases. It identifies what to test before detailing how to test it.",
+    "category": "Test Design"
+  },
+  {
+    "term": "test coverage",
+    "definition": "A metric expressing how much of a defined item, such as code, requirements, or risks, has been exercised by a set of tests, usually as a percentage. Higher coverage indicates less untested area but does not guarantee absence of defects.",
+    "category": "Fundamentals"
+  },
+  {
+    "term": "test data",
+    "definition": "The input values and stored records used during test execution to drive the system and verify its behavior. It is prepared to cover valid, invalid, and boundary scenarios.",
+    "category": "SQL & Data"
+  },
+  {
+    "term": "test execution",
+    "definition": "The process of running test cases against the software and comparing actual results with expected results to determine pass or fail. Defects are logged when discrepancies are found.",
+    "category": "Fundamentals"
+  },
+  {
+    "term": "test execution tool",
+    "definition": "Software that runs tests automatically, supplies inputs, and records and compares actual versus expected results, such as Selenium or a test runner. It enables repeatable, efficient running of automated tests.",
+    "category": "Tools & CI"
+  },
+  {
+    "term": "test isolation",
+    "definition": "Designing tests so each one runs independently without relying on the state, order, or side effects of other tests. It makes failures easier to diagnose and prevents one test from corrupting another.",
+    "category": "Automation"
+  },
+  {
+    "term": "test isolation / order dependence",
+    "definition": "Test isolation means each test runs independently with its own setup and state, so results do not depend on other tests; order dependence is the anti-pattern where a test only passes if earlier tests ran first, causing flaky or unreliable suites.",
+    "category": "Automation"
+  },
+  {
+    "term": "test level",
+    "definition": "A group of test activities organized and managed together within the development lifecycle, such as component (unit), integration, system, and acceptance testing.",
+    "category": "Fundamentals"
+  },
+  {
+    "term": "test object",
+    "definition": "The specific component, system, or part of the software that is being tested, also called the test item or system under test.",
+    "category": "Fundamentals"
+  },
+  {
+    "term": "test plan",
+    "definition": "A document describing the scope, objectives, approach, resources, schedule, and entry/exit criteria for testing activities on a project.",
+    "category": "Documentation"
+  },
+  {
+    "term": "test planning",
+    "definition": "The activity of defining test objectives, scope, and approach and selecting the resources, schedule, and tasks needed to meet those objectives, typically resulting in a test plan.",
+    "category": "Process & Agile"
+  },
+  {
+    "term": "test pyramid",
+    "definition": "A model for structuring an automated test suite with many fast, cheap unit tests at the base, fewer integration tests in the middle, and a small number of slow end-to-end (UI) tests at the top.",
+    "category": "Automation"
+  },
+  {
+    "term": "test scenario",
+    "definition": "A high-level description of a feature or end-to-end flow to be tested, written from the user's perspective, which can be broken down into one or more concrete test cases.",
+    "category": "Test Design"
+  },
+  {
+    "term": "test strategy",
+    "definition": "A high-level, often organization-wide document describing the general testing approach, methods, and principles applied across projects, independent of any single project's specifics.",
+    "category": "Documentation"
+  },
+  {
+    "term": "test summary report",
+    "definition": "A document produced at the end of testing that summarizes the activities performed, results achieved, defects found, and an evaluation of whether exit criteria and quality goals were met.",
+    "category": "Documentation"
+  },
+  {
+    "term": "testability",
+    "definition": "The degree to which a component or system supports effective and efficient testing, including how easily its state can be controlled and observed.",
+    "category": "Fundamentals"
+  },
+  {
+    "term": "Testing",
+    "definition": "The process of evaluating software to find defects and verify that it meets requirements, encompassing both static activities (like reviews) and dynamic execution of the system.",
+    "category": "Fundamentals"
+  },
+  {
+    "term": "testware",
+    "definition": "All work products created during the testing process, such as test plans, test cases, test scripts, test data, and test reports, which are used and reused across testing.",
+    "category": "Documentation"
+  },
+  {
+    "term": "trace viewer",
+    "definition": "A debugging tool (notably in Playwright) that records a step-by-step trace of a test run, letting you replay actions, view DOM snapshots, screenshots, network calls, and console logs to diagnose failures.",
+    "category": "Automation"
+  },
+  {
+    "term": "traceability",
+    "definition": "The ability to link related work items together, such as connecting requirements to the test cases that verify them and to the defects found, so coverage and impact can be tracked.",
+    "category": "Process & Agile"
+  },
+  {
+    "term": "traceability matrix",
+    "definition": "A table or grid that maps requirements to their corresponding test cases (and often defects), used to confirm that every requirement is covered by at least one test.",
+    "category": "Documentation"
+  },
+  {
+    "term": "transition",
+    "definition": "In a state transition model, a change from one state to another triggered by an event or condition, used as the basis for state transition testing.",
+    "category": "Test Design"
+  },
+  {
+    "term": "V-Model",
+    "definition": "A sequential software development model that pairs each development phase with a corresponding test level, emphasizing that test design begins early alongside the matching requirement or design activity.",
+    "category": "Process & Agile"
+  },
+  {
+    "term": "valid partition",
+    "definition": "In equivalence partitioning, a group of input values that the system is expected to accept and process correctly, so testing one representative value covers the whole group.",
+    "category": "Test Design"
+  },
+  {
+    "term": "validation",
+    "definition": "Confirmation that the software meets the user's actual needs and intended use, answering the question \"are we building the right product?\"",
+    "category": "Fundamentals"
+  },
+  {
+    "term": "verification",
+    "definition": "Confirmation that the software conforms to its specified requirements and was built correctly, answering the question \"are we building the product right?\"",
+    "category": "Fundamentals"
+  },
+  {
+    "term": "W3C WebDriver protocol",
+    "definition": "A standardized HTTP-based wire protocol defined by the W3C that lets test tools send commands to and receive results from web browsers, enabling cross-browser automation like Selenium.",
+    "category": "API & Web"
+  },
+  {
+    "term": "Waterfall",
+    "definition": "A sequential software development model where phases like requirements, design, implementation, and testing are completed one after another, with testing concentrated near the end.",
+    "category": "Process & Agile"
+  },
+  {
+    "term": "WebDriver",
+    "definition": "An interface and protocol for automating browsers by programmatically controlling a real browser, forming the engine behind tools such as Selenium WebDriver.",
+    "category": "Automation"
+  },
+  {
+    "term": "WebDriverWait",
+    "definition": "A Selenium mechanism for explicit waits that pauses test execution until a specified condition (such as an element becoming visible or clickable) is met or a timeout is reached, reducing flaky tests.",
+    "category": "Automation"
+  },
+  {
+    "term": "white-box test technique",
+    "definition": "A test design technique that derives test cases from the internal structure of the code, such as statement coverage, branch/decision coverage, and path coverage.",
+    "category": "Test Design"
+  },
+  {
+    "term": "white-box testing",
+    "definition": "Testing based on knowledge of the software's internal structure, code, and implementation, focusing on exercising paths, branches, and statements rather than just external behavior.",
+    "category": "Test Types"
+  },
+  {
+    "term": "workflow",
+    "definition": "A defined sequence of steps or states that a process or user follows from start to finish, often modeled and tested to ensure each path through the business process behaves correctly.",
+    "category": "Process & Agile"
+  }
+]

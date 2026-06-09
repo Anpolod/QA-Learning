@@ -9,6 +9,7 @@ import { AuthNav } from "@/components/auth/AuthNav";
 
 const LINKS: [string, string][] = [
   ["/courses", "Courses"],
+  ["/glossary", "Glossary"],
   ["/docs", "Docs"],
   ["/api-testing", "API Testing"],
   ["/interview", "Interview"],

@@ -4,7 +4,7 @@ from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 
-from app.api.routes import ai, auth, courses, gamification, homework, progress, quizzes
+from app.api.routes import ai, auth, courses, gamification, glossary, homework, progress, quizzes
 from app.core.config import settings
 from app.database.session import Base, engine
 
@@ -69,6 +69,7 @@ app.include_router(homework.router, prefix="/api/homework", tags=["homework"])
 app.include_router(progress.router, prefix="/api/progress", tags=["progress"])
 app.include_router(gamification.router, prefix="/api/gamification", tags=["gamification"])
 app.include_router(ai.router, prefix="/api/ai", tags=["ai"])
+app.include_router(glossary.router, prefix="/api/glossary", tags=["glossary"])
 
 
 @app.get("/health")

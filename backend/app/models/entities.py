@@ -338,3 +338,14 @@ class AiGeneratedImage(Base):
     provider: Mapped[str] = mapped_column(String(80), default="openai")
     model: Mapped[str] = mapped_column(String(120))
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class GlossaryTerm(Base):
+    __tablename__ = "glossary_terms"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    slug: Mapped[str] = mapped_column(String(160), unique=True, index=True)
+    term: Mapped[str] = mapped_column(String(160))
+    definition: Mapped[str] = mapped_column(Text)
+    category: Mapped[str] = mapped_column(String(60), default="")
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)

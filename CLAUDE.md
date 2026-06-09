@@ -47,7 +47,7 @@ Note: README/AGENTS mention Playwright e2e, but no `playwright.config` or `tests
 
 **Backend** (`backend/app/`):
 - `main.py` — creates the app, CORS, mounts `/uploads`, and **`Base.metadata.create_all(bind=engine)`**. There is **no Alembic**; schema changes happen by editing `models/entities.py` and recreating tables (drop the `postgres_data` volume to reset).
-- `api/routes/` — routers: `courses`, `auth`, `quizzes`, `homework`, `progress`, `gamification`, `ai`. Each mounted at `/api/<name>`. **Lessons, modules, slides, examples, and admin CRUD do NOT have their own routers** — they live as `/admin/*` endpoints inside `courses.py` and `ai.py`.
+- `api/routes/` — routers: `courses`, `auth`, `quizzes`, `homework`, `progress`, `gamification`, `ai`, `glossary`. Each mounted at `/api/<name>`. **Lessons, modules, slides, examples, and admin CRUD do NOT have their own routers** — they live as `/admin/*` endpoints inside `courses.py` and `ai.py`. The **glossary** (`GET /api/glossary`) serves QA terms from the `glossary_terms` table (seeded via `app.seed.apply_glossary` from `seed/glossary.json`); the frontend `/glossary` page renders them and lesson "Key terms" link to `/glossary#<slug>` (slug derivation must match `apply_glossary.slugify`).
 - `models/entities.py` — **all SQLAlchemy models in one file** (~340 lines), not split per the aspirational `docs/ARCHITECTURE.md`.
 - `schemas/` — Pydantic schemas grouped by domain (`course`, `auth`, `quiz`, `homework`, `ai`, `gamification`).
 - `services/` — business logic: `ai_service.py`, `gamification_service.py`, `progress_service.py`. Keep route handlers thin; put logic here.

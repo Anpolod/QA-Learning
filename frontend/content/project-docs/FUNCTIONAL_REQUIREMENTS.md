@@ -722,3 +722,17 @@ Expected Result
 Actual Result
 Status
 ```
+
+## Glossary
+
+### FR-GLOSSARY-001: QA Glossary
+
+The system shall provide a public glossary of core QA terms.
+
+- The glossary lists ~177 core testing terms (terms that recur across multiple lessons), each with a concise definition and a category.
+- Terms are served from `GET /api/glossary` (table `glossary_terms`, seeded from `seed/glossary.json` via `app.seed.apply_glossary`).
+- The `/glossary` page is reachable from the main navigation, supports search by term or definition, and groups terms alphabetically with per-term anchors.
+
+### FR-GLOSSARY-002: Lesson term links
+
+Each lesson's "Key terms" are rendered as links to the matching glossary entry (`/glossary#<slug>`), so learners can open a definition from any lesson.
