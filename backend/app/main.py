@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html
 from fastapi.staticfiles import StaticFiles
@@ -23,6 +23,20 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def cookie_to_auth_header(request: Request, call_next):
+    # Let the httpOnly access_token cookie act as the bearer token: if there is no
+    # Authorization header, inject one from the cookie so existing auth code works.
+    has_auth = any(key == b"authorization" for key, _ in request.scope["headers"])
+    if not has_auth:
+        token = request.cookies.get("access_token")
+        if token:
+            request.scope["headers"] = request.scope["headers"] + [
+                (b"authorization", f"Bearer {token}".encode())
+            ]
+    return await call_next(request)
 
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 app.mount("/static", StaticFiles(directory="app/static"), name="static")

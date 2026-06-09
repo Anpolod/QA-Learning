@@ -63,14 +63,13 @@ export default function AdminPage() {
     async function loadAdmin() {
       setLoading(true);
       setError("");
-      const token = localStorage.getItem("qa_learning_token");
-      if (!token) {
+      if (!localStorage.getItem("qa_learning_user")) {
         router.replace("/login");
         return;
       }
 
       try {
-        const currentUser = await api.me(token);
+        const currentUser = await api.me();
         if (currentUser.role !== "admin") {
           // Keep the user signed in — just deny access instead of logging them out.
           if (isMounted) {
@@ -94,7 +93,6 @@ export default function AdminPage() {
       } catch {
         if (!isMounted) return;
         setError("Admin session is invalid or expired. Please log in again.");
-        localStorage.removeItem("qa_learning_token");
         localStorage.removeItem("qa_learning_user");
       } finally {
         if (isMounted) {

@@ -6,14 +6,15 @@ import { Lock, LogIn, UserPlus } from "lucide-react";
 
 // Client-side gate for learning content. The catalog stays public; opening a
 // lesson/quiz/homework requires an account. Auth state lives in localStorage
-// (qa_learning_token), so the check runs on the client after mount.
+// (httpOnly cookie + qa_learning_user), so the check runs on the client after mount.
 export function RequireAuth({ children }: { children: React.ReactNode }) {
   const [authed, setAuthed] = useState<boolean | null>(null);
   const [next, setNext] = useState("/");
 
   useEffect(() => {
     setNext(window.location.pathname + window.location.search);
-    setAuthed(Boolean(localStorage.getItem("qa_learning_token")));
+    // Auth token is an httpOnly cookie; the readable user object signals "signed in".
+    setAuthed(Boolean(localStorage.getItem("qa_learning_user")));
   }, []);
 
   if (authed === null) {

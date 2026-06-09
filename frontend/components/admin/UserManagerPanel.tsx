@@ -28,7 +28,6 @@ export function UserManagerPanel({ currentUserId }: Props) {
   const [error, setError] = useState("");
 
   const selectedUser = useMemo(() => users.find((user) => user.id === selectedUserId) ?? null, [selectedUserId, users]);
-  const token = () => localStorage.getItem("qa_learning_token") ?? "";
 
   function resetCreateForm() {
     setSelectedUserId(null);
@@ -47,7 +46,7 @@ export function UserManagerPanel({ currentUserId }: Props) {
     setLoading(true);
     setError("");
     try {
-      const data = await api.adminUsers(token());
+      const data = await api.adminUsers();
       setUsers(data);
       if (!selectedUserId && data.length) {
         setSelectedUserId(data[0].id);
@@ -66,7 +65,7 @@ export function UserManagerPanel({ currentUserId }: Props) {
     setError("");
     try {
       if (isCreating) {
-        const created = await api.adminCreateUser(token(), {
+        const created = await api.adminCreateUser({
           email,
           password,
           fullName,
@@ -88,7 +87,7 @@ export function UserManagerPanel({ currentUserId }: Props) {
         if (password.trim()) {
           body.password = password;
         }
-        const updated = await api.adminUpdateUser(token(), selectedUser.id, body);
+        const updated = await api.adminUpdateUser(selectedUser.id, body);
         setUsers((items) => items.map((item) => (item.id === updated.id ? updated : item)));
         setPassword("");
         setStatus("User saved.");
@@ -112,7 +111,7 @@ export function UserManagerPanel({ currentUserId }: Props) {
     setStatus("");
     setError("");
     try {
-      await api.adminDeleteUser(token(), selectedUser.id);
+      await api.adminDeleteUser(selectedUser.id);
       const remainingUsers = users.filter((user) => user.id !== selectedUser.id);
       setUsers(remainingUsers);
       setSelectedUserId(remainingUsers[0]?.id ?? null);

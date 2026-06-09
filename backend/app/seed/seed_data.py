@@ -1,3 +1,5 @@
+import os
+
 from app.database.session import Base, SessionLocal, engine
 from app.auth.security import hash_password
 from app.models.entities import (
@@ -520,7 +522,8 @@ def seed() -> None:
     try:
         admin = db.query(User).filter(User.email == "admin@example.com").first()
         if not admin:
-            admin = User(email="admin@example.com", password_hash=hash_password("Password123"), role="admin")
+            admin_password = os.getenv("ADMIN_PASSWORD", "Password123")
+            admin = User(email="admin@example.com", password_hash=hash_password(admin_password), role="admin")
             db.add(admin)
             db.flush()
         else:

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { LogOut } from "lucide-react";
+import { api } from "@/lib/api";
 
 type StoredUser = { email: string; fullName?: string; role: string } | null;
 
@@ -33,7 +34,8 @@ export function AuthNav() {
   }, [pathname]);
 
   function logout() {
-    localStorage.removeItem("qa_learning_token");
+    // Clear the httpOnly cookie server-side, then drop the client user state.
+    api.logout().catch(() => {});
     localStorage.removeItem("qa_learning_user");
     setUser(null);
     window.dispatchEvent(new Event("auth-change"));

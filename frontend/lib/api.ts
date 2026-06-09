@@ -15,23 +15,15 @@ function apiUrl() {
   return typeof window === "undefined" ? serverApiUrl : publicApiUrl;
 }
 
-// Bearer token for admin-gated calls. Browser-only (token lives in localStorage after login).
-function authHeader(): Record<string, string> {
-  if (typeof window === "undefined") return {};
-  const token = localStorage.getItem("qa_learning_token");
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
-
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${apiUrl()}${path}`, {
     ...init,
     headers: {
       "Content-Type": "application/json",
-      // Attach the bearer token (when signed in) to every request so admin/personal
-      // endpoints work. An explicit Authorization in init.headers overrides this.
-      ...authHeader(),
       ...init?.headers
     },
+    // Send the httpOnly auth cookie with every request (the backend reads it as the bearer token).
+    credentials: "include",
     cache: "no-store"
   });
   if (!response.ok) {
@@ -61,43 +53,32 @@ export const api = {
       "/api/auth/login",
       { method: "POST", body: JSON.stringify(body) }
     ),
-  me: (accessToken: string) =>
-    request<UserRead>("/api/auth/me", {
-      headers: { Authorization: `Bearer ${accessToken}` }
-    }),
-  updateProfile: (accessToken: string, body: { fullName: string; goal: string }) =>
+  logout: () => request<{ status: string }>("/api/auth/logout", { method: "POST" }),
+  me: () => request<UserRead>("/api/auth/me"),
+  updateProfile: (body: { fullName: string; goal: string }) =>
     request<UserRead>("/api/auth/profile", {
       method: "PATCH",
-      headers: { Authorization: `Bearer ${accessToken}` },
       body: JSON.stringify(body)
     }),
-  adminUsers: (accessToken: string) =>
-    request<UserRead[]>("/api/auth/admin/users", {
-      headers: { Authorization: `Bearer ${accessToken}` }
-    }),
+  adminUsers: () => request<UserRead[]>("/api/auth/admin/users"),
   adminCreateUser: (
-    accessToken: string,
     body: { email: string; password: string; fullName: string; goal: string; role: "student" | "admin" }
   ) =>
     request<UserRead>("/api/auth/admin/users", {
       method: "POST",
-      headers: { Authorization: `Bearer ${accessToken}` },
       body: JSON.stringify(body)
     }),
   adminUpdateUser: (
-    accessToken: string,
     userId: number,
     body: Partial<{ email: string; password: string; fullName: string; goal: string; role: "student" | "admin" }>
   ) =>
     request<UserRead>(`/api/auth/admin/users/${userId}`, {
       method: "PATCH",
-      headers: { Authorization: `Bearer ${accessToken}` },
       body: JSON.stringify(body)
     }),
-  adminDeleteUser: (accessToken: string, userId: number) =>
+  adminDeleteUser: (userId: number) =>
     request<{ status: string; userId: number }>(`/api/auth/admin/users/${userId}`, {
-      method: "DELETE",
-      headers: { Authorization: `Bearer ${accessToken}` }
+      method: "DELETE"
     }),
   courses: () => request<Course[]>("/api/courses"),
   course: (id: string) => request<Course>(`/api/courses/${id}`),
@@ -116,7 +97,6 @@ export const api = {
       created_at: string;
     }>(`/api/courses/final-projects/${projectId}/submit`, {
       method: "POST",
-      headers: authHeader(),
       body: JSON.stringify({ submission_text: submissionText, file_url: fileUrl })
     }),
   finalProjectSubmissions: () =>
@@ -308,7 +288,7 @@ export const api = {
       finalProjectsSubmitted: number;
       finalProjectsApproved: number;
       totalFinalProjects: number;
-    }>(`/api/progress/dashboard/me`, { headers: authHeader() }),
+    }>(`/api/progress/dashboard/me`),
   adminStudentProgress: () =>
     request<
       {
@@ -328,14 +308,12 @@ export const api = {
       `/api/quizzes/${quizId}/submit`,
       {
         method: "POST",
-        headers: authHeader(),
         body: JSON.stringify({ answers })
       }
     ),
   submitHomework: (homeworkId: number, answerText: string) =>
     request<{ status: string; submissionId: number }>(`/api/homework/${homeworkId}/submit`, {
       method: "POST",
-      headers: authHeader(),
       body: JSON.stringify({ answer_text: answerText })
     }),
   homeworkSubmissions: () =>
@@ -372,7 +350,6 @@ export const api = {
   }) =>
     request<{ status: string }>("/api/progress/lesson", {
       method: "POST",
-      headers: authHeader(),
       body: JSON.stringify(body)
     }),
   playerStats: () =>
@@ -408,7 +385,7 @@ export const api = {
         unlocked: boolean;
         unlockedAt: string | null;
       }[];
-    }>(`/api/gamification/player/me`, { headers: authHeader() }),
+    }>(`/api/gamification/player/me`),
   leaderboard: () =>
     request<
       {
@@ -472,7 +449,6 @@ export const api = {
     }>("/api/ai/admin/settings", {
       method: "PATCH",
       body: JSON.stringify(body),
-      headers: authHeader()
     }),
   aiUsage: () =>
     request<{

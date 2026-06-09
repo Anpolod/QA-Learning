@@ -25,15 +25,14 @@ export default function ProfilePage() {
   async function loadProfile() {
     setLoading(true);
     setError("");
-    const token = localStorage.getItem("qa_learning_token");
-    if (!token) {
+    if (!localStorage.getItem("qa_learning_user")) {
       setUser(null);
       setError("You are not logged in yet.");
       setLoading(false);
       return;
     }
     try {
-      const response = await api.me(token);
+      const response = await api.me();
       setUser(response);
       setDraftName(response.fullName);
       setDraftGoal(response.goal || "Become a job-ready QA engineer");
@@ -46,15 +45,15 @@ export default function ProfilePage() {
   }
 
   function logout() {
-    localStorage.removeItem("qa_learning_token");
+    api.logout().catch(() => {});
     localStorage.removeItem("qa_learning_user");
     setUser(null);
+    window.dispatchEvent(new Event("auth-change"));
     setError("You are logged out.");
   }
 
   async function saveProfile() {
-    const token = localStorage.getItem("qa_learning_token");
-    if (!token) {
+    if (!localStorage.getItem("qa_learning_user")) {
       setError("You are not logged in yet.");
       return;
     }
@@ -62,7 +61,7 @@ export default function ProfilePage() {
     setStatus("");
     setError("");
     try {
-      const updated = await api.updateProfile(token, { fullName: draftName, goal: draftGoal });
+      const updated = await api.updateProfile({ fullName: draftName, goal: draftGoal });
       setUser(updated);
       localStorage.setItem("qa_learning_user", JSON.stringify(updated));
       setStatus("Profile saved.");

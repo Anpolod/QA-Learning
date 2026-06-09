@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Header, HTTPException, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Response, status
 from jose import JWTError, jwt
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
@@ -36,9 +36,28 @@ from app.schemas.auth import (
 
 router = APIRouter()
 
+COOKIE_NAME = "access_token"
+COOKIE_MAX_AGE = 12 * 3600  # match the JWT lifetime
 
-def _auth_response(user: User, profile: UserProfile | None = None) -> AuthResponse:
+
+def _set_auth_cookie(response: Response, token: str) -> None:
+    # httpOnly so JS (and XSS) cannot read the token; the backend reads it via
+    # a middleware that injects it as the Authorization header.
+    response.set_cookie(
+        COOKIE_NAME,
+        token,
+        max_age=COOKIE_MAX_AGE,
+        httponly=True,
+        secure=True,
+        samesite="lax",
+        path="/",
+    )
+
+
+def _auth_response(user: User, profile: UserProfile | None = None, response: Response | None = None) -> AuthResponse:
     token = create_access_token(str(user.id), user.role)
+    if response is not None:
+        _set_auth_cookie(response, token)
     return AuthResponse(
         accessToken=token,
         user=UserRead(
@@ -111,7 +130,7 @@ def _delete_user_related_rows(db: Session, user_id: int) -> None:
 
 
 @router.post("/register", response_model=AuthResponse)
-def register(request: RegisterRequest, db: Session = Depends(get_db)) -> AuthResponse:
+def register(request: RegisterRequest, response: Response, db: Session = Depends(get_db)) -> AuthResponse:
     existing = db.scalar(select(User).where(User.email == request.email.lower()))
     if existing:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email is already registered.")
@@ -122,16 +141,22 @@ def register(request: RegisterRequest, db: Session = Depends(get_db)) -> AuthRes
     db.add(profile)
     db.commit()
     db.refresh(user)
-    return _auth_response(user, profile)
+    return _auth_response(user, profile, response)
 
 
 @router.post("/login", response_model=AuthResponse)
-def login(request: LoginRequest, db: Session = Depends(get_db)) -> AuthResponse:
+def login(request: LoginRequest, response: Response, db: Session = Depends(get_db)) -> AuthResponse:
     user = db.scalar(select(User).where(User.email == request.email.lower()))
     if not user or not verify_password(request.password, user.password_hash):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password.")
     profile = db.scalar(select(UserProfile).where(UserProfile.user_id == user.id))
-    return _auth_response(user, profile)
+    return _auth_response(user, profile, response)
+
+
+@router.post("/logout")
+def logout(response: Response) -> dict[str, str]:
+    response.delete_cookie(COOKIE_NAME, path="/")
+    return {"status": "logged_out"}
 
 
 @router.get("/me", response_model=UserRead)

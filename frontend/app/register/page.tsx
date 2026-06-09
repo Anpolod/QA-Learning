@@ -22,7 +22,7 @@ export default function RegisterPage() {
     setError("");
     try {
       const response = await api.register({ email, password, full_name: fullName });
-      localStorage.setItem("qa_learning_token", response.accessToken);
+      // Token is set by the backend as an httpOnly cookie; only the user object is kept client-side.
       localStorage.setItem("qa_learning_user", JSON.stringify(response.user));
       window.dispatchEvent(new Event("auth-change"));
       setStatus(`Account created for ${response.user.email}`);
