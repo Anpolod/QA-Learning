@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ClipboardList, Bug, Sparkles, Loader2, CheckCircle2, AlertTriangle, XCircle } from "lucide-react";
 import { RequireAuth } from "@/components/auth/RequireAuth";
 import { api, type DocAttempt, type DocReview, type DocScenario } from "@/lib/api";
@@ -55,6 +55,7 @@ function PracticePanel({ docType }: { docType: DocType }) {
   const [submitting, setSubmitting] = useState(false);
   const [review, setReview] = useState<DocReview | null>(null);
   const [error, setError] = useState("");
+  const reviewRef = useRef<HTMLDivElement>(null);
 
   const loadScenarios = useCallback(
     (selectFirst: boolean) => {
@@ -102,6 +103,7 @@ function PracticePanel({ docType }: { docType: DocType }) {
     try {
       const result = await api.reviewDoc({ scenario_id: scenarioId, doc_type: docType, fields: values });
       setReview(result);
+      setTimeout(() => reviewRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Review failed.");
     } finally {
@@ -196,7 +198,7 @@ function PracticePanel({ docType }: { docType: DocType }) {
         </div>
       </div>
 
-      <aside className="lg:sticky lg:top-6 lg:self-start">
+      <aside ref={reviewRef} className="scroll-mt-6 lg:sticky lg:top-6 lg:self-start">
         {review ? (
           <div className="rounded-lg border border-slate-200 bg-white p-4">
             <div className="flex items-center justify-between">
