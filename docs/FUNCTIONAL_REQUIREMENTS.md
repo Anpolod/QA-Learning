@@ -736,3 +736,17 @@ The system shall provide a public glossary of core QA terms.
 ### FR-GLOSSARY-002: Lesson term links
 
 Each lesson's "Key terms" are rendered as links to the matching glossary entry (`/glossary#<slug>`), so learners can open a definition from any lesson.
+
+## Test Documentation Practice
+
+### FR-TESTDOCS-001: Practice writing test cases and bug reports
+
+The system shall let a logged-in user practise writing test documentation.
+
+- A `/test-docs` section offers two document types: **Test Case** and **Bug Report**, each with a type-specific structured form.
+- Practice runs against realistic scenarios stored as `DocScenario` rows (seeded set via `app.seed.apply_doc_scenarios`), with an on-demand **"New (AI)"** generator that creates a fresh scenario.
+- Submissions, scores and feedback are saved per-user as `DocAttempt` rows and shown in a history list; each attempt grants XP.
+
+### FR-TESTDOCS-002: AI review of submissions
+
+On submit, an AI reviewer scores the document 0-100 and returns a short summary, a per-field rating (`good` / `weak` / `missing`), and 2-4 concrete improvements. Blank fields are flagged `missing`; submissions that do not match the scenario are penalised. Endpoints: `GET /api/test-docs/scenarios`, `POST /api/test-docs/generate`, `POST /api/test-docs/review`, `GET /api/test-docs/attempts`.
