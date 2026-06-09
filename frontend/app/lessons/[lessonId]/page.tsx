@@ -4,6 +4,7 @@ import { AiAssistant } from "@/components/ai/AiAssistant";
 import { RequireAuth } from "@/components/auth/RequireAuth";
 import { LessonProgressTracker } from "@/components/course/LessonProgressTracker";
 import { LessonSlideDrawer } from "@/components/course/LessonSlideDrawer";
+import { BackLink } from "@/components/ui/BackLink";
 import { api, mediaUrl } from "@/lib/api";
 
 export default async function LessonPage({ params }: { params: Promise<{ lessonId: string }> }) {
@@ -13,6 +14,7 @@ export default async function LessonPage({ params }: { params: Promise<{ lessonI
   return (
     <RequireAuth>
     <main className="mx-auto max-w-7xl px-4 py-8">
+      <BackLink label="Back" />
       <LessonProgressTracker lessonId={lesson.id} />
       <div className="grid gap-8 lg:grid-cols-[260px_1fr]">
         <aside className="space-y-3">

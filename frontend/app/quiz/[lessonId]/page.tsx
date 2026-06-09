@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { CheckCircle2, RotateCcw } from "lucide-react";
 import { RequireAuth } from "@/components/auth/RequireAuth";
+import { BackLink } from "@/components/ui/BackLink";
 import { api } from "@/lib/api";
 
 type Quiz = Awaited<ReturnType<typeof api.quiz>>;
@@ -63,6 +64,7 @@ export default function QuizPage() {
   return (
     <RequireAuth>
     <main className="mx-auto max-w-4xl px-4 py-8">
+      <BackLink href={`/lessons/${params.lessonId}`} label="Back to lesson" />
       <h1 className="text-3xl font-bold">{quiz?.title ?? "Quiz"}</h1>
       <div className="mt-6 space-y-4">
         {quiz?.questions.map((question) => (
