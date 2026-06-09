@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { BookMarked, Search } from "lucide-react";
+import Link from "next/link";
+import { BookMarked, Layers, Search } from "lucide-react";
 import { api } from "@/lib/api";
 
 type Term = { slug: string; term: string; definition: string; category: string };
@@ -57,9 +58,17 @@ export default function GlossaryPage() {
   return (
     <main className="mx-auto max-w-5xl px-4 py-8">
       <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="flex items-center gap-2">
-          <BookMarked className="h-6 w-6 text-coral" />
-          <h1 className="text-3xl font-bold text-ink">QA Glossary</h1>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <BookMarked className="h-6 w-6 text-coral" />
+            <h1 className="text-3xl font-bold text-ink">QA Glossary</h1>
+          </div>
+          <Link
+            href="/glossary/flashcards"
+            className="inline-flex items-center gap-1.5 rounded-md border border-coral/40 px-3 py-2 text-sm font-medium text-coral hover:bg-coral/5"
+          >
+            <Layers className="h-4 w-4" /> Flashcards
+          </Link>
         </div>
         <p className="mt-2 max-w-2xl text-slate-600">
           {terms.length} core testing terms used across the courses — definitions you can jump to from any lesson.
