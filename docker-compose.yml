@@ -17,7 +17,7 @@ services:
     build:
       context: ./backend
     env_file:
-      - .env.example
+      - .env
     environment:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/qa_learning
     ports:
