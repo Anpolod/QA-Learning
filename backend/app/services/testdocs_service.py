@@ -127,9 +127,13 @@ async def review_submission(
         f"{field_lines}\n\n"
         "Grade it. Rules:\n"
         "- Rate a field 'missing' ONLY if its value is '(blank)'. Never mark a filled field 'missing'.\n"
-        "- Rate 'good' if the content is clear, specific, and testable; 'weak' if present but vague/incomplete.\n"
+        "- Rate 'good' if the content is clear, specific, and testable; 'weak' only if genuinely vague or "
+        "incomplete. Do NOT default to 'weak' — give 'good' freely when a field is clear and adequate.\n"
         "- Reward reproducible steps, observable expected/actual results, and sensible severity/priority.\n"
-        "- Read the values carefully before judging; do not invent problems that are not in the text.\n\n"
+        "- Read the values carefully before judging; do not invent problems that are not in the text.\n"
+        "Scoring anchors: 85-100 = complete, clear, reproducible (all key fields good); 60-84 = solid with minor "
+        "gaps; 30-59 = partial or several weak fields; 0-29 = mostly blank or unusable. A correct, clearly written "
+        "submission with all fields filled should score 80+.\n\n"
         'Return JSON: {"score": int 0-100, "summary": str (1-2 sentences), '
         '"fields": [{"name": str, "rating": "good"|"weak"|"missing", "comment": str}] (one entry per expected '
         'field, same names as above), "improvements": [str] (2-4 concrete fixes)}.'
