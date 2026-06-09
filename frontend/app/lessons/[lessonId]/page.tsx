@@ -22,6 +22,13 @@ export default async function LessonPage({ params }: { params: Promise<{ lessonI
       .then((terms) => terms.map((t) => t.slug))
       .catch(() => [])
   );
+  // Surface a contextual practice CTA when the lesson is about test documentation.
+  const topicText = `${lesson.title} ${lesson.key_terms ?? ""}`.toLowerCase();
+  const docPractice = /bug report|defect report|defect|incident/.test(topicText)
+    ? "bug_report"
+    : /test case|test design|test scenario|test documentation/.test(topicText)
+      ? "test_case"
+      : null;
   return (
     <RequireAuth>
     <main className="mx-auto max-w-7xl px-4 py-8">
@@ -84,6 +91,22 @@ export default async function LessonPage({ params }: { params: Promise<{ lessonI
                   })}
               </div>
             </section>
+          ) : null}
+          {docPractice ? (
+            <Link
+              href={`/test-docs?type=${docPractice}`}
+              className="flex items-center justify-between gap-3 rounded-lg border border-coral/30 bg-coral/5 p-5 transition hover:border-coral"
+            >
+              <span>
+                <span className="font-semibold text-ink">
+                  Practice: write a {docPractice === "bug_report" ? "bug report" : "test case"}
+                </span>
+                <span className="mt-1 block text-sm text-slate-600">
+                  Apply this lesson on a real scenario and get instant AI feedback.
+                </span>
+              </span>
+              <ArrowRight className="h-5 w-5 shrink-0 text-coral" />
+            </Link>
           ) : null}
           <section className="rounded-lg border border-slate-200 bg-white p-5">
             <div className="flex items-center gap-2">

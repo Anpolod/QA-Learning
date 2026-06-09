@@ -29,15 +29,18 @@ type Player = Awaited<ReturnType<typeof api.playerStats>> | null;
 export default function DashboardPage() {
   const [progress, setProgress] = useState(defaultProgress);
   const [player, setPlayer] = useState<Player>(null);
+  const [docStats, setDocStats] = useState({ count: 0, best: 0 });
 
   useEffect(() => {
     let mounted = true;
     (async () => {
       const p = await api.dashboardProgress().catch(() => ({}));
       const pl = await api.playerStats().catch(() => null);
+      const docs = await api.docAttempts().catch(() => []);
       if (!mounted) return;
       setProgress({ ...defaultProgress, ...p });
       setPlayer(pl);
+      setDocStats({ count: docs.length, best: docs.reduce((m, a) => Math.max(m, a.score), 0) });
     })();
     return () => {
       mounted = false;
@@ -105,6 +108,20 @@ export default function DashboardPage() {
         </div>
         <p className="mt-3 text-sm text-slate-600">Your progress is saved to your account as you open lessons, take quizzes, and submit homework.</p>
       </section>
+      <Link
+        href="/test-docs"
+        className="mt-8 flex items-center justify-between rounded-lg border border-slate-200 bg-white p-5 shadow-sm transition hover:border-coral"
+      >
+        <span>
+          <ClipboardCheck className="h-5 w-5 text-coral" />
+          <p className="mt-3 text-sm text-slate-500">Test documentation practice</p>
+          <h2 className="mt-1 text-lg font-semibold">
+            {docStats.count
+              ? `${docStats.count} reviewed · best ${docStats.best}/100`
+              : "Start practising test cases & bug reports"}
+          </h2>
+        </span>
+      </Link>
       <section className="mt-6 grid gap-3 md:grid-cols-3">
         <Link href="/progress" className="rounded-lg border border-slate-200 bg-white p-4 text-sm font-medium hover:border-mint">
           View detailed progress

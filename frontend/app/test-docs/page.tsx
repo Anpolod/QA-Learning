@@ -265,6 +265,10 @@ function History() {
 
 export default function TestDocsPage() {
   const [tab, setTab] = useState<DocType>("test_case");
+  useEffect(() => {
+    const t = new URLSearchParams(window.location.search).get("type");
+    if (t === "bug_report" || t === "test_case") setTab(t);
+  }, []);
   return (
     <RequireAuth>
       <main className="mx-auto max-w-5xl px-4 py-8">

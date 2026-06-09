@@ -94,6 +94,22 @@ ACHIEVEMENT_DEFINITIONS = [
         "category": "mastery",
         "xp_reward": 250,
     },
+    {
+        "code": "doc_apprentice",
+        "title": "Documentation Apprentice",
+        "description": "Submit your first test case or bug report for review.",
+        "icon": "clipboard",
+        "category": "practice",
+        "xp_reward": 25,
+    },
+    {
+        "code": "doc_specialist",
+        "title": "Documentation Specialist",
+        "description": "Get 5 test documents reviewed.",
+        "icon": "clipboard",
+        "category": "practice",
+        "xp_reward": 75,
+    },
 ]
 
 
@@ -169,10 +185,15 @@ def achievement_codes_for_stats(
     homework_submitted: int,
     ai_usage_total: int,
     final_projects_submitted: int,
+    doc_attempts: int = 0,
 ) -> set[str]:
     codes: set[str] = set()
     if opened_lessons >= 1:
         codes.add("first_step")
+    if doc_attempts >= 1:
+        codes.add("doc_apprentice")
+    if doc_attempts >= 5:
+        codes.add("doc_specialist")
     if completed_lessons >= 5:
         codes.add("lesson_finisher_5")
     if completed_lessons >= 15:
@@ -205,6 +226,7 @@ def sync_user_gamification(db: Session, user_id: int) -> UserGameStats:
         db.scalar(select(func.count(FinalProjectSubmission.id)).where(FinalProjectSubmission.user_id == user_id)) or 0
     )
     total_lessons = int(db.scalar(select(func.count(Lesson.id))) or 0)
+    doc_attempts = int(db.scalar(select(func.count(DocAttempt.id)).where(DocAttempt.user_id == user_id)) or 0)
 
     unlocked_codes = achievement_codes_for_stats(
         opened_lessons=opened_lessons,
@@ -213,6 +235,7 @@ def sync_user_gamification(db: Session, user_id: int) -> UserGameStats:
         homework_submitted=homework_submitted,
         ai_usage_total=ai_usage_total,
         final_projects_submitted=final_projects_submitted,
+        doc_attempts=doc_attempts,
     )
     achievements = db.scalars(select(Achievement)).all()
     achievements_by_code = {achievement.code: achievement for achievement in achievements}
@@ -229,8 +252,6 @@ def sync_user_gamification(db: Session, user_id: int) -> UserGameStats:
         achievement_xp += achievement.xp_reward
         if achievement.id not in existing:
             db.add(UserAchievement(user_id=user_id, achievement_id=achievement.id))
-
-    doc_attempts = int(db.scalar(select(func.count(DocAttempt.id)).where(DocAttempt.user_id == user_id)) or 0)
 
     xp = (
         opened_lessons * 5
