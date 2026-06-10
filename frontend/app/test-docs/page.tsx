@@ -1,15 +1,15 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ClipboardList, Bug, Sparkles, Loader2, CheckCircle2, AlertTriangle, XCircle } from "lucide-react";
+import { ClipboardList, Bug, Table2, Sparkles, Loader2, CheckCircle2, AlertTriangle, XCircle, Plus, Trash2 } from "lucide-react";
 import { RequireAuth } from "@/components/auth/RequireAuth";
 import { api, type DocAttempt, type DocReview, type DocScenario } from "@/lib/api";
 
-type DocType = "test_case" | "bug_report";
+type DocType = "test_case" | "bug_report" | "decision_table";
 
 type FieldDef = { name: string; label: string; multiline?: boolean; hint?: string; options?: string[] };
 
-const FIELDS: Record<DocType, FieldDef[]> = {
+const FIELDS: Record<string, FieldDef[]> = {
   test_case: [
     { name: "title", label: "Title", hint: "Short, action-oriented (e.g. 'Login with valid credentials')" },
     { name: "preconditions", label: "Preconditions", multiline: true, hint: "State the system must be in before steps" },
@@ -31,8 +31,162 @@ const FIELDS: Record<DocType, FieldDef[]> = {
 
 const TABS: { type: DocType; label: string; icon: typeof Bug }[] = [
   { type: "test_case", label: "Test Case", icon: ClipboardList },
-  { type: "bug_report", label: "Bug Report", icon: Bug }
+  { type: "bug_report", label: "Bug Report", icon: Bug },
+  { type: "decision_table", label: "Decision Table", icon: Table2 }
 ];
+
+const DOC_NOUN: Record<DocType, string> = {
+  test_case: "test case",
+  bug_report: "bug report",
+  decision_table: "decision table"
+};
+
+type DTRule = { vals: string[]; action: string };
+type DTState = { conditions: string[]; rules: DTRule[] };
+
+function emptyDecisionTable(): DTState {
+  return {
+    conditions: ["", ""],
+    rules: [
+      { vals: ["Y", "Y"], action: "" },
+      { vals: ["Y", "N"], action: "" }
+    ]
+  };
+}
+
+// Serialise the grid into the flat fields the backend reviewer expects.
+function serializeDecisionTable(title: string, dt: DTState): Record<string, string> {
+  const conds = dt.conditions.map((c, i) => `${i + 1}. ${c || "(unnamed)"}`).join("\n");
+  const rules = dt.rules
+    .map((r, j) => `R${j + 1}: ` + dt.conditions.map((c, i) => `${c || "C" + (i + 1)}=${r.vals[i] ?? "-"}`).join(", "))
+    .join("\n");
+  const actions = dt.rules.map((r, j) => `R${j + 1}: ${r.action || "(no action)"}`).join("\n");
+  return { title, conditions: conds, rules, actions };
+}
+
+function DecisionTableEditor({ value, onChange }: { value: DTState; onChange: (dt: DTState) => void }) {
+  const { conditions, rules } = value;
+
+  function setCondition(i: number, label: string) {
+    onChange({ ...value, conditions: conditions.map((c, idx) => (idx === i ? label : c)) });
+  }
+  function addCondition() {
+    onChange({ conditions: [...conditions, ""], rules: rules.map((r) => ({ ...r, vals: [...r.vals, "-"] })) });
+  }
+  function removeCondition(i: number) {
+    if (conditions.length <= 1) return;
+    onChange({
+      conditions: conditions.filter((_, idx) => idx !== i),
+      rules: rules.map((r) => ({ ...r, vals: r.vals.filter((_, idx) => idx !== i) }))
+    });
+  }
+  function setVal(ruleIdx: number, condIdx: number, v: string) {
+    onChange({
+      ...value,
+      rules: rules.map((r, idx) => (idx === ruleIdx ? { ...r, vals: r.vals.map((x, k) => (k === condIdx ? v : x)) } : r))
+    });
+  }
+  function setAction(ruleIdx: number, action: string) {
+    onChange({ ...value, rules: rules.map((r, idx) => (idx === ruleIdx ? { ...r, action } : r)) });
+  }
+  function addRule() {
+    onChange({ ...value, rules: [...rules, { vals: conditions.map(() => "-"), action: "" }] });
+  }
+  function removeRule(j: number) {
+    if (rules.length <= 1) return;
+    onChange({ ...value, rules: rules.filter((_, idx) => idx !== j) });
+  }
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <div className="flex items-center justify-between">
+          <label className="text-sm font-medium text-ink">Conditions</label>
+          <button type="button" onClick={addCondition} className="inline-flex items-center gap-1 text-xs font-medium text-coral hover:underline">
+            <Plus className="h-3.5 w-3.5" /> Condition
+          </button>
+        </div>
+        <div className="mt-2 space-y-2">
+          {conditions.map((c, i) => (
+            <div key={i} className="flex items-center gap-2">
+              <span className="w-5 text-xs text-slate-400">C{i + 1}</span>
+              <input
+                value={c}
+                onChange={(e) => setCondition(i, e.target.value)}
+                placeholder="e.g. Customer is a member"
+                className="flex-1 rounded-md border border-slate-300 bg-paper px-3 py-1.5 text-sm"
+              />
+              <button type="button" onClick={() => removeCondition(i)} className="text-slate-300 hover:text-coral" aria-label="Remove condition">
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <div className="flex items-center justify-between">
+          <label className="text-sm font-medium text-ink">Rules</label>
+          <button type="button" onClick={addRule} className="inline-flex items-center gap-1 text-xs font-medium text-coral hover:underline">
+            <Plus className="h-3.5 w-3.5" /> Rule
+          </button>
+        </div>
+        <div className="mt-2 overflow-x-auto">
+          <table className="w-full border-collapse text-sm">
+            <thead>
+              <tr>
+                <th className="border border-slate-200 bg-slate-50 p-2 text-left text-xs font-semibold text-slate-500">Condition</th>
+                {rules.map((_, j) => (
+                  <th key={j} className="border border-slate-200 bg-slate-50 p-2 text-xs font-semibold text-slate-500">
+                    <div className="flex items-center justify-center gap-1">
+                      R{j + 1}
+                      <button type="button" onClick={() => removeRule(j)} className="text-slate-300 hover:text-coral" aria-label="Remove rule">
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {conditions.map((c, i) => (
+                <tr key={i}>
+                  <td className="border border-slate-200 p-2 text-slate-700">{c || `C${i + 1}`}</td>
+                  {rules.map((r, j) => (
+                    <td key={j} className="border border-slate-200 p-1 text-center">
+                      <select value={r.vals[i] ?? "-"} onChange={(e) => setVal(j, i, e.target.value)} className="rounded bg-paper px-1 py-1 text-sm">
+                        <option value="Y">Y</option>
+                        <option value="N">N</option>
+                        <option value="-">–</option>
+                      </select>
+                    </td>
+                  ))}
+                </tr>
+              ))}
+              <tr>
+                <td className="border border-slate-200 bg-slate-50 p-2 text-xs font-semibold text-slate-500">Action / outcome</td>
+                {rules.map((r, j) => (
+                  <td key={j} className="border border-slate-200 p-1">
+                    <input
+                      value={r.action}
+                      onChange={(e) => setAction(j, e.target.value)}
+                      placeholder="outcome"
+                      className="w-full min-w-[90px] rounded bg-paper px-2 py-1 text-sm"
+                    />
+                  </td>
+                ))}
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p className="mt-2 text-xs text-slate-400">
+          For {conditions.length} boolean condition{conditions.length === 1 ? "" : "s"} a complete table usually needs{" "}
+          {2 ** conditions.length} rules (use “–” for don’t-care).
+        </p>
+      </div>
+    </div>
+  );
+}
 
 function scoreColor(score: number) {
   if (score >= 80) return "bg-mint/15 text-mint";
@@ -47,10 +201,13 @@ function RatingIcon({ rating }: { rating: string }) {
 }
 
 function PracticePanel({ docType }: { docType: DocType }) {
-  const fields = FIELDS[docType];
+  const fieldDefs = FIELDS[docType] ?? [];
+  const isDecisionTable = docType === "decision_table";
   const [scenarios, setScenarios] = useState<DocScenario[]>([]);
   const [scenarioId, setScenarioId] = useState<number | null>(null);
   const [values, setValues] = useState<Record<string, string>>({});
+  const [dtTitle, setDtTitle] = useState("");
+  const [dt, setDt] = useState<DTState>(emptyDecisionTable());
   const [generating, setGenerating] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [review, setReview] = useState<DocReview | null>(null);
@@ -101,7 +258,8 @@ function PracticePanel({ docType }: { docType: DocType }) {
     setError("");
     setReview(null);
     try {
-      const result = await api.reviewDoc({ scenario_id: scenarioId, doc_type: docType, fields: values });
+      const fields = isDecisionTable ? serializeDecisionTable(dtTitle, dt) : values;
+      const result = await api.reviewDoc({ scenario_id: scenarioId, doc_type: docType, fields });
       setReview(result);
       setTimeout(() => reviewRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
     } catch (e) {
@@ -152,39 +310,54 @@ function PracticePanel({ docType }: { docType: DocType }) {
         </div>
 
         <div className="space-y-3 rounded-lg border border-slate-200 bg-white p-4">
-          {fields.map((f) => (
-            <div key={f.name}>
-              <label className="text-sm font-medium text-ink">{f.label}</label>
-              {f.hint ? <p className="text-xs text-slate-400">{f.hint}</p> : null}
-              {f.options ? (
-                <select
-                  value={values[f.name] ?? ""}
-                  onChange={(e) => setValues((v) => ({ ...v, [f.name]: e.target.value }))}
-                  className="mt-1 w-full rounded-md border border-slate-300 bg-paper px-3 py-2 text-sm"
-                >
-                  <option value="">—</option>
-                  {f.options.map((o) => (
-                    <option key={o} value={o}>
-                      {o}
-                    </option>
-                  ))}
-                </select>
-              ) : f.multiline ? (
-                <textarea
-                  value={values[f.name] ?? ""}
-                  onChange={(e) => setValues((v) => ({ ...v, [f.name]: e.target.value }))}
-                  rows={3}
-                  className="mt-1 w-full rounded-md border border-slate-300 bg-paper px-3 py-2 text-sm"
-                />
-              ) : (
+          {isDecisionTable ? (
+            <>
+              <div>
+                <label className="text-sm font-medium text-ink">Title</label>
                 <input
-                  value={values[f.name] ?? ""}
-                  onChange={(e) => setValues((v) => ({ ...v, [f.name]: e.target.value }))}
+                  value={dtTitle}
+                  onChange={(e) => setDtTitle(e.target.value)}
+                  placeholder="e.g. Checkout discount eligibility"
                   className="mt-1 w-full rounded-md border border-slate-300 bg-paper px-3 py-2 text-sm"
                 />
-              )}
-            </div>
-          ))}
+              </div>
+              <DecisionTableEditor value={dt} onChange={setDt} />
+            </>
+          ) : (
+            fieldDefs.map((f) => (
+              <div key={f.name}>
+                <label className="text-sm font-medium text-ink">{f.label}</label>
+                {f.hint ? <p className="text-xs text-slate-400">{f.hint}</p> : null}
+                {f.options ? (
+                  <select
+                    value={values[f.name] ?? ""}
+                    onChange={(e) => setValues((v) => ({ ...v, [f.name]: e.target.value }))}
+                    className="mt-1 w-full rounded-md border border-slate-300 bg-paper px-3 py-2 text-sm"
+                  >
+                    <option value="">—</option>
+                    {f.options.map((o) => (
+                      <option key={o} value={o}>
+                        {o}
+                      </option>
+                    ))}
+                  </select>
+                ) : f.multiline ? (
+                  <textarea
+                    value={values[f.name] ?? ""}
+                    onChange={(e) => setValues((v) => ({ ...v, [f.name]: e.target.value }))}
+                    rows={3}
+                    className="mt-1 w-full rounded-md border border-slate-300 bg-paper px-3 py-2 text-sm"
+                  />
+                ) : (
+                  <input
+                    value={values[f.name] ?? ""}
+                    onChange={(e) => setValues((v) => ({ ...v, [f.name]: e.target.value }))}
+                    className="mt-1 w-full rounded-md border border-slate-300 bg-paper px-3 py-2 text-sm"
+                  />
+                )}
+              </div>
+            ))
+          )}
           <button
             type="button"
             onClick={submit}
@@ -232,7 +405,7 @@ function PracticePanel({ docType }: { docType: DocType }) {
           </div>
         ) : (
           <div className="rounded-lg border border-dashed border-slate-300 bg-white p-6 text-sm text-slate-500">
-            Fill the {docType === "test_case" ? "test case" : "bug report"} and submit — an AI reviewer scores it and
+            Fill the {DOC_NOUN[docType]} and submit — an AI reviewer scores it and
             points out what to fix.
           </div>
         )}
@@ -254,7 +427,13 @@ function History() {
         {attempts.map((a) => (
           <div key={a.id} className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm">
             <span className="flex items-center gap-2">
-              {a.doc_type === "bug_report" ? <Bug className="h-4 w-4 text-coral" /> : <ClipboardList className="h-4 w-4 text-mint" />}
+              {a.doc_type === "bug_report" ? (
+                <Bug className="h-4 w-4 text-coral" />
+              ) : a.doc_type === "decision_table" ? (
+                <Table2 className="h-4 w-4 text-amber" />
+              ) : (
+                <ClipboardList className="h-4 w-4 text-mint" />
+              )}
               <span className="font-medium text-ink">{a.scenario_title}</span>
             </span>
             <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-bold ${scoreColor(a.score)}`}>{a.score}</span>

@@ -41,7 +41,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
 export type DocScenario = {
   id: number;
-  doc_type: "test_case" | "bug_report";
+  doc_type: "test_case" | "bug_report" | "decision_table";
   title: string;
   brief: string;
   context: string;
@@ -60,7 +60,7 @@ export type DocAttempt = {
   id: number;
   scenario_id: number;
   scenario_title: string;
-  doc_type: "test_case" | "bug_report";
+  doc_type: "test_case" | "bug_report" | "decision_table";
   score: number;
   summary: string;
   created_at: string;
@@ -116,9 +116,9 @@ export const api = {
     }),
   glossary: () =>
     request<{ slug: string; term: string; definition: string; category: string }[]>("/api/glossary"),
-  docScenarios: (type: "test_case" | "bug_report") =>
+  docScenarios: (type: "test_case" | "bug_report" | "decision_table") =>
     request<DocScenario[]>(`/api/test-docs/scenarios?type=${type}`),
-  generateDocScenario: (doc_type: "test_case" | "bug_report") =>
+  generateDocScenario: (doc_type: "test_case" | "bug_report" | "decision_table") =>
     request<DocScenario>("/api/test-docs/generate", { method: "POST", body: JSON.stringify({ doc_type }) }),
   reviewDoc: (payload: { scenario_id: number; doc_type: string; fields: Record<string, string> }) =>
     request<DocReview>("/api/test-docs/review", { method: "POST", body: JSON.stringify(payload) }),

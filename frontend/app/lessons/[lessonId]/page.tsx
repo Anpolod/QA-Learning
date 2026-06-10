@@ -24,11 +24,13 @@ export default async function LessonPage({ params }: { params: Promise<{ lessonI
   );
   // Surface a contextual practice CTA when the lesson is about test documentation.
   const topicText = `${lesson.title} ${lesson.key_terms ?? ""}`.toLowerCase();
-  const docPractice = /bug report|defect report|defect|incident/.test(topicText)
-    ? "bug_report"
-    : /test case|test design|test scenario|test documentation/.test(topicText)
-      ? "test_case"
-      : null;
+  const docPractice = /decision table/.test(topicText)
+    ? "decision_table"
+    : /bug report|defect report|defect|incident/.test(topicText)
+      ? "bug_report"
+      : /test case|test design|test scenario|test documentation/.test(topicText)
+        ? "test_case"
+        : null;
   return (
     <RequireAuth>
     <main className="mx-auto max-w-7xl px-4 py-8">
@@ -99,7 +101,12 @@ export default async function LessonPage({ params }: { params: Promise<{ lessonI
             >
               <span>
                 <span className="font-semibold text-ink">
-                  Practice: write a {docPractice === "bug_report" ? "bug report" : "test case"}
+                  Practice: write a{" "}
+                  {docPractice === "bug_report"
+                    ? "bug report"
+                    : docPractice === "decision_table"
+                      ? "decision table"
+                      : "test case"}
                 </span>
                 <span className="mt-1 block text-sm text-slate-600">
                   Apply this lesson on a real scenario and get instant AI feedback.

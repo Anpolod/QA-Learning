@@ -94,5 +94,41 @@
     "title": "Wrong currency symbol after switching language",
     "brief": "Write a bug report: switching the UI from English to German keeps prices in '$' instead of '€'.",
     "context": "Prices should localise to euro for the German locale. Numbers are correct, only the symbol is wrong."
+  },
+  {
+    "doc_type": "decision_table",
+    "title": "Checkout discount eligibility",
+    "brief": "Build a decision table for applying a discount at checkout.",
+    "context": "Conditions: customer is a member (Yes/No) and order total is over $100 (Yes/No). Outcomes: 15% discount (member + over $100), 5% discount (member only), free shipping (over $100 only), no discount otherwise."
+  },
+  {
+    "doc_type": "decision_table",
+    "title": "Login outcome",
+    "brief": "Build a decision table for the result of a login attempt.",
+    "context": "Conditions: password is correct (Yes/No), account is locked (Yes/No), 2FA is enabled (Yes/No). Outcomes include: access granted, prompt for 2FA code, access denied (wrong password), and account-locked message."
+  },
+  {
+    "doc_type": "decision_table",
+    "title": "Loan application approval",
+    "brief": "Build a decision table for an automated loan pre-approval.",
+    "context": "Conditions: credit score above 700 (Yes/No), income verified (Yes/No), has collateral (Yes/No). Outcomes: approve, manual review, or reject."
+  },
+  {
+    "doc_type": "decision_table",
+    "title": "Shipping cost rules",
+    "brief": "Build a decision table for calculating shipping cost.",
+    "context": "Conditions: order over $50 (Yes/No) and customer is a Prime member (Yes/No). Outcomes: free shipping, $2.99 shipping, or $5.99 shipping depending on the combination."
+  },
+  {
+    "doc_type": "decision_table",
+    "title": "Feature access control",
+    "brief": "Build a decision table for granting access to a beta feature.",
+    "context": "Conditions: user is logged in (Yes/No), user has admin role (Yes/No), the beta feature flag is on (Yes/No). Outcomes: allow access, deny with upgrade prompt, or redirect to login."
+  },
+  {
+    "doc_type": "decision_table",
+    "title": "Insurance premium tier",
+    "brief": "Build a decision table for assigning an insurance premium tier.",
+    "context": "Conditions: driver age over 25 (Yes/No) and at least one accident in the last year (Yes/No). Outcomes: low, standard, or high premium tier."
   }
 ]

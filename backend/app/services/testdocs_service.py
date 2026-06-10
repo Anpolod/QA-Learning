@@ -28,12 +28,32 @@ EXPECTED_FIELDS = {
         "severity",
         "priority",
     ],
+    "decision_table": ["title", "conditions", "rules", "actions"],
+}
+
+LABELS = {
+    "test_case": "test case",
+    "bug_report": "bug report",
+    "decision_table": "decision table",
+}
+
+# Extra, type-specific grading guidance appended to the review prompt.
+TYPE_GUIDANCE = {
+    "decision_table": (
+        "- Conditions must be clear and boolean/discrete (each evaluates to Yes/No or a small set).\n"
+        "- Rules must cover the relevant condition combinations: for n independent boolean conditions a "
+        "complete table has 2^n rules (fewer only if some combinations are impossible or collapsed with '-').\n"
+        "- Every rule must map to exactly one action/outcome; flag missing actions.\n"
+        "- Penalise contradictory or duplicate rules and any uncovered combination.\n"
+    ),
 }
 
 
 def _validate_type(doc_type: str) -> None:
     if doc_type not in EXPECTED_FIELDS:
-        raise HTTPException(status_code=400, detail="doc_type must be 'test_case' or 'bug_report'.")
+        raise HTTPException(
+            status_code=400, detail="doc_type must be 'test_case', 'bug_report' or 'decision_table'."
+        )
 
 
 def _extract_json(text: str) -> dict:
@@ -81,16 +101,22 @@ def list_scenarios(db: Session, doc_type: str) -> list[DocScenario]:
 async def generate_scenario(db: Session, doc_type: str, user_id: int) -> DocScenario:
     _validate_type(doc_type)
     _enforce_daily_limit(db, user_id)
-    label = "test case" if doc_type == "test_case" else "bug report"
+    label = LABELS[doc_type]
+    extra = (
+        " The scenario should describe business rules with a few boolean conditions that drive different outcomes "
+        "(so the student can model a decision table)."
+        if doc_type == "decision_table"
+        else ""
+    )
     system = (
         "You design realistic QA practice scenarios for students learning to write test documentation. "
         "Reply with strict JSON only, no prose, no code fences."
     )
     user = (
-        f"Create one fresh, realistic scenario a student will use to practise writing a {label}. "
+        f"Create one fresh, realistic scenario a student will use to practise writing a {label}.{extra} "
         "Pick a common web/mobile app feature. Keep it concrete but do NOT write the document itself. "
         'Return JSON: {"title": str (<=60 chars), "brief": str (one sentence telling the student what to '
-        'write), "context": str (2-3 short sentences of relevant detail: platform, expected behaviour)}.'
+        'write), "context": str (2-3 short sentences of relevant detail: platform, rules, expected behaviour)}.'
     )
     raw = await _run_text(db, system, user, max_tokens=400)
     data = _extract_json(raw)
@@ -118,7 +144,7 @@ async def review_submission(
         raise HTTPException(status_code=404, detail="Scenario not found.")
 
     expected = EXPECTED_FIELDS[doc_type]
-    label = "test case" if doc_type == "test_case" else "bug report"
+    label = LABELS[doc_type]
     # Show EVERY expected field with its value or an explicit (blank) marker so the
     # reviewer never hallucinates a provided field as missing.
     field_lines = "\n".join(f"- {name}: {(fields.get(name) or '').strip() or '(blank)'}" for name in expected)
@@ -139,6 +165,7 @@ async def review_submission(
         "incomplete. Do NOT default to 'weak' — give 'good' freely when a field is clear and adequate.\n"
         "- Reward reproducible steps, observable expected/actual results, and sensible severity/priority.\n"
         "- Read the values carefully before judging; do not invent problems that are not in the text.\n"
+        f"{TYPE_GUIDANCE.get(doc_type, '')}"
         "Scoring anchors: 85-100 = complete, clear, reproducible (all key fields good); 60-84 = solid with minor "
         "gaps; 30-59 = partial or several weak fields; 0-29 = mostly blank or unusable. A correct, clearly written "
         "submission with all fields filled should score 80+.\n\n"
