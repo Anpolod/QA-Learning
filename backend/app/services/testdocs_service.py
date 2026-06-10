@@ -45,6 +45,9 @@ TYPE_GUIDANCE = {
         "complete table has 2^n rules (fewer only if some combinations are impossible or collapsed with '-').\n"
         "- Every rule must map to exactly one action/outcome; flag missing actions.\n"
         "- Penalise contradictory or duplicate rules and any uncovered combination.\n"
+        "- IMPORTANT: if ALL combinations are covered and EVERY rule has a clear action, the 'rules' and "
+        "'actions' fields are GOOD (not weak) and the table should score 85+. Terse but correct notation such "
+        "as 'R1: A=Y, B=N -> 15% discount' is perfectly acceptable — do not mark it weak for brevity.\n"
     ),
 }
 
