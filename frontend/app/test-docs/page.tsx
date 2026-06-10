@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ClipboardList, Bug, Table2, FileText, Code2, BarChart3, Network, Sparkles, Loader2, CheckCircle2, AlertTriangle, XCircle, Plus, Trash2 } from "lucide-react";
+import { ClipboardList, Bug, Table2, FileText, Code2, BarChart3, Network, Sparkles, Loader2, CheckCircle2, AlertTriangle, XCircle, Plus, Trash2, Lightbulb } from "lucide-react";
 import { RequireAuth } from "@/components/auth/RequireAuth";
 import { api, type DocAttempt, type DocReview, type DocScenario } from "@/lib/api";
 
@@ -74,6 +74,54 @@ const DOC_NOUN: Record<DocType, string> = {
   bdd: "Given/When/Then scenarios",
   test_summary: "test summary report",
   traceability: "traceability matrix"
+};
+
+// Bullet-point "how to fill this well" tips shown above each form.
+const TIPS: Record<DocType, string[]> = {
+  test_case: [
+    "Title: action-oriented, one behaviour (e.g. “Login with valid credentials”).",
+    "Preconditions: the exact system state required before the steps.",
+    "Steps: numbered, one action per line, reproducible by anyone.",
+    "Expected result: observable and verifiable — not just “it works”.",
+    "Keep the case independent — it shouldn’t depend on another test running first."
+  ],
+  bug_report: [
+    "Title: what is broken and where, specific enough to triage at a glance.",
+    "Environment: OS, browser/app version, device.",
+    "Steps to reproduce: minimal, numbered, deterministic.",
+    "State Expected AND Actual result explicitly.",
+    "Severity = impact on the system; Priority = urgency to fix. Don’t confuse them."
+  ],
+  decision_table: [
+    "List conditions as clear Yes/No checks.",
+    "Cover every combination: n boolean conditions → 2ⁿ rules (use “–” for don’t-care).",
+    "Each rule maps to exactly one action/outcome.",
+    "No duplicate or contradictory rules."
+  ],
+  test_plan: [
+    "Scope: state what IS and what is NOT tested.",
+    "Entry/exit criteria must be measurable (numbers, not “testing is done”).",
+    "Pair every risk with a mitigation.",
+    "Give a realistic schedule and who does the work."
+  ],
+  bdd: [
+    "One scenario = one behaviour.",
+    "Given = context, When = action, Then = observable outcome.",
+    "Use declarative business language, not step-by-step UI clicks.",
+    "Cover the happy path AND at least one edge/negative case."
+  ],
+  test_summary: [
+    "Metrics: planned / executed / passed / failed and the pass rate.",
+    "List open defects, ideally by severity.",
+    "State the residual risk if you ship now.",
+    "End with a clear go / no-go / conditional recommendation and justify it."
+  ],
+  traceability: [
+    "Every requirement maps to at least one test.",
+    "Give each mapping a status (Covered / Partial / Not covered).",
+    "Flag uncovered requirements — those are coverage gaps.",
+    "Avoid orphan tests that trace to no requirement."
+  ]
 };
 
 const GRID_TYPES = new Set<DocType>(["decision_table", "traceability"]);
@@ -443,6 +491,17 @@ function PracticePanel({ docType }: { docType: DocType }) {
             </div>
           ) : null}
         </div>
+
+        <details open className="rounded-lg border border-amber/30 bg-amber/5 p-4">
+          <summary className="flex cursor-pointer items-center gap-2 text-sm font-semibold text-amber-700">
+            <Lightbulb className="h-4 w-4" /> How to fill a good {DOC_NOUN[docType]}
+          </summary>
+          <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-slate-600">
+            {TIPS[docType].map((tip, i) => (
+              <li key={i}>{tip}</li>
+            ))}
+          </ul>
+        </details>
 
         <div className="space-y-3 rounded-lg border border-slate-200 bg-white p-4">
           {isGrid ? (
