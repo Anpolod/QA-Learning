@@ -1,11 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ClipboardList, Bug, Table2, Sparkles, Loader2, CheckCircle2, AlertTriangle, XCircle, Plus, Trash2 } from "lucide-react";
+import { ClipboardList, Bug, Table2, FileText, Code2, BarChart3, Network, Sparkles, Loader2, CheckCircle2, AlertTriangle, XCircle, Plus, Trash2 } from "lucide-react";
 import { RequireAuth } from "@/components/auth/RequireAuth";
 import { api, type DocAttempt, type DocReview, type DocScenario } from "@/lib/api";
 
-type DocType = "test_case" | "bug_report" | "decision_table";
+type DocType = "test_case" | "bug_report" | "decision_table" | "test_plan" | "bdd" | "test_summary" | "traceability";
 
 type FieldDef = { name: string; label: string; multiline?: boolean; hint?: string; options?: string[] };
 
@@ -26,20 +26,59 @@ const FIELDS: Record<string, FieldDef[]> = {
     { name: "actual_result", label: "Actual result", multiline: true },
     { name: "severity", label: "Severity", options: ["Blocker", "Critical", "Major", "Minor", "Trivial"] },
     { name: "priority", label: "Priority", options: ["P1", "P2", "P3"] }
+  ],
+  test_plan: [
+    { name: "title", label: "Title", hint: "e.g. 'Test plan — checkout & payment release'" },
+    { name: "scope", label: "Scope (in / out)", multiline: true, hint: "What IS and is NOT tested" },
+    { name: "approach", label: "Approach", multiline: true, hint: "Test levels, types, manual/automation" },
+    { name: "entry_criteria", label: "Entry criteria", multiline: true, hint: "When testing can start (measurable)" },
+    { name: "exit_criteria", label: "Exit criteria", multiline: true, hint: "When testing is done (measurable)" },
+    { name: "risks", label: "Risks & mitigation", multiline: true, hint: "Real risks + how to handle them" },
+    { name: "schedule", label: "Schedule & resources", multiline: true, hint: "Who, how long" }
+  ],
+  bdd: [
+    { name: "title", label: "Title", hint: "Feature under test" },
+    { name: "feature", label: "Feature", multiline: true, hint: "One-line feature description / user story" },
+    {
+      name: "scenarios",
+      label: "Scenarios (Given/When/Then)",
+      multiline: true,
+      hint: "One scenario per block: Given … / When … / Then …. Cover happy + edge cases."
+    }
+  ],
+  test_summary: [
+    { name: "title", label: "Title", hint: "e.g. 'Test summary — Sprint 12 regression'" },
+    { name: "summary", label: "Summary", multiline: true, hint: "What was tested, overall outcome" },
+    { name: "metrics", label: "Metrics", multiline: true, hint: "Planned/executed/passed/failed, pass rate" },
+    { name: "open_defects", label: "Open defects", multiline: true, hint: "By severity (criticals, majors…)" },
+    { name: "risks", label: "Residual risk", multiline: true, hint: "What risk remains if shipped" },
+    { name: "recommendation", label: "Release recommendation", multiline: true, hint: "Go / no-go / conditional + why" }
   ]
 };
 
 const TABS: { type: DocType; label: string; icon: typeof Bug }[] = [
   { type: "test_case", label: "Test Case", icon: ClipboardList },
   { type: "bug_report", label: "Bug Report", icon: Bug },
-  { type: "decision_table", label: "Decision Table", icon: Table2 }
+  { type: "decision_table", label: "Decision Table", icon: Table2 },
+  { type: "test_plan", label: "Test Plan", icon: FileText },
+  { type: "bdd", label: "Given/When/Then", icon: Code2 },
+  { type: "test_summary", label: "Summary Report", icon: BarChart3 },
+  { type: "traceability", label: "Traceability", icon: Network }
 ];
 
 const DOC_NOUN: Record<DocType, string> = {
   test_case: "test case",
   bug_report: "bug report",
-  decision_table: "decision table"
+  decision_table: "decision table",
+  test_plan: "test plan",
+  bdd: "Given/When/Then scenarios",
+  test_summary: "test summary report",
+  traceability: "traceability matrix"
 };
+
+const GRID_TYPES = new Set<DocType>(["decision_table", "traceability"]);
+
+const ICON_BY_TYPE = Object.fromEntries(TABS.map((t) => [t.type, t.icon])) as Record<DocType, typeof Bug>;
 
 type DTRule = { vals: string[]; action: string };
 type DTState = { conditions: string[]; rules: DTRule[] };
@@ -188,6 +227,95 @@ function DecisionTableEditor({ value, onChange }: { value: DTState; onChange: (d
   );
 }
 
+type TraceRow = { requirement: string; tests: string; status: string };
+type TraceState = { rows: TraceRow[] };
+const TRACE_STATUS = ["Covered", "Partial", "Not covered"];
+
+function emptyTraceability(): TraceState {
+  return {
+    rows: [
+      { requirement: "", tests: "", status: "Covered" },
+      { requirement: "", tests: "", status: "Covered" },
+      { requirement: "", tests: "", status: "Not covered" }
+    ]
+  };
+}
+
+function serializeTraceability(title: string, t: TraceState): Record<string, string> {
+  const rows = t.rows;
+  const requirements = rows.map((r, i) => `REQ-${i + 1}: ${r.requirement || "(unnamed)"}`).join("\n");
+  const matrix = rows
+    .map((r, i) => `REQ-${i + 1} -> tests: ${r.tests || "(none)"} [${r.status}]`)
+    .join("\n");
+  const covered = rows.filter((r) => r.tests.trim() && r.status !== "Not covered").length;
+  return { title, requirements, matrix, coverage_notes: `${covered}/${rows.length} requirements traced to a test.` };
+}
+
+function TraceabilityEditor({ value, onChange }: { value: TraceState; onChange: (t: TraceState) => void }) {
+  const { rows } = value;
+  function setRow(i: number, patch: Partial<TraceRow>) {
+    onChange({ rows: rows.map((r, idx) => (idx === i ? { ...r, ...patch } : r)) });
+  }
+  function addRow() {
+    onChange({ rows: [...rows, { requirement: "", tests: "", status: "Covered" }] });
+  }
+  function removeRow(i: number) {
+    if (rows.length <= 1) return;
+    onChange({ rows: rows.filter((_, idx) => idx !== i) });
+  }
+  return (
+    <div>
+      <div className="flex items-center justify-between">
+        <label className="text-sm font-medium text-ink">Requirements → tests</label>
+        <button type="button" onClick={addRow} className="inline-flex items-center gap-1 text-xs font-medium text-coral hover:underline">
+          <Plus className="h-3.5 w-3.5" /> Requirement
+        </button>
+      </div>
+      <div className="mt-2 overflow-x-auto">
+        <table className="w-full border-collapse text-sm">
+          <thead>
+            <tr>
+              <th className="border border-slate-200 bg-slate-50 p-2 text-left text-xs font-semibold text-slate-500">#</th>
+              <th className="border border-slate-200 bg-slate-50 p-2 text-left text-xs font-semibold text-slate-500">Requirement</th>
+              <th className="border border-slate-200 bg-slate-50 p-2 text-left text-xs font-semibold text-slate-500">Test case(s)</th>
+              <th className="border border-slate-200 bg-slate-50 p-2 text-left text-xs font-semibold text-slate-500">Status</th>
+              <th className="border border-slate-200 bg-slate-50 p-2" />
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r, i) => (
+              <tr key={i}>
+                <td className="border border-slate-200 p-2 text-xs text-slate-400">REQ-{i + 1}</td>
+                <td className="border border-slate-200 p-1">
+                  <input value={r.requirement} onChange={(e) => setRow(i, { requirement: e.target.value })} placeholder="e.g. Valid login succeeds" className="w-full min-w-[140px] rounded bg-paper px-2 py-1 text-sm" />
+                </td>
+                <td className="border border-slate-200 p-1">
+                  <input value={r.tests} onChange={(e) => setRow(i, { tests: e.target.value })} placeholder="e.g. TC-01, TC-02" className="w-full min-w-[110px] rounded bg-paper px-2 py-1 text-sm" />
+                </td>
+                <td className="border border-slate-200 p-1">
+                  <select value={r.status} onChange={(e) => setRow(i, { status: e.target.value })} className="rounded bg-paper px-1 py-1 text-sm">
+                    {TRACE_STATUS.map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
+                  </select>
+                </td>
+                <td className="border border-slate-200 p-1 text-center">
+                  <button type="button" onClick={() => removeRow(i)} className="text-slate-300 hover:text-coral" aria-label="Remove requirement">
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="mt-2 text-xs text-slate-400">Every requirement should map to at least one test with a status.</p>
+    </div>
+  );
+}
+
 function scoreColor(score: number) {
   if (score >= 80) return "bg-mint/15 text-mint";
   if (score >= 50) return "bg-amber/15 text-amber-700";
@@ -203,11 +331,14 @@ function RatingIcon({ rating }: { rating: string }) {
 function PracticePanel({ docType }: { docType: DocType }) {
   const fieldDefs = FIELDS[docType] ?? [];
   const isDecisionTable = docType === "decision_table";
+  const isTraceability = docType === "traceability";
+  const isGrid = GRID_TYPES.has(docType);
   const [scenarios, setScenarios] = useState<DocScenario[]>([]);
   const [scenarioId, setScenarioId] = useState<number | null>(null);
   const [values, setValues] = useState<Record<string, string>>({});
   const [dtTitle, setDtTitle] = useState("");
   const [dt, setDt] = useState<DTState>(emptyDecisionTable());
+  const [trace, setTrace] = useState<TraceState>(emptyTraceability());
   const [generating, setGenerating] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [review, setReview] = useState<DocReview | null>(null);
@@ -258,7 +389,11 @@ function PracticePanel({ docType }: { docType: DocType }) {
     setError("");
     setReview(null);
     try {
-      const fields = isDecisionTable ? serializeDecisionTable(dtTitle, dt) : values;
+      const fields = isDecisionTable
+        ? serializeDecisionTable(dtTitle, dt)
+        : isTraceability
+          ? serializeTraceability(dtTitle, trace)
+          : values;
       const result = await api.reviewDoc({ scenario_id: scenarioId, doc_type: docType, fields });
       setReview(result);
       setTimeout(() => reviewRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
@@ -310,18 +445,22 @@ function PracticePanel({ docType }: { docType: DocType }) {
         </div>
 
         <div className="space-y-3 rounded-lg border border-slate-200 bg-white p-4">
-          {isDecisionTable ? (
+          {isGrid ? (
             <>
               <div>
                 <label className="text-sm font-medium text-ink">Title</label>
                 <input
                   value={dtTitle}
                   onChange={(e) => setDtTitle(e.target.value)}
-                  placeholder="e.g. Checkout discount eligibility"
+                  placeholder={isTraceability ? "e.g. Traceability — login" : "e.g. Checkout discount eligibility"}
                   className="mt-1 w-full rounded-md border border-slate-300 bg-paper px-3 py-2 text-sm"
                 />
               </div>
-              <DecisionTableEditor value={dt} onChange={setDt} />
+              {isDecisionTable ? (
+                <DecisionTableEditor value={dt} onChange={setDt} />
+              ) : (
+                <TraceabilityEditor value={trace} onChange={setTrace} />
+              )}
             </>
           ) : (
             fieldDefs.map((f) => (
@@ -424,21 +563,18 @@ function History() {
     <section className="mt-10">
       <h2 className="text-lg font-semibold text-ink">Your history</h2>
       <div className="mt-3 space-y-2">
-        {attempts.map((a) => (
+        {attempts.map((a) => {
+          const Icon = ICON_BY_TYPE[a.doc_type] ?? ClipboardList;
+          return (
           <div key={a.id} className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm">
             <span className="flex items-center gap-2">
-              {a.doc_type === "bug_report" ? (
-                <Bug className="h-4 w-4 text-coral" />
-              ) : a.doc_type === "decision_table" ? (
-                <Table2 className="h-4 w-4 text-amber" />
-              ) : (
-                <ClipboardList className="h-4 w-4 text-mint" />
-              )}
+              <Icon className="h-4 w-4 text-slate-500" />
               <span className="font-medium text-ink">{a.scenario_title}</span>
             </span>
             <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-bold ${scoreColor(a.score)}`}>{a.score}</span>
           </div>
-        ))}
+          );
+        })}
       </div>
     </section>
   );
@@ -459,7 +595,7 @@ export default function TestDocsPage() {
           submission and explains what to improve.
         </p>
 
-        <div className="mt-5 inline-flex rounded-lg border border-slate-200 bg-white p-1">
+        <div className="mt-5 flex flex-wrap gap-1 rounded-lg border border-slate-200 bg-white p-1">
           {TABS.map(({ type, label, icon: Icon }) => (
             <button
               key={type}

@@ -130,5 +130,101 @@
     "title": "Insurance premium tier",
     "brief": "Build a decision table for assigning an insurance premium tier.",
     "context": "Conditions: driver age over 25 (Yes/No) and at least one accident in the last year (Yes/No). Outcomes: low, standard, or high premium tier."
+  },
+  {
+    "doc_type": "test_plan",
+    "title": "Test plan for a checkout & payment release",
+    "brief": "Write a test plan for releasing a new checkout and card payment flow.",
+    "context": "The release adds card payment, coupon codes, and order confirmation emails. Risk areas: payment failures, price calculation, and email delivery. One QA, two weeks before launch."
+  },
+  {
+    "doc_type": "test_plan",
+    "title": "Test plan for mobile login & onboarding",
+    "brief": "Write a test plan for a new mobile login and first-run onboarding flow.",
+    "context": "Covers email/social login, 2FA, and a 3-step onboarding. Targets iOS and Android. Risk areas: 2FA, session handling, deep links."
+  },
+  {
+    "doc_type": "test_plan",
+    "title": "Test plan for search & filters",
+    "brief": "Write a test plan for a product search with category and price filters.",
+    "context": "New feature on the web catalog. Risk areas: relevance, empty/edge queries, filter combinations, performance with large result sets."
+  },
+  {
+    "doc_type": "test_plan",
+    "title": "Regression test plan for v2.0",
+    "brief": "Write a regression test plan for a major v2.0 release.",
+    "context": "v2.0 refactors the cart and account modules. Need to plan regression scope, entry/exit criteria, risks, and a one-week schedule with two testers."
+  },
+  {
+    "doc_type": "bdd",
+    "title": "Acceptance scenarios: user login",
+    "brief": "Write Given/When/Then acceptance scenarios for user login.",
+    "context": "Cover valid login, wrong password, and a locked account. Login page has email + password fields and a Sign in button."
+  },
+  {
+    "doc_type": "bdd",
+    "title": "Acceptance scenarios: add to cart",
+    "brief": "Write Given/When/Then acceptance scenarios for adding a product to the cart.",
+    "context": "From a product page; cover adding an in-stock item, an out-of-stock item, and updating quantity."
+  },
+  {
+    "doc_type": "bdd",
+    "title": "Acceptance scenarios: apply coupon",
+    "brief": "Write Given/When/Then acceptance scenarios for applying a discount coupon at checkout.",
+    "context": "Cover a valid coupon, an expired coupon, and a coupon below the minimum order value."
+  },
+  {
+    "doc_type": "bdd",
+    "title": "Acceptance scenarios: password reset",
+    "brief": "Write Given/When/Then acceptance scenarios for the password reset flow.",
+    "context": "Cover requesting a reset link, using a valid link, and using an expired link."
+  },
+  {
+    "doc_type": "test_summary",
+    "title": "Summary: Sprint 12 regression cycle",
+    "brief": "Write a test summary report and release recommendation for the Sprint 12 regression cycle.",
+    "context": "Planned 120 tests, executed 118, 108 passed, 10 failed. Open defects: 3 major, 1 critical (payment timeout), 4 minor. Deadline is in 2 days."
+  },
+  {
+    "doc_type": "test_summary",
+    "title": "Summary: Release 2.1 UAT",
+    "brief": "Write a test summary report with a go/no-go recommendation for Release 2.1 UAT.",
+    "context": "80 acceptance cases, 78 passed, 2 failed (1 critical login defect, 1 cosmetic). Business wants to ship Friday."
+  },
+  {
+    "doc_type": "test_summary",
+    "title": "Summary: mobile app smoke test",
+    "brief": "Write a test summary report for a pre-release mobile smoke test.",
+    "context": "30 smoke tests across iOS and Android, 28 passed, 2 failed (Android push notifications, iOS deep link). No criticals."
+  },
+  {
+    "doc_type": "test_summary",
+    "title": "Summary: payments API test cycle",
+    "brief": "Write a test summary report for the payments API test cycle.",
+    "context": "150 API tests, 145 passed, 5 failed (3 timeouts under load, 2 schema mismatches). Performance risk under peak load remains."
+  },
+  {
+    "doc_type": "traceability",
+    "title": "Traceability: login requirements",
+    "brief": "Build a requirements traceability matrix for the login feature.",
+    "context": "Requirements: REQ-1 valid login succeeds, REQ-2 wrong password rejected, REQ-3 account locks after 5 attempts, REQ-4 2FA prompt when enabled. Trace each to test cases with a status."
+  },
+  {
+    "doc_type": "traceability",
+    "title": "Traceability: checkout requirements",
+    "brief": "Build a requirements traceability matrix for checkout.",
+    "context": "Requirements: REQ-1 cart total is correct, REQ-2 valid coupon applies discount, REQ-3 payment success shows confirmation, REQ-4 payment failure shows an error. Map each to tests and a status."
+  },
+  {
+    "doc_type": "traceability",
+    "title": "Traceability: registration requirements",
+    "brief": "Build a requirements traceability matrix for the registration form.",
+    "context": "Requirements: REQ-1 valid signup creates an account, REQ-2 invalid email is rejected, REQ-3 weak password is rejected, REQ-4 duplicate email is rejected. Trace to tests with status."
+  },
+  {
+    "doc_type": "traceability",
+    "title": "Traceability: search requirements",
+    "brief": "Build a requirements traceability matrix for product search.",
+    "context": "Requirements: REQ-1 keyword returns relevant results, REQ-2 empty query is handled, REQ-3 filters narrow results, REQ-4 no-results state is shown. Map each to tests and a status."
   }
 ]

@@ -29,12 +29,20 @@ EXPECTED_FIELDS = {
         "priority",
     ],
     "decision_table": ["title", "conditions", "rules", "actions"],
+    "test_plan": ["title", "scope", "approach", "entry_criteria", "exit_criteria", "risks", "schedule"],
+    "bdd": ["title", "feature", "scenarios"],
+    "test_summary": ["title", "summary", "metrics", "open_defects", "risks", "recommendation"],
+    "traceability": ["title", "requirements", "matrix", "coverage_notes"],
 }
 
 LABELS = {
     "test_case": "test case",
     "bug_report": "bug report",
     "decision_table": "decision table",
+    "test_plan": "test plan",
+    "bdd": "set of Given/When/Then acceptance scenarios",
+    "test_summary": "test summary report",
+    "traceability": "requirements traceability matrix",
 }
 
 # Extra, type-specific grading guidance appended to the review prompt.
@@ -49,14 +57,55 @@ TYPE_GUIDANCE = {
         "'actions' fields are GOOD (not weak) and the table should score 85+. Terse but correct notation such "
         "as 'R1: A=Y, B=N -> 15% discount' is perfectly acceptable — do not mark it weak for brevity.\n"
     ),
+    "test_plan": (
+        "- Scope must state both what IS and what is NOT tested (in/out).\n"
+        "- Entry and exit criteria must be specific and measurable (e.g. 'all P1 tests pass, <5 open majors'), "
+        "not vague ('testing is done').\n"
+        "- Risks must be real and paired with a mitigation; the schedule/resources should be plausible.\n"
+        "- A clear, complete plan with measurable criteria should score 85+.\n"
+    ),
+    "bdd": (
+        "- Each scenario must follow Given / When / Then (Given = context, When = action, Then = observable "
+        "outcome).\n"
+        "- Scenarios should be atomic (one behaviour each), declarative (business language, not UI clicks), and "
+        "cover both the happy path and at least one edge/negative case.\n"
+        "- Penalise missing Then assertions, multiple unrelated behaviours in one scenario, and imperative "
+        "step-by-step UI wording.\n"
+        "- Well-formed scenarios covering happy + edge cases should score 85+.\n"
+    ),
+    "test_summary": (
+        "- Must include result metrics (tests planned/executed/passed/failed, pass rate).\n"
+        "- Must list open defects (ideally by severity) and the residual risk.\n"
+        "- Must end with a clear, justified release recommendation (go / no-go / conditional).\n"
+        "- A report with metrics, open defects, residual risk and a justified recommendation should score 85+.\n"
+    ),
+    "traceability": (
+        "- Every requirement must map to at least one test; flag any requirement with no test (a coverage gap).\n"
+        "- Each mapping should carry a status (e.g. Covered / Partial / Not covered or Pass / Fail).\n"
+        "- Reward full requirement coverage and clear status; penalise orphan tests and uncovered requirements.\n"
+        "- A matrix where every requirement is traced to a test with a status should score 85+.\n"
+    ),
+}
+
+
+# Extra instruction appended when AI-generating a scenario, so it fits the document type.
+SCENARIO_EXTRA = {
+    "decision_table": " The scenario should describe business rules with a few boolean conditions that drive "
+    "different outcomes (so the student can model a decision table).",
+    "test_plan": " The scenario should describe a feature or release to plan testing for (give scope hints, "
+    "rough risk areas).",
+    "bdd": " The scenario should describe a feature whose behaviour the student will capture as Given/When/Then "
+    "acceptance scenarios.",
+    "test_summary": " The scenario should describe a completed test cycle with some made-up results (counts, a "
+    "few open defects) so the student can write the summary and a release recommendation.",
+    "traceability": " The scenario should list a few requirements/user stories the student will trace to tests "
+    "in a matrix.",
 }
 
 
 def _validate_type(doc_type: str) -> None:
     if doc_type not in EXPECTED_FIELDS:
-        raise HTTPException(
-            status_code=400, detail="doc_type must be 'test_case', 'bug_report' or 'decision_table'."
-        )
+        raise HTTPException(status_code=400, detail=f"Unknown doc_type. Allowed: {', '.join(EXPECTED_FIELDS)}.")
 
 
 def _extract_json(text: str) -> dict:
@@ -105,12 +154,7 @@ async def generate_scenario(db: Session, doc_type: str, user_id: int) -> DocScen
     _validate_type(doc_type)
     _enforce_daily_limit(db, user_id)
     label = LABELS[doc_type]
-    extra = (
-        " The scenario should describe business rules with a few boolean conditions that drive different outcomes "
-        "(so the student can model a decision table)."
-        if doc_type == "decision_table"
-        else ""
-    )
+    extra = SCENARIO_EXTRA.get(doc_type, "")
     system = (
         "You design realistic QA practice scenarios for students learning to write test documentation. "
         "Reply with strict JSON only, no prose, no code fences."
