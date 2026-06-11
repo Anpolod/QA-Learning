@@ -73,12 +73,15 @@ export default function DocsPage() {
 
         <div className="space-y-8">
           {docs.map((d) => (
-            <section key={d.slug} id={d.slug} className="scroll-mt-6 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-              <article className="prose prose-slate max-w-none prose-headings:scroll-mt-6 prose-pre:bg-slate-900 prose-pre:text-slate-100 prose-a:text-coral">
+            <section key={d.slug} id={d.slug} className="scroll-mt-8 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+              <article className="prose prose-slate max-w-none prose-headings:scroll-mt-8 prose-pre:bg-slate-900 prose-pre:text-slate-100 prose-a:text-coral">
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>{d.content}</ReactMarkdown>
               </article>
             </section>
           ))}
+          {/* Spacer so the last (short) sections can still scroll to the top when their
+              anchor is clicked, instead of stopping mid-page. */}
+          <div aria-hidden className="h-[60vh]" />
         </div>
       </div>
     </main>
