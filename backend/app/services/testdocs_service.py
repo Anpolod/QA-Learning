@@ -1,6 +1,8 @@
 """Test-documentation practice: list/generate scenarios and AI-review submissions."""
 
 import json
+from pathlib import Path
+from uuid import uuid4
 
 from fastapi import HTTPException
 from sqlalchemy import select
@@ -9,6 +11,16 @@ from sqlalchemy.orm import Session
 from app.ai.providers import get_text_provider
 from app.models.entities import AiUsageLog, DocAttempt, DocScenario
 from app.services.ai_service import _daily_count, _effective_ai_settings, _effective_secret
+
+SCREENSHOT_DIR = Path("uploads/doc-screenshots")
+_EXT_BY_TYPE = {"image/png": "png", "image/jpeg": "jpg", "image/webp": "webp", "image/gif": "gif"}
+
+
+def save_screenshot(data: bytes, content_type: str) -> str:
+    SCREENSHOT_DIR.mkdir(parents=True, exist_ok=True)
+    name = f"{uuid4()}.{_EXT_BY_TYPE.get(content_type, 'png')}"
+    (SCREENSHOT_DIR / name).write_bytes(data)
+    return f"/uploads/doc-screenshots/{name}"
 
 
 def _enforce_daily_limit(db: Session, user_id: int, effective: dict) -> None:
@@ -313,3 +325,28 @@ def list_attempts(db: Session, user_id: int, limit: int = 30) -> list[dict]:
             }
         )
     return out
+
+
+def get_attempt(db: Session, user_id: int, attempt_id: int) -> dict:
+    attempt = db.get(DocAttempt, attempt_id)
+    if attempt is None or attempt.user_id != user_id:
+        raise HTTPException(status_code=404, detail="Attempt not found.")
+    scenario = db.get(DocScenario, attempt.scenario_id)
+    try:
+        fields = json.loads(attempt.submission_json)
+    except json.JSONDecodeError:
+        fields = {}
+    try:
+        feedback = json.loads(attempt.feedback_json)
+    except json.JSONDecodeError:
+        feedback = {}
+    return {
+        "id": attempt.id,
+        "doc_type": attempt.doc_type,
+        "scenario_title": scenario.title if scenario else "(removed)",
+        "scenario_brief": scenario.brief if scenario else "",
+        "score": attempt.score,
+        "fields": fields,
+        "feedback": feedback,
+        "created_at": attempt.created_at,
+    }

@@ -9,6 +9,7 @@ from app.core.config import settings
 from app.database.session import Base, engine
 
 Path("uploads/ai-images").mkdir(parents=True, exist_ok=True)
+Path("uploads/doc-screenshots").mkdir(parents=True, exist_ok=True)
 Base.metadata.create_all(bind=engine)
 
 # Disable the built-in docs pages so we can serve Swagger UI / ReDoc from self-hosted

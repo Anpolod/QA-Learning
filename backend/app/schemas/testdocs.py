@@ -44,3 +44,14 @@ class AttemptRead(BaseModel):
     score: int
     summary: str
     created_at: datetime
+
+
+class AttemptDetail(BaseModel):
+    id: int
+    doc_type: str
+    scenario_title: str
+    scenario_brief: str
+    score: int
+    fields: dict[str, str]
+    feedback: dict
+    created_at: datetime

@@ -87,6 +87,40 @@ export type DocAttempt = {
   created_at: string;
 };
 
+export type DocAttemptDetail = {
+  id: number;
+  doc_type: DocType;
+  scenario_title: string;
+  scenario_brief: string;
+  score: number;
+  fields: Record<string, string>;
+  feedback: DocReview;
+  created_at: string;
+};
+
+// Multipart upload bypasses request() because it must NOT set a JSON Content-Type
+// (the browser sets the multipart boundary itself).
+export async function uploadDocScreenshot(file: File): Promise<{ url: string }> {
+  const form = new FormData();
+  form.append("file", file);
+  const res = await fetch(`${apiUrl()}/api/test-docs/upload`, {
+    method: "POST",
+    body: form,
+    credentials: "include",
+    cache: "no-store"
+  });
+  if (!res.ok) {
+    let detail = "";
+    try {
+      detail = (await res.json())?.detail ?? "";
+    } catch {
+      // ignore
+    }
+    throw new Error(detail || `Upload failed: ${res.status}`);
+  }
+  return res.json();
+}
+
 export function publicApiBase() {
   return publicApiUrl;
 }
@@ -144,6 +178,7 @@ export const api = {
   reviewDoc: (payload: { scenario_id: number; doc_type: string; fields: Record<string, string> }) =>
     request<DocReview>("/api/test-docs/review", { method: "POST", body: JSON.stringify(payload) }),
   docAttempts: () => request<DocAttempt[]>("/api/test-docs/attempts"),
+  docAttempt: (id: number) => request<DocAttemptDetail>(`/api/test-docs/attempts/${id}`),
   courses: () => request<Course[]>("/api/courses"),
   course: (id: string) => request<Course>(`/api/courses/${id}`),
   module: (id: string) => request<Module>(`/api/courses/modules/${id}`),

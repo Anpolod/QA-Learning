@@ -1,9 +1,18 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ClipboardList, Bug, Table2, FileText, Code2, BarChart3, Network, ListChecks, Sparkles, Loader2, CheckCircle2, AlertTriangle, XCircle, Plus, Trash2, Lightbulb } from "lucide-react";
+import { ClipboardList, Bug, Table2, FileText, Code2, BarChart3, Network, ListChecks, Sparkles, Loader2, CheckCircle2, AlertTriangle, XCircle, Plus, Trash2, Lightbulb, ImagePlus, ChevronDown } from "lucide-react";
 import { RequireAuth } from "@/components/auth/RequireAuth";
-import { api, type DocAttempt, type DocReview, type DocScenario, type DocType } from "@/lib/api";
+import {
+  api,
+  mediaUrl,
+  uploadDocScreenshot,
+  type DocAttempt,
+  type DocAttemptDetail,
+  type DocReview,
+  type DocScenario,
+  type DocType
+} from "@/lib/api";
 
 type FieldDef = { name: string; label: string; multiline?: boolean; hint?: string; options?: string[] };
 
@@ -392,6 +401,45 @@ function RatingIcon({ rating }: { rating: string }) {
   return <AlertTriangle className="h-4 w-4 text-amber-600" />;
 }
 
+function humanize(key: string): string {
+  return key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+// Live, formatted rendering of the document the user is writing (or a saved one).
+function DocumentPreview({ docType, fields }: { docType: DocType; fields: Record<string, string> }) {
+  const labelFor = (k: string) => FIELDS[docType]?.find((f) => f.name === k)?.label ?? humanize(k);
+  const title = (fields.title ?? "").trim();
+  const shot = fields.screenshot_url;
+  const bodyKeys = Object.keys(fields).filter((k) => k !== "title" && k !== "screenshot_url" && (fields[k] ?? "").trim());
+  const empty = !title && bodyKeys.length === 0 && !shot;
+
+  return (
+    <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+      <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Document preview · {DOC_NOUN[docType]}</p>
+      {empty ? (
+        <p className="mt-3 text-sm text-slate-400">Your document builds here as you fill the form.</p>
+      ) : (
+        <div className="mt-3 space-y-3">
+          {title ? <h3 className="text-lg font-bold text-ink">{title}</h3> : null}
+          {bodyKeys.map((k) => (
+            <div key={k}>
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{labelFor(k)}</p>
+              <p className="mt-0.5 whitespace-pre-wrap text-sm leading-6 text-slate-700">{fields[k]}</p>
+            </div>
+          ))}
+          {shot ? (
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Screenshot</p>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={mediaUrl(shot)} alt="attached screenshot" className="mt-1 max-h-64 rounded-md border border-slate-200" />
+            </div>
+          ) : null}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function PracticePanel({ docType, onReviewed }: { docType: DocType; onReviewed: () => void }) {
   const fieldDefs = FIELDS[docType] ?? [];
   const isDecisionTable = docType === "decision_table";
@@ -405,9 +453,32 @@ function PracticePanel({ docType, onReviewed }: { docType: DocType; onReviewed: 
   const [trace, setTrace] = useState<TraceState>(emptyTraceability());
   const [generating, setGenerating] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [review, setReview] = useState<DocReview | null>(null);
   const [error, setError] = useState("");
   const reviewRef = useRef<HTMLDivElement>(null);
+
+  async function onPickScreenshot(file: File | undefined) {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setError("Screenshot must be an image.");
+      return;
+    }
+    if (file.size > 1_000_000) {
+      setError("Screenshot must be 1 MB or smaller.");
+      return;
+    }
+    setUploading(true);
+    setError("");
+    try {
+      const { url } = await uploadDocScreenshot(file);
+      setValues((v) => ({ ...v, screenshot_url: url }));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Upload failed.");
+    } finally {
+      setUploading(false);
+    }
+  }
 
   // Clear ALL form state (plain fields and both grid editors) — used whenever the
   // active scenario changes so stale answers are never submitted against it.
@@ -464,6 +535,14 @@ function PracticePanel({ docType, onReviewed }: { docType: DocType; onReviewed: 
     return "";
   }
 
+  // The flat fields object the document is made of — used for both the live
+  // preview and the review submission.
+  function buildFields(): Record<string, string> {
+    if (isDecisionTable) return serializeDecisionTable(dtTitle, dt);
+    if (isTraceability) return serializeTraceability(dtTitle, trace);
+    return values;
+  }
+
   async function submit() {
     if (!scenarioId) return;
     const problem = validate();
@@ -475,11 +554,7 @@ function PracticePanel({ docType, onReviewed }: { docType: DocType; onReviewed: 
     setError("");
     setReview(null);
     try {
-      const fields = isDecisionTable
-        ? serializeDecisionTable(dtTitle, dt)
-        : isTraceability
-          ? serializeTraceability(dtTitle, trace)
-          : values;
+      const fields = buildFields();
       const result = await api.reviewDoc({ scenario_id: scenarioId, doc_type: docType, fields });
       setReview(result);
       onReviewed();
@@ -594,10 +669,42 @@ function PracticePanel({ docType, onReviewed }: { docType: DocType; onReviewed: 
               </div>
             ))
           )}
+
+          {docType === "bug_report" ? (
+            <div>
+              <label className="text-sm font-medium text-ink">Screenshot</label>
+              <p className="text-xs text-slate-400">Optional. Image, max 1 MB.</p>
+              {values.screenshot_url ? (
+                <div className="mt-1 flex items-center gap-3">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={mediaUrl(values.screenshot_url)} alt="screenshot" className="h-14 w-14 rounded border border-slate-200 object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => setValues((v) => ({ ...v, screenshot_url: "" }))}
+                    className="text-xs font-medium text-coral hover:underline"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ) : (
+                <label className="mt-1 inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-600 hover:border-coral">
+                  {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
+                  {uploading ? "Uploading…" : "Attach screenshot"}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => onPickScreenshot(e.target.files?.[0])}
+                  />
+                </label>
+              )}
+            </div>
+          ) : null}
+
           <button
             type="button"
             onClick={submit}
-            disabled={submitting || !scenarioId}
+            disabled={submitting || uploading || !scenarioId}
             className="inline-flex items-center gap-2 rounded-md bg-coral px-4 py-2 text-sm font-semibold text-white hover:bg-coral/90 disabled:opacity-50"
           >
             {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
@@ -607,7 +714,7 @@ function PracticePanel({ docType, onReviewed }: { docType: DocType; onReviewed: 
         </div>
       </div>
 
-      <aside ref={reviewRef} className="scroll-mt-6 lg:sticky lg:top-6 lg:self-start">
+      <aside ref={reviewRef} className="scroll-mt-6 space-y-4 lg:sticky lg:top-6 lg:self-start">
         {review ? (
           <div className="rounded-lg border border-slate-200 bg-white p-4">
             <div className="flex items-center justify-between">
@@ -639,12 +746,8 @@ function PracticePanel({ docType, onReviewed }: { docType: DocType; onReviewed: 
               </div>
             ) : null}
           </div>
-        ) : (
-          <div className="rounded-lg border border-dashed border-slate-300 bg-white p-6 text-sm text-slate-500">
-            Fill the {DOC_NOUN[docType]} and submit — an AI reviewer scores it and
-            points out what to fix.
-          </div>
-        )}
+        ) : null}
+        <DocumentPreview docType={docType} fields={buildFields()} />
       </aside>
     </div>
   );
@@ -652,24 +755,57 @@ function PracticePanel({ docType, onReviewed }: { docType: DocType; onReviewed: 
 
 function History({ refreshKey }: { refreshKey: number }) {
   const [attempts, setAttempts] = useState<DocAttempt[]>([]);
+  const [openId, setOpenId] = useState<number | null>(null);
+  const [detail, setDetail] = useState<DocAttemptDetail | null>(null);
+
   useEffect(() => {
     api.docAttempts().then(setAttempts).catch(() => {});
   }, [refreshKey]);
+
+  function toggle(id: number) {
+    if (openId === id) {
+      setOpenId(null);
+      return;
+    }
+    setOpenId(id);
+    setDetail(null);
+    api.docAttempt(id).then(setDetail).catch(() => {});
+  }
+
   if (!attempts.length) return null;
   return (
     <section className="mt-10">
-      <h2 className="text-lg font-semibold text-ink">Your history</h2>
+      <h2 className="text-lg font-semibold text-ink">Your saved documents</h2>
       <div className="mt-3 space-y-2">
         {attempts.map((a) => {
           const Icon = ICON_BY_TYPE[a.doc_type] ?? ClipboardList;
+          const open = openId === a.id;
           return (
-          <div key={a.id} className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm">
-            <span className="flex items-center gap-2">
-              <Icon className="h-4 w-4 text-slate-500" />
-              <span className="font-medium text-ink">{a.scenario_title}</span>
-            </span>
-            <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-bold ${scoreColor(a.score)}`}>{a.score}</span>
-          </div>
+            <div key={a.id} className="rounded-lg border border-slate-200 bg-white">
+              <button
+                type="button"
+                onClick={() => toggle(a.id)}
+                className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left text-sm"
+              >
+                <span className="flex items-center gap-2">
+                  <Icon className="h-4 w-4 text-slate-500" />
+                  <span className="font-medium text-ink">{a.scenario_title}</span>
+                </span>
+                <span className="flex items-center gap-2">
+                  <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-bold ${scoreColor(a.score)}`}>{a.score}</span>
+                  <ChevronDown className={`h-4 w-4 text-slate-400 transition ${open ? "rotate-180" : ""}`} />
+                </span>
+              </button>
+              {open ? (
+                <div className="border-t border-slate-100 p-4">
+                  {detail && detail.id === a.id ? (
+                    <DocumentPreview docType={detail.doc_type} fields={detail.fields} />
+                  ) : (
+                    <p className="text-sm text-slate-400">Loading…</p>
+                  )}
+                </div>
+              ) : null}
+            </div>
           );
         })}
       </div>
