@@ -21,25 +21,41 @@ SECTION = "istqb"
 MAX_THEORY_SLIDES = 4
 
 
+def _text(value: object) -> str:
+    if isinstance(value, list):
+        value = "\n".join(str(item) for item in value)
+    elif value is None:
+        value = ""
+    else:
+        value = str(value)
+    return value.replace("\\n", "\n")
+
+
 def _slides_for(lesson: Lesson) -> list[tuple[str, str]]:
     slides: list[tuple[str, str]] = []
-    if lesson.learning_goals or lesson.short_description:
-        slides.append(("Overview", lesson.learning_goals or lesson.short_description))
+    learning_goals = _text(lesson.learning_goals)
+    short_description = _text(lesson.short_description)
+    if learning_goals or short_description:
+        slides.append(("Overview", learning_goals or short_description))
 
-    paragraphs = [p.strip() for p in (lesson.theory or "").split("\n\n") if p.strip()]
+    paragraphs = [p.strip() for p in _text(lesson.theory).split("\n\n") if p.strip()]
     paragraphs = paragraphs[:MAX_THEORY_SLIDES]
     for i, para in enumerate(paragraphs, start=1):
         title = "Core concept" if len(paragraphs) == 1 else f"Core concept ({i})"
         slides.append((title, para))
 
-    if lesson.key_terms:
-        slides.append(("Key terms", lesson.key_terms))
-    if lesson.real_world_example:
-        slides.append(("Real-world example", lesson.real_world_example))
-    if lesson.common_mistakes:
-        slides.append(("Common mistakes", lesson.common_mistakes))
-    if lesson.summary:
-        slides.append(("Summary", lesson.summary))
+    key_terms = _text(lesson.key_terms)
+    real_world_example = _text(lesson.real_world_example)
+    common_mistakes = _text(lesson.common_mistakes)
+    summary = _text(lesson.summary)
+    if key_terms:
+        slides.append(("Key terms", key_terms))
+    if real_world_example:
+        slides.append(("Real-world example", real_world_example))
+    if common_mistakes:
+        slides.append(("Common mistakes", common_mistakes))
+    if summary:
+        slides.append(("Summary", summary))
     return slides
 
 

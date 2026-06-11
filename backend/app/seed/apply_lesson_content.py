@@ -44,6 +44,16 @@ TEXT_FIELDS = [
 ]
 
 
+def _normalize_text(value: object) -> str:
+    if isinstance(value, list):
+        value = "\n".join(str(item) for item in value)
+    elif value is None:
+        value = ""
+    else:
+        value = str(value)
+    return value.replace("\\n", "\n")
+
+
 def _load_content() -> list[dict]:
     lessons: list[dict] = []
     if not CONTENT_DIR.exists():
@@ -100,19 +110,19 @@ def apply_lesson_content() -> None:
 
             for field in TEXT_FIELDS:
                 if c.get(field) is not None:
-                    setattr(lesson, field, c[field])
+                    setattr(lesson, field, _normalize_text(c[field]))
 
             if c.get("example"):
                 example = db.scalar(select(LessonExample).where(LessonExample.lesson_id == lesson.id))
                 if example:
                     example.title = c.get("example_title", "Practical workplace example")
-                    example.content = c["example"]
+                    example.content = _normalize_text(c["example"])
                 else:
                     db.add(
                         LessonExample(
                             lesson_id=lesson.id,
                             title=c.get("example_title", "Practical workplace example"),
-                            content=c["example"],
+                            content=_normalize_text(c["example"]),
                         )
                     )
 
@@ -120,29 +130,29 @@ def apply_lesson_content() -> None:
                 task = db.scalar(select(LessonInteractiveTask).where(LessonInteractiveTask.lesson_id == lesson.id))
                 if task:
                     task.task_type = c.get("task_type", "analysis")
-                    task.prompt = c["interactive"]
-                    task.expected_answer = c.get("expected_answer", "")
+                    task.prompt = _normalize_text(c["interactive"])
+                    task.expected_answer = _normalize_text(c.get("expected_answer", ""))
                 else:
                     db.add(
                         LessonInteractiveTask(
                             lesson_id=lesson.id,
                             task_type=c.get("task_type", "analysis"),
-                            prompt=c["interactive"],
-                            expected_answer=c.get("expected_answer", ""),
+                            prompt=_normalize_text(c["interactive"]),
+                            expected_answer=_normalize_text(c.get("expected_answer", "")),
                         )
                     )
 
             if c.get("homework"):
                 homework = db.scalar(select(Homework).where(Homework.lesson_id == lesson.id))
                 if homework:
-                    homework.task_description = c["homework"]
-                    homework.expected_result = c.get("expected_result", "")
+                    homework.task_description = _normalize_text(c["homework"])
+                    homework.expected_result = _normalize_text(c.get("expected_result", ""))
                 else:
                     db.add(
                         Homework(
                             lesson_id=lesson.id,
-                            task_description=c["homework"],
-                            expected_result=c.get("expected_result", ""),
+                            task_description=_normalize_text(c["homework"]),
+                            expected_result=_normalize_text(c.get("expected_result", "")),
                         )
                     )
 
