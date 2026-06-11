@@ -226,5 +226,29 @@
     "title": "Traceability: search requirements",
     "brief": "Build a requirements traceability matrix for product search.",
     "context": "Requirements: REQ-1 keyword returns relevant results, REQ-2 empty query is handled, REQ-3 filters narrow results, REQ-4 no-results state is shown. Map each to tests and a status."
+  },
+  {
+    "doc_type": "checklist",
+    "title": "Checklist: login form",
+    "brief": "Write a test checklist for a login form.",
+    "context": "Fields: email, password, Sign in button, 'Forgot password' link. Consider valid login, wrong password, empty fields, invalid email format, and account lockout."
+  },
+  {
+    "doc_type": "checklist",
+    "title": "Checklist: file upload",
+    "brief": "Write a test checklist for an avatar/file upload feature.",
+    "context": "Accepts JPG/PNG up to 5 MB. Consider valid file, oversized file, wrong format, no file selected, and upload progress/feedback."
+  },
+  {
+    "doc_type": "checklist",
+    "title": "Checklist: responsive layout",
+    "brief": "Write a test checklist for a page's responsive layout.",
+    "context": "The product page must work on mobile, tablet, and desktop. Consider breakpoints, navigation/hamburger menu, image scaling, touch targets, and horizontal scrolling."
+  },
+  {
+    "doc_type": "checklist",
+    "title": "Checklist: checkout form",
+    "brief": "Write a test checklist for a checkout form.",
+    "context": "Fields: shipping address, card number, expiry, CVV, coupon code, Place order. Consider valid order, invalid card, expired card, missing required fields, and coupon application."
   }
 ]

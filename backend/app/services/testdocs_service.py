@@ -32,6 +32,7 @@ EXPECTED_FIELDS = {
     "bdd": ["title", "feature", "scenarios"],
     "test_summary": ["title", "summary", "metrics", "open_defects", "risks", "recommendation"],
     "traceability": ["title", "requirements", "matrix", "coverage_notes"],
+    "checklist": ["title", "area", "items"],
 }
 
 LABELS = {
@@ -42,6 +43,7 @@ LABELS = {
     "bdd": "set of Given/When/Then acceptance scenarios",
     "test_summary": "test summary report",
     "traceability": "requirements traceability matrix",
+    "checklist": "test checklist",
 }
 
 # Extra, type-specific grading guidance appended to the review prompt.
@@ -84,6 +86,14 @@ TYPE_GUIDANCE = {
         "- Reward full requirement coverage and clear status; penalise orphan tests and uncovered requirements.\n"
         "- A matrix where every requirement is traced to a test with a status should score 85+.\n"
     ),
+    "checklist": (
+        "- Each item must be a concrete, verifiable check that can be answered yes/no (e.g. 'Empty email shows "
+        "a validation error'), not a vague topic ('check validation').\n"
+        "- Items should be atomic (one check each), non-duplicated, and cover the key cases of the area "
+        "(happy path, boundaries, negative/error cases).\n"
+        "- Penalise vague/untestable items, duplicates, and big gaps in coverage of the stated area.\n"
+        "- A focused list of clear, verifiable, well-covering checks should score 85+.\n"
+    ),
 }
 
 
@@ -99,6 +109,8 @@ SCENARIO_EXTRA = {
     "few open defects) so the student can write the summary and a release recommendation.",
     "traceability": " The scenario should list a few requirements/user stories the student will trace to tests "
     "in a matrix.",
+    "checklist": " The scenario should name a feature/area for which the student will write a test checklist "
+    "(give a few hints about what matters in that area).",
 }
 
 

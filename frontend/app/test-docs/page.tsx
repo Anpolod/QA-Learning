@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ClipboardList, Bug, Table2, FileText, Code2, BarChart3, Network, Sparkles, Loader2, CheckCircle2, AlertTriangle, XCircle, Plus, Trash2, Lightbulb } from "lucide-react";
+import { ClipboardList, Bug, Table2, FileText, Code2, BarChart3, Network, ListChecks, Sparkles, Loader2, CheckCircle2, AlertTriangle, XCircle, Plus, Trash2, Lightbulb } from "lucide-react";
 import { RequireAuth } from "@/components/auth/RequireAuth";
 import { api, type DocAttempt, type DocReview, type DocScenario, type DocType } from "@/lib/api";
 
@@ -51,6 +51,16 @@ const FIELDS: Record<string, FieldDef[]> = {
     { name: "open_defects", label: "Open defects", multiline: true, hint: "By severity (criticals, majors…)" },
     { name: "risks", label: "Residual risk", multiline: true, hint: "What risk remains if shipped" },
     { name: "recommendation", label: "Release recommendation", multiline: true, hint: "Go / no-go / conditional + why" }
+  ],
+  checklist: [
+    { name: "title", label: "Title", hint: "e.g. 'Login form test checklist'" },
+    { name: "area", label: "Area / feature", hint: "What the checklist covers" },
+    {
+      name: "items",
+      label: "Checklist items",
+      multiline: true,
+      hint: "One verifiable check per line (yes/no). Cover happy path, boundaries, and negative cases."
+    }
   ]
 };
 
@@ -61,7 +71,8 @@ const TABS: { type: DocType; label: string; icon: typeof Bug }[] = [
   { type: "test_plan", label: "Test Plan", icon: FileText },
   { type: "bdd", label: "Given/When/Then", icon: Code2 },
   { type: "test_summary", label: "Summary Report", icon: BarChart3 },
-  { type: "traceability", label: "Traceability", icon: Network }
+  { type: "traceability", label: "Traceability", icon: Network },
+  { type: "checklist", label: "Checklist", icon: ListChecks }
 ];
 
 const DOC_NOUN: Record<DocType, string> = {
@@ -71,7 +82,8 @@ const DOC_NOUN: Record<DocType, string> = {
   test_plan: "test plan",
   bdd: "Given/When/Then scenarios",
   test_summary: "test summary report",
-  traceability: "traceability matrix"
+  traceability: "traceability matrix",
+  checklist: "test checklist"
 };
 
 // Bullet-point "how to fill this well" tips shown above each form.
@@ -119,6 +131,12 @@ const TIPS: Record<DocType, string[]> = {
     "Give each mapping a status (Covered / Partial / Not covered).",
     "Flag uncovered requirements — those are coverage gaps.",
     "Avoid orphan tests that trace to no requirement."
+  ],
+  checklist: [
+    "One verifiable check per item — answerable yes/no.",
+    "Make items atomic (one check each), no duplicates.",
+    "Cover happy path, boundaries, and negative/error cases.",
+    "Phrase as a check (“Empty email shows an error”), not a vague topic (“check validation”)."
   ]
 };
 

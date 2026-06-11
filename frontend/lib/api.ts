@@ -46,7 +46,8 @@ export type DocType =
   | "test_plan"
   | "bdd"
   | "test_summary"
-  | "traceability";
+  | "traceability"
+  | "checklist";
 
 export type LeaderboardRow = {
   position: number;
