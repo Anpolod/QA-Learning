@@ -60,16 +60,6 @@ const FIELDS: Record<string, FieldDef[]> = {
     { name: "open_defects", label: "Open defects", multiline: true, hint: "By severity (criticals, majors…)" },
     { name: "risks", label: "Residual risk", multiline: true, hint: "What risk remains if shipped" },
     { name: "recommendation", label: "Release recommendation", multiline: true, hint: "Go / no-go / conditional + why" }
-  ],
-  checklist: [
-    { name: "title", label: "Title", hint: "e.g. 'Login form test checklist'" },
-    { name: "area", label: "Area / feature", hint: "What the checklist covers" },
-    {
-      name: "items",
-      label: "Checklist items",
-      multiline: true,
-      hint: "One verifiable check per line (yes/no). Cover happy path, boundaries, and negative cases."
-    }
   ]
 };
 
@@ -149,7 +139,7 @@ const TIPS: Record<DocType, string[]> = {
   ]
 };
 
-const GRID_TYPES = new Set<DocType>(["decision_table", "traceability"]);
+const GRID_TYPES = new Set<DocType>(["decision_table", "traceability", "checklist"]);
 
 const ICON_BY_TYPE = Object.fromEntries(TABS.map((t) => [t.type, t.icon])) as Record<DocType, typeof Bug>;
 
@@ -389,6 +379,78 @@ function TraceabilityEditor({ value, onChange }: { value: TraceState; onChange: 
   );
 }
 
+type ChecklistSection = { area: string; items: string };
+type ChecklistState = { sections: ChecklistSection[] };
+
+function emptyChecklist(): ChecklistState {
+  return { sections: [{ area: "", items: "" }] };
+}
+
+function serializeChecklist(title: string, c: ChecklistState): Record<string, string> {
+  const used = c.sections.filter((s) => s.area.trim() || s.items.trim());
+  const areas = used.map((s, i) => `${i + 1}. ${s.area || "(unnamed area)"}`).join("\n");
+  const items = used
+    .map((s) => {
+      const lines = s.items
+        .split("\n")
+        .map((l) => l.trim())
+        .filter(Boolean)
+        .map((l) => `- ${l.replace(/^[-*]\s*/, "")}`)
+        .join("\n");
+      return `## ${s.area || "(unnamed area)"}\n${lines || "- (no items)"}`;
+    })
+    .join("\n\n");
+  return { title, areas, items };
+}
+
+function ChecklistEditor({ value, onChange }: { value: ChecklistState; onChange: (c: ChecklistState) => void }) {
+  const { sections } = value;
+  function setSection(i: number, patch: Partial<ChecklistSection>) {
+    onChange({ sections: sections.map((s, idx) => (idx === i ? { ...s, ...patch } : s)) });
+  }
+  function addSection() {
+    onChange({ sections: [...sections, { area: "", items: "" }] });
+  }
+  function removeSection(i: number) {
+    if (sections.length <= 1) return;
+    onChange({ sections: sections.filter((_, idx) => idx !== i) });
+  }
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <label className="text-sm font-medium text-ink">Areas / features</label>
+        <button type="button" onClick={addSection} className="inline-flex items-center gap-1 text-xs font-medium text-coral hover:underline">
+          <Plus className="h-3.5 w-3.5" /> Area
+        </button>
+      </div>
+      {sections.map((s, i) => (
+        <div key={i} className="rounded-md border border-slate-200 p-3">
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-slate-400">{i + 1}</span>
+            <input
+              value={s.area}
+              onChange={(e) => setSection(i, { area: e.target.value })}
+              placeholder="Area name, e.g. Functional Testing"
+              className="flex-1 rounded-md border border-slate-300 bg-paper px-3 py-1.5 text-sm font-medium"
+            />
+            <button type="button" onClick={() => removeSection(i)} className="text-slate-300 hover:text-coral" aria-label="Remove area">
+              <Trash2 className="h-4 w-4" />
+            </button>
+          </div>
+          <textarea
+            value={s.items}
+            onChange={(e) => setSection(i, { items: e.target.value })}
+            rows={4}
+            placeholder={"One verifiable check per line…\nSide A accepts 1\nSide A rejects 0"}
+            className="mt-2 w-full rounded-md border border-slate-300 bg-paper px-3 py-2 text-sm"
+          />
+        </div>
+      ))}
+      <p className="text-xs text-slate-400">Add an area per group of checks (Functional, Boundary, Negative…). One check per line.</p>
+    </div>
+  );
+}
+
 function scoreColor(score: number) {
   if (score >= 80) return "bg-mint/15 text-mint";
   if (score >= 50) return "bg-amber/15 text-amber-700";
@@ -444,6 +506,7 @@ function PracticePanel({ docType, onReviewed }: { docType: DocType; onReviewed: 
   const fieldDefs = FIELDS[docType] ?? [];
   const isDecisionTable = docType === "decision_table";
   const isTraceability = docType === "traceability";
+  const isChecklist = docType === "checklist";
   const isGrid = GRID_TYPES.has(docType);
   const [scenarios, setScenarios] = useState<DocScenario[]>([]);
   const [scenarioId, setScenarioId] = useState<number | null>(null);
@@ -451,6 +514,7 @@ function PracticePanel({ docType, onReviewed }: { docType: DocType; onReviewed: 
   const [dtTitle, setDtTitle] = useState("");
   const [dt, setDt] = useState<DTState>(emptyDecisionTable());
   const [trace, setTrace] = useState<TraceState>(emptyTraceability());
+  const [checklist, setChecklist] = useState<ChecklistState>(emptyChecklist());
   const [generating, setGenerating] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -487,6 +551,7 @@ function PracticePanel({ docType, onReviewed }: { docType: DocType; onReviewed: 
     setDtTitle("");
     setDt(emptyDecisionTable());
     setTrace(emptyTraceability());
+    setChecklist(emptyChecklist());
     setReview(null);
   }
 
@@ -531,6 +596,10 @@ function PracticePanel({ docType, onReviewed }: { docType: DocType; onReviewed: 
       if (!trace.rows.some((r) => r.requirement.trim())) return "Add at least one requirement.";
       return "";
     }
+    if (isChecklist) {
+      if (!checklist.sections.some((s) => s.items.trim())) return "Add at least one checklist item.";
+      return "";
+    }
     if (!fieldDefs.some((f) => (values[f.name] ?? "").trim())) return "Fill in at least one field.";
     return "";
   }
@@ -540,6 +609,7 @@ function PracticePanel({ docType, onReviewed }: { docType: DocType; onReviewed: 
   function buildFields(): Record<string, string> {
     if (isDecisionTable) return serializeDecisionTable(dtTitle, dt);
     if (isTraceability) return serializeTraceability(dtTitle, trace);
+    if (isChecklist) return serializeChecklist(dtTitle, checklist);
     return values;
   }
 
@@ -624,14 +694,22 @@ function PracticePanel({ docType, onReviewed }: { docType: DocType; onReviewed: 
                 <input
                   value={dtTitle}
                   onChange={(e) => setDtTitle(e.target.value)}
-                  placeholder={isTraceability ? "e.g. Traceability — login" : "e.g. Checkout discount eligibility"}
+                  placeholder={
+                    isTraceability
+                      ? "e.g. Traceability — login"
+                      : isChecklist
+                        ? "e.g. Triangle App test checklist"
+                        : "e.g. Checkout discount eligibility"
+                  }
                   className="mt-1 w-full rounded-md border border-slate-300 bg-paper px-3 py-2 text-sm"
                 />
               </div>
               {isDecisionTable ? (
                 <DecisionTableEditor value={dt} onChange={setDt} />
-              ) : (
+              ) : isTraceability ? (
                 <TraceabilityEditor value={trace} onChange={setTrace} />
+              ) : (
+                <ChecklistEditor value={checklist} onChange={setChecklist} />
               )}
             </>
           ) : (

@@ -34,6 +34,13 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     } catch {
       // non-JSON error body
     }
+    // Session cookie expired/invalid: clear the local user so RequireAuth flips
+    // back to the login card instead of leaving the page in a broken signed-in state.
+    if (response.status === 401 && typeof window !== "undefined") {
+      localStorage.removeItem("qa_learning_user");
+      window.dispatchEvent(new Event("auth-change"));
+      throw new Error("Your session expired. Please log in again.");
+    }
     throw new Error(detail || `API request failed: ${response.status}`);
   }
   return response.json() as Promise<T>;
@@ -115,6 +122,11 @@ export async function uploadDocScreenshot(file: File): Promise<{ url: string }> 
       detail = (await res.json())?.detail ?? "";
     } catch {
       // ignore
+    }
+    if (res.status === 401 && typeof window !== "undefined") {
+      localStorage.removeItem("qa_learning_user");
+      window.dispatchEvent(new Event("auth-change"));
+      throw new Error("Your session expired. Please log in again.");
     }
     throw new Error(detail || `Upload failed: ${res.status}`);
   }

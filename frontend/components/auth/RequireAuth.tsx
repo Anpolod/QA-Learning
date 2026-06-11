@@ -14,7 +14,16 @@ export function RequireAuth({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     setNext(window.location.pathname + window.location.search);
     // Auth token is an httpOnly cookie; the readable user object signals "signed in".
-    setAuthed(Boolean(localStorage.getItem("qa_learning_user")));
+    const sync = () => setAuthed(Boolean(localStorage.getItem("qa_learning_user")));
+    sync();
+    // A 401 from any API call clears the user and fires auth-change, so an expired
+    // session flips this gate back to the login card instead of breaking silently.
+    window.addEventListener("auth-change", sync);
+    window.addEventListener("storage", sync);
+    return () => {
+      window.removeEventListener("auth-change", sync);
+      window.removeEventListener("storage", sync);
+    };
   }, []);
 
   if (authed === null) {

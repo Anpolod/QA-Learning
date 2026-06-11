@@ -44,7 +44,7 @@ EXPECTED_FIELDS = {
     "bdd": ["title", "feature", "scenarios"],
     "test_summary": ["title", "summary", "metrics", "open_defects", "risks", "recommendation"],
     "traceability": ["title", "requirements", "matrix", "coverage_notes"],
-    "checklist": ["title", "area", "items"],
+    "checklist": ["title", "areas", "items"],
 }
 
 LABELS = {
@@ -99,12 +99,14 @@ TYPE_GUIDANCE = {
         "- A matrix where every requirement is traced to a test with a status should score 85+.\n"
     ),
     "checklist": (
-        "- Each item must be a concrete, verifiable check that can be answered yes/no (e.g. 'Empty email shows "
-        "a validation error'), not a vague topic ('check validation').\n"
-        "- Items should be atomic (one check each), non-duplicated, and cover the key cases of the area "
-        "(happy path, boundaries, negative/error cases).\n"
-        "- Penalise vague/untestable items, duplicates, and big gaps in coverage of the stated area.\n"
-        "- A focused list of clear, verifiable, well-covering checks should score 85+.\n"
+        "- The checklist may group checks under several areas/features (e.g. Functional, Boundary, Negative) — "
+        "reward sensible grouping and good coverage across the relevant areas.\n"
+        "- Each item must be a concrete, verifiable check that can be answered yes/no (e.g. 'Side A accepts 1') "
+        "not a vague topic ('check validation').\n"
+        "- Items should be atomic (one check each), non-duplicated, and cover happy path, boundaries, and "
+        "negative/error cases.\n"
+        "- Penalise vague/untestable items, duplicates, and big gaps in coverage.\n"
+        "- A well-grouped list of clear, verifiable, well-covering checks should score 85+.\n"
     ),
 }
 
