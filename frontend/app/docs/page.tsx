@@ -1,6 +1,7 @@
 import { readFileSync } from "fs";
 import path from "path";
-import { BookOpen, FileText } from "lucide-react";
+import Link from "next/link";
+import { BookMarked, BookOpen, FileText } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -42,7 +43,17 @@ export default function DocsPage() {
       </section>
 
       <div className="mt-6 grid gap-8 lg:grid-cols-[240px_1fr]">
-        <aside className="lg:sticky lg:top-6 lg:self-start">
+        <aside className="lg:sticky lg:top-6 lg:self-start space-y-3">
+          <Link
+            href="/glossary"
+            className="flex items-start gap-2 rounded-lg border border-coral/30 bg-coral/5 p-3 transition hover:border-coral"
+          >
+            <BookMarked className="mt-0.5 h-4 w-4 shrink-0 text-coral" />
+            <span>
+              <span className="block text-sm font-semibold text-ink">QA Glossary</span>
+              <span className="block text-xs text-slate-500">Core testing terms + flashcards</span>
+            </span>
+          </Link>
           <nav className="space-y-1 rounded-lg border border-slate-200 bg-white p-3">
             {docs.map((d) => (
               <a
