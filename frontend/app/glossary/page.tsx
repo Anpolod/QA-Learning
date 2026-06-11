@@ -37,6 +37,15 @@ export default function GlossaryPage() {
     };
   }, []);
 
+  // Terms (and their id= anchors) render only after the fetch, which is too late
+  // for the browser's native #hash scroll — re-apply it once the list exists.
+  useEffect(() => {
+    if (!terms.length) return;
+    const slug = decodeURIComponent(window.location.hash.slice(1));
+    if (!slug) return;
+    document.getElementById(slug)?.scrollIntoView({ block: "start" });
+  }, [terms]);
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return terms;

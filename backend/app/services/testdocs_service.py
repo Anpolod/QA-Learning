@@ -11,8 +11,7 @@ from app.models.entities import AiUsageLog, DocAttempt, DocScenario
 from app.services.ai_service import _daily_count, _effective_ai_settings, _effective_secret
 
 
-def _enforce_daily_limit(db: Session, user_id: int) -> None:
-    effective = _effective_ai_settings(db)
+def _enforce_daily_limit(db: Session, user_id: int, effective: dict) -> None:
     if _daily_count(db, user_id, "text") >= int(effective["dailyTextLimitPerUser"]):
         raise HTTPException(status_code=429, detail="Daily AI request limit reached. Try again tomorrow.")
 
@@ -122,8 +121,7 @@ def _extract_json(text: str) -> dict:
         raise HTTPException(status_code=502, detail="AI returned an unparseable response.") from exc
 
 
-async def _run_text(db: Session, system_prompt: str, user_prompt: str, *, max_tokens: int) -> str:
-    effective = _effective_ai_settings(db)
+async def _run_text(db: Session, effective: dict, system_prompt: str, user_prompt: str, *, max_tokens: int) -> str:
     provider_name = str(effective["provider"])
     provider = get_text_provider(provider_name)
     key = _effective_secret(db, "openrouterApiKey" if provider_name == "openrouter" else "openaiApiKey")
@@ -152,7 +150,8 @@ def list_scenarios(db: Session, doc_type: str) -> list[DocScenario]:
 
 async def generate_scenario(db: Session, doc_type: str, user_id: int) -> DocScenario:
     _validate_type(doc_type)
-    _enforce_daily_limit(db, user_id)
+    effective = _effective_ai_settings(db)
+    _enforce_daily_limit(db, user_id, effective)
     label = LABELS[doc_type]
     extra = SCENARIO_EXTRA.get(doc_type, "")
     system = (
@@ -165,7 +164,7 @@ async def generate_scenario(db: Session, doc_type: str, user_id: int) -> DocScen
         'Return JSON: {"title": str (<=60 chars), "brief": str (one sentence telling the student what to '
         'write), "context": str (2-3 short sentences of relevant detail: platform, rules, expected behaviour)}.'
     )
-    raw = await _run_text(db, system, user, max_tokens=400)
+    raw = await _run_text(db, effective, system, user, max_tokens=400)
     data = _extract_json(raw)
     scenario = DocScenario(
         doc_type=doc_type,
@@ -175,7 +174,16 @@ async def generate_scenario(db: Session, doc_type: str, user_id: int) -> DocScen
         source="ai",
     )
     db.add(scenario)
-    db.add(AiUsageLog(user_id=user_id, lesson_id=None, mode="generate_doc_scenario", provider=str(_effective_ai_settings(db)["provider"]), model=str(_effective_ai_settings(db)["textModel"]), request_type="text"))
+    db.add(
+        AiUsageLog(
+            user_id=user_id,
+            lesson_id=None,
+            mode="generate_doc_scenario",
+            provider=str(effective["provider"]),
+            model=str(effective["textModel"]),
+            request_type="text",
+        )
+    )
     db.commit()
     db.refresh(scenario)
     return scenario
@@ -185,7 +193,8 @@ async def review_submission(
     db: Session, user_id: int, scenario_id: int, doc_type: str, fields: dict[str, str]
 ) -> tuple[DocAttempt, dict]:
     _validate_type(doc_type)
-    _enforce_daily_limit(db, user_id)
+    effective = _effective_ai_settings(db)
+    _enforce_daily_limit(db, user_id, effective)
     scenario = db.get(DocScenario, scenario_id)
     if scenario is None or scenario.doc_type != doc_type:
         raise HTTPException(status_code=404, detail="Scenario not found.")
@@ -220,7 +229,7 @@ async def review_submission(
         '"fields": [{"name": str, "rating": "good"|"weak"|"missing", "comment": str}] (one entry per expected '
         'field, same names as above), "improvements": [str] (2-4 concrete fixes)}.'
     )
-    raw = await _run_text(db, system, user, max_tokens=900)
+    raw = await _run_text(db, effective, system, user, max_tokens=900)
     data = _extract_json(raw)
 
     try:
@@ -251,22 +260,31 @@ async def review_submission(
         feedback_json=json.dumps(feedback, ensure_ascii=False),
     )
     db.add(attempt)
-    db.add(AiUsageLog(user_id=user_id, lesson_id=None, mode="review_doc", provider=str(_effective_ai_settings(db)["provider"]), model=str(_effective_ai_settings(db)["textModel"]), request_type="text"))
+    db.add(
+        AiUsageLog(
+            user_id=user_id,
+            lesson_id=None,
+            mode="review_doc",
+            provider=str(effective["provider"]),
+            model=str(effective["textModel"]),
+            request_type="text",
+        )
+    )
     db.commit()
     db.refresh(attempt)
     return attempt, feedback
 
 
 def list_attempts(db: Session, user_id: int, limit: int = 30) -> list[dict]:
-    rows = db.scalars(
-        select(DocAttempt)
+    rows = db.execute(
+        select(DocAttempt, DocScenario.title)
+        .outerjoin(DocScenario, DocScenario.id == DocAttempt.scenario_id)
         .where(DocAttempt.user_id == user_id)
         .order_by(DocAttempt.created_at.desc())
         .limit(limit)
     ).all()
     out: list[dict] = []
-    for r in rows:
-        scenario = db.get(DocScenario, r.scenario_id)
+    for r, scenario_title in rows:
         try:
             summary = json.loads(r.feedback_json).get("summary", "")
         except json.JSONDecodeError:
@@ -275,7 +293,7 @@ def list_attempts(db: Session, user_id: int, limit: int = 30) -> list[dict]:
             {
                 "id": r.id,
                 "scenario_id": r.scenario_id,
-                "scenario_title": scenario.title if scenario else "(removed)",
+                "scenario_title": scenario_title or "(removed)",
                 "doc_type": r.doc_type,
                 "score": r.score,
                 "summary": summary,

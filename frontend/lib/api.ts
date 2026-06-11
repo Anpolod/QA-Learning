@@ -39,9 +39,29 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return response.json() as Promise<T>;
 }
 
+export type DocType =
+  | "test_case"
+  | "bug_report"
+  | "decision_table"
+  | "test_plan"
+  | "bdd"
+  | "test_summary"
+  | "traceability";
+
+export type LeaderboardRow = {
+  position: number;
+  userId: number;
+  displayName: string;
+  xp: number;
+  level: number;
+  rank: string;
+  achievementsUnlocked: number;
+  completedLessons: number;
+};
+
 export type DocScenario = {
   id: number;
-  doc_type: "test_case" | "bug_report" | "decision_table" | "test_plan" | "bdd" | "test_summary" | "traceability";
+  doc_type: DocType;
   title: string;
   brief: string;
   context: string;
@@ -60,7 +80,7 @@ export type DocAttempt = {
   id: number;
   scenario_id: number;
   scenario_title: string;
-  doc_type: "test_case" | "bug_report" | "decision_table" | "test_plan" | "bdd" | "test_summary" | "traceability";
+  doc_type: DocType;
   score: number;
   summary: string;
   created_at: string;
@@ -116,9 +136,9 @@ export const api = {
     }),
   glossary: () =>
     request<{ slug: string; term: string; definition: string; category: string }[]>("/api/glossary"),
-  docScenarios: (type: "test_case" | "bug_report" | "decision_table" | "test_plan" | "bdd" | "test_summary" | "traceability") =>
+  docScenarios: (type: DocType) =>
     request<DocScenario[]>(`/api/test-docs/scenarios?type=${type}`),
-  generateDocScenario: (doc_type: "test_case" | "bug_report" | "decision_table" | "test_plan" | "bdd" | "test_summary" | "traceability") =>
+  generateDocScenario: (doc_type: DocType) =>
     request<DocScenario>("/api/test-docs/generate", { method: "POST", body: JSON.stringify({ doc_type }) }),
   reviewDoc: (payload: { scenario_id: number; doc_type: string; fields: Record<string, string> }) =>
     request<DocReview>("/api/test-docs/review", { method: "POST", body: JSON.stringify(payload) }),
@@ -429,20 +449,7 @@ export const api = {
         unlockedAt: string | null;
       }[];
     }>(`/api/gamification/player/me`),
-  leaderboard: () =>
-    request<
-      {
-        position: number;
-        userId: number;
-        email: string;
-        fullName: string;
-        xp: number;
-        level: number;
-        rank: string;
-        achievementsUnlocked: number;
-        completedLessons: number;
-      }[]
-    >("/api/gamification/leaderboard"),
+  leaderboard: () => request<LeaderboardRow[]>("/api/gamification/leaderboard"),
   aiChat: (body: { message: string; lessonId: string; mode: string }) =>
     request<{ answer: string; type: string }>("/api/ai/chat", {
       method: "POST",

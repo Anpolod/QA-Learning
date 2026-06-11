@@ -13,7 +13,7 @@ class ScenarioRead(BaseModel):
 
 
 class GenerateScenarioRequest(BaseModel):
-    doc_type: str  # test_case | bug_report
+    doc_type: str  # validated against testdocs_service.EXPECTED_FIELDS keys
 
 
 class ReviewRequest(BaseModel):

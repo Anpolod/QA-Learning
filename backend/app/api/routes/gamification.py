@@ -107,11 +107,8 @@ def sync_player_stats(user_id: int, authorization: str = Header(default=""), db:
 
 @router.get("/leaderboard", response_model=list[LeaderboardRow])
 def leaderboard(db: Session = Depends(get_db)) -> list[LeaderboardRow]:
-    users = db.scalars(select(User).order_by(User.id)).all()
-    for user in users:
-        sync_user_gamification(db, user.id)
-    db.commit()
-
+    # Public, read-only: stats are synced when users act (dashboard/player/progress
+    # endpoints), not here — an anonymous page view must not write to the DB.
     rows = (
         db.execute(
             select(User, UserProfile, UserGameStats)
@@ -121,28 +118,33 @@ def leaderboard(db: Session = Depends(get_db)) -> list[LeaderboardRow]:
         )
         .all()
     )
+    achievements_by_user = dict(
+        db.execute(
+            select(UserAchievement.user_id, func.count(UserAchievement.id)).group_by(UserAchievement.user_id)
+        ).all()
+    )
+    completed_by_user = dict(
+        db.execute(
+            select(UserProgress.user_id, func.count(UserProgress.id))
+            .where(UserProgress.completed == True)
+            .group_by(UserProgress.user_id)
+        ).all()
+    )
     result: list[LeaderboardRow] = []
     for index, (user, profile, stats) in enumerate(rows, start=1):
-        achievements_unlocked = int(
-            db.scalar(select(func.count(UserAchievement.id)).where(UserAchievement.user_id == user.id)) or 0
-        )
-        completed_lessons = int(
-            db.scalar(
-                select(func.count(UserProgress.id)).where(UserProgress.user_id == user.id, UserProgress.completed == True)
-            )
-            or 0
-        )
+        full_name = profile.full_name if profile else ""
+        # Never expose raw emails on a public endpoint; fall back to a masked handle.
+        display_name = full_name or f"{user.email.split('@')[0][:2]}***"
         result.append(
             LeaderboardRow(
                 position=index,
                 userId=user.id,
-                email=user.email,
-                fullName=profile.full_name if profile else "",
+                displayName=display_name,
                 xp=stats.xp,
                 level=stats.level,
                 rank=stats.rank,
-                achievementsUnlocked=achievements_unlocked,
-                completedLessons=completed_lessons,
+                achievementsUnlocked=int(achievements_by_user.get(user.id, 0)),
+                completedLessons=int(completed_by_user.get(user.id, 0)),
             )
         )
     return result

@@ -1,11 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ClipboardList, Bug, Table2, FileText, Code2, BarChart3, Network, Sparkles, Loader2, CheckCircle2, AlertTriangle, XCircle, Plus, Trash2, Lightbulb } from "lucide-react";
 import { RequireAuth } from "@/components/auth/RequireAuth";
-import { api, type DocAttempt, type DocReview, type DocScenario } from "@/lib/api";
-
-type DocType = "test_case" | "bug_report" | "decision_table" | "test_plan" | "bdd" | "test_summary" | "traceability";
+import { api, type DocAttempt, type DocReview, type DocScenario, type DocType } from "@/lib/api";
 
 type FieldDef = { name: string; label: string; multiline?: boolean; hint?: string; options?: string[] };
 
@@ -376,7 +374,7 @@ function RatingIcon({ rating }: { rating: string }) {
   return <AlertTriangle className="h-4 w-4 text-amber-600" />;
 }
 
-function PracticePanel({ docType }: { docType: DocType }) {
+function PracticePanel({ docType, onReviewed }: { docType: DocType; onReviewed: () => void }) {
   const fieldDefs = FIELDS[docType] ?? [];
   const isDecisionTable = docType === "decision_table";
   const isTraceability = docType === "traceability";
@@ -393,25 +391,26 @@ function PracticePanel({ docType }: { docType: DocType }) {
   const [error, setError] = useState("");
   const reviewRef = useRef<HTMLDivElement>(null);
 
-  const loadScenarios = useCallback(
-    (selectFirst: boolean) => {
-      api
-        .docScenarios(docType)
-        .then((list) => {
-          setScenarios(list);
-          if (selectFirst && list.length) setScenarioId(list[0].id);
-        })
-        .catch(() => setError("Could not load scenarios."));
-    },
-    [docType]
-  );
+  // Clear ALL form state (plain fields and both grid editors) — used whenever the
+  // active scenario changes so stale answers are never submitted against it.
+  function resetForm() {
+    setValues({});
+    setDtTitle("");
+    setDt(emptyDecisionTable());
+    setTrace(emptyTraceability());
+    setReview(null);
+  }
 
   useEffect(() => {
-    setReview(null);
-    setValues({});
-    setError("");
-    loadScenarios(true);
-  }, [loadScenarios]);
+    api
+      .docScenarios(docType)
+      .then((list) => {
+        setScenarios(list);
+        if (list.length) setScenarioId(list[0].id);
+      })
+      .catch(() => setError("Could not load scenarios."));
+    // PracticePanel is remounted per tab (key={tab}), so this runs once per doc type.
+  }, [docType]);
 
   const scenario = useMemo(() => scenarios.find((s) => s.id === scenarioId) ?? null, [scenarios, scenarioId]);
 
@@ -422,8 +421,7 @@ function PracticePanel({ docType }: { docType: DocType }) {
       const created = await api.generateDocScenario(docType);
       setScenarios((prev) => [...prev, created]);
       setScenarioId(created.id);
-      setValues({});
-      setReview(null);
+      resetForm();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Generation failed.");
     } finally {
@@ -431,8 +429,30 @@ function PracticePanel({ docType }: { docType: DocType }) {
     }
   }
 
+  // Client-side guard: grid serializers emit placeholder text, so the backend's
+  // empty-submission check can't see an untouched grid — block it here instead
+  // of burning an AI call on it.
+  function validate(): string {
+    if (isDecisionTable) {
+      if (!dt.conditions.some((c) => c.trim())) return "Name at least one condition.";
+      if (!dt.rules.some((r) => r.action.trim())) return "Give at least one rule an action/outcome.";
+      return "";
+    }
+    if (isTraceability) {
+      if (!trace.rows.some((r) => r.requirement.trim())) return "Add at least one requirement.";
+      return "";
+    }
+    if (!fieldDefs.some((f) => (values[f.name] ?? "").trim())) return "Fill in at least one field.";
+    return "";
+  }
+
   async function submit() {
     if (!scenarioId) return;
+    const problem = validate();
+    if (problem) {
+      setError(problem);
+      return;
+    }
     setSubmitting(true);
     setError("");
     setReview(null);
@@ -444,6 +464,7 @@ function PracticePanel({ docType }: { docType: DocType }) {
           : values;
       const result = await api.reviewDoc({ scenario_id: scenarioId, doc_type: docType, fields });
       setReview(result);
+      onReviewed();
       setTimeout(() => reviewRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Review failed.");
@@ -462,8 +483,7 @@ function PracticePanel({ docType }: { docType: DocType }) {
               value={scenarioId ?? ""}
               onChange={(e) => {
                 setScenarioId(Number(e.target.value));
-                setValues({});
-                setReview(null);
+                resetForm();
               }}
               className="min-w-[220px] flex-1 rounded-md border border-slate-300 bg-paper px-3 py-2 text-sm"
             >
@@ -612,11 +632,11 @@ function PracticePanel({ docType }: { docType: DocType }) {
   );
 }
 
-function History() {
+function History({ refreshKey }: { refreshKey: number }) {
   const [attempts, setAttempts] = useState<DocAttempt[]>([]);
   useEffect(() => {
     api.docAttempts().then(setAttempts).catch(() => {});
-  }, []);
+  }, [refreshKey]);
   if (!attempts.length) return null;
   return (
     <section className="mt-10">
@@ -641,17 +661,19 @@ function History() {
 
 export default function TestDocsPage() {
   const [tab, setTab] = useState<DocType>("test_case");
+  const [reviewCount, setReviewCount] = useState(0);
   useEffect(() => {
     const t = new URLSearchParams(window.location.search).get("type");
-    if (t === "bug_report" || t === "test_case") setTab(t);
+    if (t && TABS.some((tab) => tab.type === t)) setTab(t as DocType);
   }, []);
   return (
     <RequireAuth>
       <main className="mx-auto max-w-5xl px-4 py-8">
         <h1 className="text-3xl font-bold text-ink">Test Documentation Practice</h1>
         <p className="mt-2 max-w-2xl text-slate-600">
-          Practise writing test cases and bug reports against realistic scenarios. An AI reviewer scores each
-          submission and explains what to improve.
+          Practise writing QA documents — test cases, bug reports, decision tables, test plans, BDD scenarios,
+          summary reports, and traceability matrices. An AI reviewer scores each submission and explains what to
+          improve.
         </p>
 
         <div className="mt-5 flex flex-wrap gap-1 rounded-lg border border-slate-200 bg-white p-1">
@@ -670,8 +692,8 @@ export default function TestDocsPage() {
           ))}
         </div>
 
-        <PracticePanel key={tab} docType={tab} />
-        <History />
+        <PracticePanel key={tab} docType={tab} onReviewed={() => setReviewCount((c) => c + 1)} />
+        <History refreshKey={reviewCount} />
       </main>
     </RequireAuth>
   );

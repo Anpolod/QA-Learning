@@ -355,7 +355,7 @@ class DocScenario(Base):
     __tablename__ = "doc_scenarios"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    doc_type: Mapped[str] = mapped_column(String(20))  # test_case | bug_report
+    doc_type: Mapped[str] = mapped_column(String(20))  # keys of testdocs_service.EXPECTED_FIELDS
     title: Mapped[str] = mapped_column(String(200))
     brief: Mapped[str] = mapped_column(Text)
     context: Mapped[str] = mapped_column(Text, default="")

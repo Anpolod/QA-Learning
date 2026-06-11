@@ -34,9 +34,11 @@ export default function DashboardPage() {
   useEffect(() => {
     let mounted = true;
     (async () => {
-      const p = await api.dashboardProgress().catch(() => ({}));
-      const pl = await api.playerStats().catch(() => null);
-      const docs = await api.docAttempts().catch(() => []);
+      const [p, pl, docs] = await Promise.all([
+        api.dashboardProgress().catch(() => ({})),
+        api.playerStats().catch(() => null),
+        api.docAttempts().catch(() => [])
+      ]);
       if (!mounted) return;
       setProgress({ ...defaultProgress, ...p });
       setPlayer(pl);

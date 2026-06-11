@@ -1,11 +1,16 @@
 """Build richer text slides for ISTQB lessons (no images) from their content.
 
-Rebuilds slides each run (deletes the lesson's existing slides first), producing
-~6-9 slides per lesson: Overview, the theory split into concept slides, Key terms,
-Real-world example, Common mistakes, and Summary. Scoped to the ISTQB course.
+Rebuilds slides per lesson (~6-9: Overview, theory concept slides, Key terms,
+Real-world example, Common mistakes, Summary). Scoped to the ISTQB course.
 
-    python -m app.seed.add_istqb_slides
+Safety: lessons whose existing slides carry images (image_url set — i.e. admin
+curation) are SKIPPED unless --force is passed, so a routine re-run cannot
+destroy curated content.
+
+    python -m app.seed.add_istqb_slides [--force]
 """
+
+import sys
 
 from sqlalchemy import delete, select
 
@@ -38,9 +43,10 @@ def _slides_for(lesson: Lesson) -> list[tuple[str, str]]:
     return slides
 
 
-def add_istqb_slides() -> None:
+def add_istqb_slides(force: bool = False) -> None:
     db = SessionLocal()
     created = 0
+    skipped = 0
     try:
         lessons = db.scalars(
             select(Lesson)
@@ -49,15 +55,21 @@ def add_istqb_slides() -> None:
             .where(Course.section == SECTION)
         ).all()
         for lesson in lessons:
+            has_image_slides = db.scalar(
+                select(LessonSlide.id).where(LessonSlide.lesson_id == lesson.id, LessonSlide.image_url != "").limit(1)
+            )
+            if has_image_slides and not force:
+                skipped += 1
+                continue
             db.execute(delete(LessonSlide).where(LessonSlide.lesson_id == lesson.id))
             for index, (title, body) in enumerate(_slides_for(lesson), start=1):
                 db.add(LessonSlide(lesson_id=lesson.id, title=title, body=body, order_index=index, image_url=""))
                 created += 1
         db.commit()
-        print(f"created_slides={created}")
+        print(f"created_slides={created} skipped_curated_lessons={skipped}")
     finally:
         db.close()
 
 
 if __name__ == "__main__":
-    add_istqb_slides()
+    add_istqb_slides(force="--force" in sys.argv)

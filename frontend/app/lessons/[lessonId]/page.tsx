@@ -14,14 +14,15 @@ function glossarySlug(term: string): string {
 
 export default async function LessonPage({ params }: { params: Promise<{ lessonId: string }> }) {
   const { lessonId } = await params;
-  const lesson = await api.lesson(lessonId);
-  const slides = [...lesson.slides].sort((a, b) => a.order_index - b.order_index);
-  const glossarySlugs = new Set<string>(
-    await api
+  const [lesson, glossarySlugList] = await Promise.all([
+    api.lesson(lessonId),
+    api
       .glossary()
       .then((terms) => terms.map((t) => t.slug))
-      .catch(() => [])
-  );
+      .catch(() => [] as string[])
+  ]);
+  const slides = [...lesson.slides].sort((a, b) => a.order_index - b.order_index);
+  const glossarySlugs = new Set<string>(glossarySlugList);
   // Surface a contextual practice CTA when the lesson is about test documentation.
   const topicText = `${lesson.title} ${lesson.key_terms ?? ""}`.toLowerCase();
   const docPractice = /decision table/.test(topicText)
