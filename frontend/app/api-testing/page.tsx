@@ -1,4 +1,5 @@
 import { ArrowUpRight, Braces, FileJson, FlaskConical, Globe, KeyRound, ListChecks } from "lucide-react";
+import { RequireAuth } from "@/components/auth/RequireAuth";
 import { publicApiBase } from "@/lib/api";
 
 export const metadata = {
@@ -33,6 +34,7 @@ export default function ApiTestingPage() {
   const openApiUrl = `${apiBase}/openapi.json`;
 
   return (
+    <RequireAuth>
     <main className="mx-auto max-w-7xl px-4 py-8">
       <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
         <div className="flex items-center gap-2">
@@ -154,5 +156,6 @@ export default function ApiTestingPage() {
         </ul>
       </section>
     </main>
+    </RequireAuth>
   );
 }
