@@ -161,13 +161,14 @@ def submit_quiz(
             answers_json=json.dumps(request.answers),
         )
     )
+    # Lesson completion is derived (quiz + homework both done) inside
+    # upsert_lesson_progress — don't force it on quiz score alone.
     upsert_lesson_progress(
         db,
         user_id=user.id,
         lesson_id=quiz.lesson_id,
         opened=True,
         quiz_completed=True,
-        completed=score == len(questions),
     )
     db.commit()
     return QuizSubmitResponse(score=score, total=len(questions), wrong_answers=wrong)

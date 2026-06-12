@@ -171,11 +171,6 @@ export default async function LessonPage({ params }: { params: Promise<{ lessonI
               ))}
             </div>
           </section>
-          <div className="flex justify-end">
-            <Link href={`/quiz/${lesson.id}`} className="inline-flex items-center gap-2 rounded-md bg-ink px-4 py-2 text-white">
-              Start quiz <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
         </article>
       </div>
       <AiAssistant lessonId={lessonId} />

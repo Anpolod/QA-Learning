@@ -55,6 +55,7 @@ def _dashboard_payload(db: Session, user_id: int) -> dict:
     approved_project_ids = {submission.final_project_id for submission in final_submissions if submission.status == "approved"}
     return {
         "completedLessons": completed,
+        "completedLessonIds": sorted(completed_lesson_ids),
         "openedLessons": len(rows),
         "quizCompleted": sum(1 for row in rows if row.quiz_completed),
         "homeworkSubmitted": sum(1 for row in rows if row.homework_submitted),

@@ -386,6 +386,7 @@ export const api = {
   dashboardProgress: () =>
     request<{
       completedLessons: number;
+      completedLessonIds: number[];
       openedLessons: number;
       quizCompleted: number;
       homeworkSubmitted: number;

@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
@@ -41,4 +42,19 @@ def upsert_lesson_progress(
         .on_conflict_do_update(index_elements=["user_id", "lesson_id"], set_=updates)
     )
     db.execute(statement)
+
+    # A lesson counts as completed once BOTH its quiz and homework are done. When the
+    # caller didn't set `completed` explicitly, derive it from the merged row state so
+    # submitting the quiz and the homework (in either order) marks the lesson complete.
+    if completed is None:
+        db.flush()
+        row = db.scalar(
+            select(UserProgress).where(
+                UserProgress.user_id == user_id, UserProgress.lesson_id == lesson_id
+            )
+        )
+        if row is not None:
+            derived = bool(row.quiz_completed and row.homework_submitted)
+            if row.completed != derived:
+                row.completed = derived
 
