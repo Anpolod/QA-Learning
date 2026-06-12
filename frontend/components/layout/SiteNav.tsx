@@ -34,8 +34,9 @@ export function SiteNav() {
         QA Learning
       </Link>
 
-      {/* Desktop links */}
-      <div className="hidden items-center gap-4 text-sm text-slate-700 md:flex">
+      {/* Desktop links — show inline only at lg+, where all items fit; below that
+          the hamburger handles the (now many) nav entries to avoid overflow. */}
+      <div className="hidden items-center gap-3 text-sm text-slate-700 lg:flex">
         {LINKS.map(([href, label]) => (
           <Link key={href} href={href}>
             {label}
@@ -49,7 +50,7 @@ export function SiteNav() {
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="rounded-md border border-slate-200 p-2 text-slate-700 md:hidden"
+        className="rounded-md border border-slate-200 p-2 text-slate-700 lg:hidden"
         aria-label="Toggle menu"
         aria-expanded={open}
       >
@@ -58,7 +59,7 @@ export function SiteNav() {
 
       {/* Mobile panel */}
       {open ? (
-        <div className="absolute left-0 right-0 top-full z-40 border-b border-slate-200 bg-white px-4 py-3 shadow-lg md:hidden">
+        <div className="absolute left-0 right-0 top-full z-40 border-b border-slate-200 bg-white px-4 py-3 shadow-lg lg:hidden">
           <div className="flex flex-col gap-3 text-sm text-slate-700">
             {LINKS.map(([href, label]) => (
               <Link key={href} href={href} onClick={() => setOpen(false)} className="py-1">
