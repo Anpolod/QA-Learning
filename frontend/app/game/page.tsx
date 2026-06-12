@@ -75,7 +75,7 @@ export default function GamePage() {
       title: "Submit homework",
       description: "Practice tasks give the strongest skill XP.",
       reward: "+35 XP",
-      href: "/progress"
+      href: "/dashboard"
     }
   ];
 

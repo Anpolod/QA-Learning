@@ -15,7 +15,6 @@ const LINKS: [string, string][] = [
   ["/interview", "Interview"],
   ["/dashboard", "Dashboard"],
   ["/game", "Game"],
-  ["/progress", "Progress"],
   ["/final-projects", "Projects"],
 ];
 

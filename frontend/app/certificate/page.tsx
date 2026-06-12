@@ -65,7 +65,7 @@ export default function CertificatePage() {
             : "Complete lessons, quizzes, homework, and approved final projects to unlock your QA Learning Certificate."}
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
-          <Link href="/progress" className="inline-flex rounded-md bg-ink px-4 py-2 text-white">View progress</Link>
+          <Link href="/dashboard" className="inline-flex rounded-md bg-ink px-4 py-2 text-white">View dashboard</Link>
           <Link href="/final-projects" className="inline-flex rounded-md border px-4 py-2">Final projects</Link>
         </div>
       </section>

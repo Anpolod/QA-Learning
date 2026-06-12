@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { BookOpen, Brain, ClipboardCheck, Gamepad2, Trophy } from "lucide-react";
+import { BookOpen, Brain, CheckCircle2, ClipboardCheck, Gamepad2, Trophy } from "lucide-react";
 import { ProgressCard } from "@/components/course/ProgressCard";
 import { RequireAuth } from "@/components/auth/RequireAuth";
 import { api } from "@/lib/api";
 
 const defaultProgress = {
   completedLessons: 0,
+  completedLessonIds: [] as number[],
   openedLessons: 0,
   quizCompleted: 0,
   homeworkSubmitted: 0,
@@ -25,24 +26,34 @@ const defaultProgress = {
 };
 
 type Player = Awaited<ReturnType<typeof api.playerStats>> | null;
+type CourseStat = { id: number; title: string; done: number; total: number };
 
 export default function DashboardPage() {
   const [progress, setProgress] = useState(defaultProgress);
   const [player, setPlayer] = useState<Player>(null);
   const [docStats, setDocStats] = useState({ count: 0, best: 0 });
+  const [courseStats, setCourseStats] = useState<CourseStat[]>([]);
 
   useEffect(() => {
     let mounted = true;
     (async () => {
-      const [p, pl, docs] = await Promise.all([
-        api.dashboardProgress().catch(() => ({})),
+      const [p, pl, docs, courses] = await Promise.all([
+        api.dashboardProgress().catch(() => ({}) as Partial<typeof defaultProgress>),
         api.playerStats().catch(() => null),
-        api.docAttempts().catch(() => [])
+        api.docAttempts().catch(() => []),
+        api.courses().catch(() => [])
       ]);
       if (!mounted) return;
       setProgress({ ...defaultProgress, ...p });
       setPlayer(pl);
       setDocStats({ count: docs.length, best: docs.reduce((m, a) => Math.max(m, a.score), 0) });
+      const doneIds = new Set(p?.completedLessonIds ?? []);
+      setCourseStats(
+        courses.map((c) => {
+          const ids = c.modules.flatMap((m) => m.lessons.map((l) => l.id));
+          return { id: c.id, title: c.title, done: ids.filter((id) => doneIds.has(id)).length, total: ids.length };
+        })
+      );
     })();
     return () => {
       mounted = false;
@@ -103,12 +114,25 @@ export default function DashboardPage() {
           <h2 className="mt-1 text-lg font-semibold">{player ? `${player.rank} · ${player.xp} XP` : "Open player hub"}</h2>
         </Link>
       </section>
-      <section className="mt-8 rounded-lg border border-slate-200 bg-white p-5">
+      <section className="mt-8 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
         <div className="flex items-center gap-2">
-          <ClipboardCheck className="h-5 w-5 text-mint" />
-          <h2 className="text-lg font-semibold">Completed lessons</h2>
+          <CheckCircle2 className="h-5 w-5 text-mint" />
+          <h2 className="text-lg font-semibold">Course completion</h2>
         </div>
-        <p className="mt-3 text-sm text-slate-600">Your progress is saved to your account as you open lessons, take quizzes, and submit homework.</p>
+        <p className="mt-2 text-sm text-slate-600">A lesson counts as completed once you pass its quiz and submit its homework.</p>
+        <div className="mt-4 grid gap-4 md:grid-cols-2">
+          {(courseStats.length
+            ? courseStats
+            : [{ id: 0, title: "Loading…", done: 0, total: 0 }]
+          ).map((c) => (
+            <ProgressCard
+              key={c.id}
+              label={c.title}
+              value={`${c.done}/${c.total}`}
+              progress={c.total ? Math.min((c.done / c.total) * 100, 100) : 0}
+            />
+          ))}
+        </div>
       </section>
       <Link
         href="/test-docs"
@@ -125,8 +149,8 @@ export default function DashboardPage() {
         </span>
       </Link>
       <section className="mt-6 grid gap-3 md:grid-cols-3">
-        <Link href="/progress" className="rounded-lg border border-slate-200 bg-white p-4 text-sm font-medium hover:border-mint">
-          View detailed progress
+        <Link href="/courses" className="rounded-lg border border-slate-200 bg-white p-4 text-sm font-medium hover:border-mint">
+          Browse courses
         </Link>
         <Link href="/final-projects" className="rounded-lg border border-slate-200 bg-white p-4 text-sm font-medium hover:border-mint">
           Open final projects
