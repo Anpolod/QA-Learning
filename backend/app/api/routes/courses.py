@@ -440,4 +440,29 @@ def get_lesson(lesson_id: int, db: Session = Depends(get_db)) -> Lesson:
     lesson = db.scalar(stmt)
     if not lesson:
         raise HTTPException(status_code=404, detail="Lesson not found")
+
+    # Compute the next lesson: the next one in this module by order, or the first
+    # lesson of the next module in the course. Set as a plain attribute so the
+    # LessonRead schema (from_attributes) picks it up.
+    siblings = db.scalars(
+        select(Lesson).where(Lesson.module_id == lesson.module_id).order_by(Lesson.order_index, Lesson.id)
+    ).all()
+    index = next((i for i, sib in enumerate(siblings) if sib.id == lesson.id), -1)
+    next_id = None
+    if 0 <= index < len(siblings) - 1:
+        next_id = siblings[index + 1].id
+    else:
+        module = db.get(Module, lesson.module_id)
+        if module is not None:
+            next_module = db.scalar(
+                select(Module)
+                .where(Module.course_id == module.course_id, Module.order_index > module.order_index)
+                .order_by(Module.order_index, Module.id)
+            )
+            if next_module is not None:
+                first = db.scalar(
+                    select(Lesson).where(Lesson.module_id == next_module.id).order_by(Lesson.order_index, Lesson.id)
+                )
+                next_id = first.id if first else None
+    lesson.next_lesson_id = next_id
     return lesson

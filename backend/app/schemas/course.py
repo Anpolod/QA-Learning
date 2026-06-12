@@ -80,6 +80,7 @@ class LessonRead(BaseModel):
     practical_use_case: str
     summary: str
     order_index: int
+    next_lesson_id: int | None = None
     slides: list[SlideRead] = []
     examples: list[ExampleRead] = []
     interactive_tasks: list[InteractiveTaskRead] = []

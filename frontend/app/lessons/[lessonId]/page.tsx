@@ -171,6 +171,23 @@ export default async function LessonPage({ params }: { params: Promise<{ lessonI
               ))}
             </div>
           </section>
+          <div className="flex items-center justify-end border-t border-slate-200 pt-6">
+            {lesson.next_lesson_id ? (
+              <Link
+                href={`/lessons/${lesson.next_lesson_id}`}
+                className="inline-flex items-center gap-2 rounded-md bg-ink px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-ink/90"
+              >
+                Next lesson <ArrowRight className="h-4 w-4" />
+              </Link>
+            ) : (
+              <Link
+                href="/courses"
+                className="inline-flex items-center gap-2 rounded-md border border-slate-300 px-5 py-2.5 text-sm font-medium text-slate-700 hover:border-mint"
+              >
+                Back to courses <ArrowRight className="h-4 w-4" />
+              </Link>
+            )}
+          </div>
         </article>
       </div>
       <AiAssistant lessonId={lessonId} />
