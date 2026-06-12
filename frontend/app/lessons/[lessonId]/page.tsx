@@ -34,7 +34,7 @@ export default async function LessonPage({ params }: { params: Promise<{ lessonI
         : null;
   return (
     <RequireAuth>
-    <main className="mx-auto max-w-7xl px-4 py-8">
+    <main className="mx-auto max-w-7xl px-4 pt-8 pb-28">
       <BackLink label="Back" />
       <LessonProgressTracker lessonId={lesson.id} />
       <div className="grid gap-8 lg:grid-cols-[260px_1fr]">
