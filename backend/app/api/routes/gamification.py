@@ -114,6 +114,9 @@ def leaderboard(db: Session = Depends(get_db)) -> list[LeaderboardRow]:
             select(User, UserProfile, UserGameStats)
             .join(UserGameStats, UserGameStats.user_id == User.id)
             .outerjoin(UserProfile, UserProfile.user_id == User.id)
+            # Staff/test accounts farm XP (AI usage, doc practice) without being
+            # real learners — keep them off the public board.
+            .where(User.role != "admin")
             .order_by(UserGameStats.xp.desc(), UserGameStats.level.desc(), User.id.asc())
         )
         .all()
