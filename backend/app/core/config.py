@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     ai_image_model: str = "gpt-image-1"
     ai_daily_image_limit_per_user: int = 10
     ai_daily_image_limit_admin: int = 100
-    cors_origins: list[str] = ["http://localhost:3000"]
+    cors_origins: list[str] = ["http://localhost:3000", "https://qa.flow-ai.work"]
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 

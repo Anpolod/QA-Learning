@@ -1,25 +1,51 @@
 import Link from "next/link";
 import { ArrowRight, ClipboardList, Layers, Lightbulb, MousePointerClick, Target } from "lucide-react";
 import { AiAssistant } from "@/components/ai/AiAssistant";
+import { RequireAuth } from "@/components/auth/RequireAuth";
 import { LessonProgressTracker } from "@/components/course/LessonProgressTracker";
 import { LessonSlideDrawer } from "@/components/course/LessonSlideDrawer";
+import { BackLink } from "@/components/ui/BackLink";
 import { api, mediaUrl } from "@/lib/api";
+
+// Must match the backend slug derivation in app/seed/apply_glossary.py.
+function glossarySlug(term: string): string {
+  return term.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "term";
+}
 
 export default async function LessonPage({ params }: { params: Promise<{ lessonId: string }> }) {
   const { lessonId } = await params;
-  const lesson = await api.lesson(lessonId);
+  const [lesson, glossarySlugList] = await Promise.all([
+    api.lesson(lessonId),
+    api
+      .glossary()
+      .then((terms) => terms.map((t) => t.slug))
+      .catch(() => [] as string[])
+  ]);
   const slides = [...lesson.slides].sort((a, b) => a.order_index - b.order_index);
+  const glossarySlugs = new Set<string>(glossarySlugList);
+  // Surface a contextual practice CTA when the lesson is about test documentation.
+  const topicText = `${lesson.title} ${lesson.key_terms ?? ""}`.toLowerCase();
+  const docPractice = /decision table/.test(topicText)
+    ? "decision_table"
+    : /bug report|defect report|defect|incident/.test(topicText)
+      ? "bug_report"
+      : /test case|test design|test scenario|test documentation/.test(topicText)
+        ? "test_case"
+        : null;
   return (
-    <main className="mx-auto max-w-7xl px-4 py-8">
+    <RequireAuth>
+    <main className="mx-auto max-w-7xl px-4 pt-8 pb-28">
+      <BackLink label="Back" />
       <LessonProgressTracker lessonId={lesson.id} />
       <div className="grid gap-8 lg:grid-cols-[260px_1fr]">
-        <aside className="space-y-3">
+        <aside className="space-y-3 lg:sticky lg:top-6 lg:self-start">
           <Link href={`/quiz/${lesson.id}`} className="flex items-center gap-2 rounded-md border bg-white px-3 py-2 text-sm">
             <Target className="h-4 w-4 text-coral" /> Quiz
           </Link>
           <Link href={`/homework/${lesson.id}`} className="flex items-center gap-2 rounded-md border bg-white px-3 py-2 text-sm">
             <ClipboardList className="h-4 w-4 text-mint" /> Homework
           </Link>
+          <LessonSlideDrawer lessonTitle={lesson.title} slides={slides} />
         </aside>
         <article className="space-y-6">
           <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
@@ -30,7 +56,6 @@ export default async function LessonPage({ params }: { params: Promise<{ lessonI
           {[
             ["Learning goals", lesson.learning_goals],
             ["Theory explanation", lesson.theory],
-            ["Key terms", lesson.key_terms],
             ["Real-world example", lesson.real_world_example],
             ["Step-by-step explanation", lesson.step_by_step],
             ["Common mistakes", lesson.common_mistakes],
@@ -42,6 +67,55 @@ export default async function LessonPage({ params }: { params: Promise<{ lessonI
               <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-700">{body}</p>
             </section>
           ))}
+          {lesson.key_terms ? (
+            <section className="rounded-lg border border-slate-200 bg-white p-5">
+              <h2 className="text-lg font-semibold">Key terms</h2>
+              <p className="mt-1 text-xs text-slate-500">Tap a term to open its glossary definition.</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {lesson.key_terms
+                  .split(",")
+                  .map((t) => t.trim())
+                  .filter(Boolean)
+                  .map((term) => {
+                    const slug = glossarySlug(term);
+                    return glossarySlugs.has(slug) ? (
+                      <Link
+                        key={term}
+                        href={`/glossary#${slug}`}
+                        className="rounded-full border border-slate-200 bg-paper px-3 py-1 text-sm text-ink transition hover:border-coral hover:text-coral"
+                      >
+                        {term}
+                      </Link>
+                    ) : (
+                      <span key={term} className="rounded-full border border-slate-100 bg-paper px-3 py-1 text-sm text-slate-500">
+                        {term}
+                      </span>
+                    );
+                  })}
+              </div>
+            </section>
+          ) : null}
+          {docPractice ? (
+            <Link
+              href={`/test-docs?type=${docPractice}`}
+              className="flex items-center justify-between gap-3 rounded-lg border border-coral/30 bg-coral/5 p-5 transition hover:border-coral"
+            >
+              <span>
+                <span className="font-semibold text-ink">
+                  Practice: write a{" "}
+                  {docPractice === "bug_report"
+                    ? "bug report"
+                    : docPractice === "decision_table"
+                      ? "decision table"
+                      : "test case"}
+                </span>
+                <span className="mt-1 block text-sm text-slate-600">
+                  Apply this lesson on a real scenario and get instant AI feedback.
+                </span>
+              </span>
+              <ArrowRight className="h-5 w-5 shrink-0 text-coral" />
+            </Link>
+          ) : null}
           <section className="rounded-lg border border-slate-200 bg-white p-5">
             <div className="flex items-center gap-2">
               <Layers className="h-5 w-5 text-amber" />
@@ -97,15 +171,27 @@ export default async function LessonPage({ params }: { params: Promise<{ lessonI
               ))}
             </div>
           </section>
-          <div className="flex justify-end">
-            <Link href={`/quiz/${lesson.id}`} className="inline-flex items-center gap-2 rounded-md bg-ink px-4 py-2 text-white">
-              Start quiz <ArrowRight className="h-4 w-4" />
-            </Link>
+          <div className="flex items-center justify-end border-t border-slate-200 pt-6">
+            {lesson.next_lesson_id ? (
+              <Link
+                href={`/lessons/${lesson.next_lesson_id}`}
+                className="inline-flex items-center gap-2 rounded-md bg-ink px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-ink/90"
+              >
+                Next lesson <ArrowRight className="h-4 w-4" />
+              </Link>
+            ) : (
+              <Link
+                href="/courses"
+                className="inline-flex items-center gap-2 rounded-md border border-slate-300 px-5 py-2.5 text-sm font-medium text-slate-700 hover:border-mint"
+              >
+                Back to courses <ArrowRight className="h-4 w-4" />
+              </Link>
+            )}
           </div>
         </article>
       </div>
-      <LessonSlideDrawer lessonTitle={lesson.title} slides={slides} />
       <AiAssistant lessonId={lessonId} />
     </main>
+    </RequireAuth>
   );
 }

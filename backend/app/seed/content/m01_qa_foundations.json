@@ -1,0 +1,238 @@
+[
+  {
+    "title": "QA / QC / Testing basics",
+    "short_description": "This lesson explains the practical differences between Quality Assurance, Quality Control, and Testing, and how the three fit together in real software teams.",
+    "learning_goals": "Distinguish Quality Assurance (process-oriented, preventive) from Quality Control (product-oriented, detective) and Testing (the act of evaluating the product) using concrete examples.\nExplain where each activity happens in a real delivery pipeline and who is responsible for it.\nCorrectly classify everyday activities (e.g. writing a process checklist vs. running a test case) as QA, QC, or Testing.\nUse the vocabulary correctly in standups, tickets, and interviews so you sound like a working QA, not a beginner.",
+    "theory": "Quality Assurance (QA), Quality Control (QC), and Testing are three different things that beginners constantly mix up. They are not synonyms, and using them interchangeably in an interview is a red flag. The cleanest mental model: QA is about the process, QC is about the product, and Testing is one specific technique inside QC.\n\nQuality Assurance is proactive and process-focused. Its goal is to prevent defects before they happen by improving how the team works. Examples: defining a Definition of Done, establishing code review rules, setting up CI pipelines that block merges on failing checks, writing test strategy documents, and running retrospectives. QA asks 'are we building the product the right way?' It is preventive and applies across the whole SDLC.\n\nQuality Control is reactive and product-focused. Its goal is to detect defects in the actual built product before release. Examples: reviewing a finished build, verifying a feature meets the acceptance criteria, inspecting a release candidate. QC asks 'did we build the right product, and does it work?' It happens after something is produced.\n\nTesting is the concrete activity of executing or evaluating a product to find defects and verify behavior. Running a login test case, sending a malformed request to an API and checking it returns HTTP 400, or exploring a checkout flow are all Testing. Testing is the main tool of QC, but QC is broader (it also includes reviews and inspections that are not test execution).\n\nA simple analogy: in a restaurant, QA writes the recipe and kitchen hygiene rules (prevent problems), QC is the chef tasting the dish before it leaves the kitchen (catch problems), and Testing is the specific act of tasting one spoonful. In software, the same person may wear all three hats, but the activities are distinct, and good teams invest in QA so QC and Testing have less to catch.",
+    "key_terms": "Quality Assurance, Quality Control, Testing, defect prevention, defect detection, process vs product, Definition of Done, verification, validation",
+    "real_world_example": "You join a team where the same bug (users can submit an order with a negative quantity) keeps coming back release after release. Testing alone keeps catching it (QC), but it keeps reappearing. As QA, you trace the root cause: there is no shared acceptance criterion for input validation and no automated check in CI. You add a rule to the Definition of Done ('all numeric inputs must reject values below the minimum') and a CI test gate. That is QA: a process fix that prevents the class of defect, not just the single instance.",
+    "step_by_step": "1. Take any activity from your day and ask: is it about the process (how we work) or the product (the actual thing we built)?\n2. If it is about improving the process to prevent defects (rules, standards, pipelines, strategy), label it QA.\n3. If it is about checking a produced artifact for defects (reviewing a build, verifying acceptance criteria), label it QC.\n4. If it is specifically executing or evaluating the product against expected behavior, label it Testing.\n5. Note who performs it and when in the SDLC it happens.\n6. Sanity-check: QA is preventive and continuous; QC and Testing are detective and happen on produced output.",
+    "common_mistakes": "Saying 'I do QA' when you only execute test cases (that is Testing/QC, not QA).\nBelieving testing alone guarantees quality; without QA process work, the same defects recur.\nConfusing verification ('did we build it right?') with validation ('did we build the right thing?').\nThinking QC and Testing are identical; QC also includes reviews and inspections that are not test execution.\nUsing 'QA engineer' and 'tester' as if process improvement were not part of the job.",
+    "practical_use_case": "In daily work you constantly switch hats: in sprint planning you do QA (push for clear acceptance criteria and a testable Definition of Done), during the sprint you do Testing (execute and explore the feature), and before release you do QC (sign off that the release candidate meets criteria). Knowing which hat you wear helps you give the right feedback in the right ceremony.",
+    "summary": "QA is preventive and process-focused, QC is detective and product-focused, and Testing is the concrete activity of evaluating the product. They overlap in practice but are distinct, and mature teams invest in QA so there is less for QC and Testing to catch.",
+    "example": "Classification checklist (fill in the right label for each activity):\n\n| Activity | QA / QC / Testing |\n| --- | --- |\n| Writing the team's Definition of Done | QA |\n| Setting up a CI gate that blocks merges on red tests | QA |\n| Reviewing the release candidate against acceptance criteria | QC |\n| Inspecting a finished build's installer before shipping | QC |\n| Running the 'login with valid credentials' test case | Testing |\n| Sending POST /orders with quantity=-1 and checking for HTTP 400 | Testing |\n| Running a retrospective to improve the bug-triage process | QA |",
+    "interactive": "Here are five activities. Label each as QA, QC, or Testing and write one sentence of justification: (a) defining branch-protection rules in GitHub; (b) executing the 'password reset' test case; (c) reviewing a release build against its acceptance criteria; (d) writing the test strategy for a new project; (e) sending an API request with a boundary value and asserting the status code.",
+    "expected_answer": "(a) QA - it is a process rule that prevents bad code from merging. (b) Testing - it is the concrete execution of a test case against the product. (c) QC - it inspects a produced artifact (the build) against criteria. (d) QA - strategy is process/prevention work spanning the project. (e) Testing - executing the product with a specific input and asserting behavior. A strong answer also notes that (b) and (e) are also part of QC, since Testing is QC's main tool.",
+    "homework": "Pick a real product you use daily (e.g. a banking app or an e-commerce site). List six quality-related activities a team behind it would perform, then classify each as QA, QC, or Testing in a small table, with one sentence of reasoning each. Include at least two QA items, two QC items, and two Testing items.",
+    "expected_result": "A table of six activities with correct labels and short justifications, showing at least two of each category. Strong submissions correctly place process/prevention work under QA, product-inspection work under QC, and concrete execution under Testing, and avoid calling all of it 'QA'.",
+    "quiz": [
+      {
+        "question": "Which statement best describes the difference between QA and QC?",
+        "answers": [
+          "QA detects defects in the product; QC prevents them in the process",
+          "QA is process-oriented and preventive; QC is product-oriented and detective",
+          "QA and QC are exactly the same thing",
+          "QA only applies to automation; QC only applies to manual testing"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Setting up a CI pipeline that blocks merges when tests fail is an example of:",
+        "answers": [
+          "Quality Assurance",
+          "Quality Control",
+          "Exploratory testing",
+          "Validation"
+        ],
+        "correct_index": 0
+      },
+      {
+        "question": "Running a single test case that logs in with valid credentials is primarily:",
+        "answers": [
+          "Quality Assurance",
+          "Process improvement",
+          "Testing",
+          "Defect prevention"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "Which of these is true about Testing and Quality Control?",
+        "answers": [
+          "Testing and QC are unrelated activities",
+          "QC is a subset of Testing",
+          "Testing is one tool used within QC, which also includes reviews and inspections",
+          "QC never involves looking at the actual product"
+        ],
+        "correct_index": 2
+      }
+    ]
+  },
+  {
+    "title": "What is software testing",
+    "short_description": "This lesson defines software testing, explains why it cannot prove the absence of bugs, and introduces the core testing principles every QA must internalize.",
+    "learning_goals": "Define software testing precisely as both verification and validation against expected behavior.\nExplain the seven testing principles (e.g. 'exhaustive testing is impossible', 'defect clustering') and apply them to real decisions.\nDescribe the difference between positive and negative testing with concrete inputs.\nJustify why testing reduces risk rather than guaranteeing a bug-free product.",
+    "theory": "Software testing is the process of evaluating a software product to check whether it behaves as expected and to find the gaps between expected and actual results. Each gap is a defect. Testing has two complementary purposes: verification ('are we building the product right?' - does it match the spec) and validation ('are we building the right product?' - does it meet the user's real need).\n\nA foundational truth: testing can show the presence of defects but can never prove their absence. Even if every test passes, the product may still contain bugs in untested paths. This is the first of the seven widely taught testing principles, and it reframes the job: testing is about reducing risk to an acceptable level, not achieving perfection.\n\nThe seven principles are worth memorizing because they guide daily decisions: (1) Testing shows presence of defects, not absence. (2) Exhaustive testing is impossible - a single form field accepting text could take near-infinite inputs, so you must prioritize. (3) Early testing saves time and money - a defect found in requirements is far cheaper than one found in production. (4) Defects cluster - typically a small number of modules contain most defects (related to the Pareto idea). (5) The pesticide paradox - running the same tests repeatedly stops finding new bugs, so tests must be reviewed and updated. (6) Testing is context-dependent - a medical device is tested very differently from a marketing landing page. (7) Absence-of-errors fallacy - a product with zero known bugs is still a failure if it does not meet user needs.\n\nIn practice, testing comes in two flavors of intent. Positive testing checks that valid input produces the expected result (entering a correct email logs you in). Negative testing checks that invalid input is handled gracefully (entering 'abc' in an age field shows a validation error, not a server crash). Both are needed; beginners over-focus on positive paths and miss the negative ones, where many real bugs live.\n\nBecause exhaustive testing is impossible, professionals use techniques to pick high-value inputs: equivalence partitioning groups inputs that should behave the same, and boundary value analysis targets the edges where bugs hide (for an age field accepting 18 to 65, you test 17, 18, 65, 66, plus 0 and a max). The goal is maximum defect-finding power from a minimum number of tests.",
+    "key_terms": "verification, validation, defect, positive testing, negative testing, seven testing principles, pesticide paradox, equivalence partitioning, boundary value analysis",
+    "real_world_example": "A signup form accepts an age field documented as 'must be 18 to 65'. A beginner tests only 25 and 40, and everything passes. A skilled QA applies boundary value analysis and negative testing: they enter 17 (should be rejected), 18 (accepted), 65 (accepted), 66 (rejected), 0, -1, and 999. The bug surfaces at 66: the system accepts it because the developer used '> 65' instead of '>= 66' logic, and an off-by-one error let 66 through. Only edge-focused testing caught it.",
+    "step_by_step": "1. Read the requirement and write down the expected behavior in your own words.\n2. Identify valid inputs (for positive tests) and invalid inputs (for negative tests).\n3. Apply equivalence partitioning: group inputs that should behave identically so you do not waste effort.\n4. Apply boundary value analysis: pick values at and just outside each edge (min-1, min, max, max+1).\n5. Execute each test and record actual vs expected results.\n6. Log any mismatch as a defect with clear steps to reproduce.\n7. Remember the goal is risk reduction, so prioritize the highest-risk, highest-traffic paths first.",
+    "common_mistakes": "Testing only the 'happy path' and ignoring invalid inputs where real bugs hide.\nAssuming all tests passing means the software is bug-free (violates principle 1).\nTrying to test every possible input instead of using equivalence partitioning and boundary analysis.\nRe-running the same old tests forever and wondering why no new bugs appear (the pesticide paradox).\nConfusing verification (matches the spec) with validation (meets the real user need).",
+    "practical_use_case": "Every time you receive a ticket, you decide what to test and what to skip, because you cannot test everything. The principles and techniques in this lesson are the daily reasoning tools: they help you justify to a project manager why you tested boundaries and negative cases, and why 'all tests green' is not the same as 'zero risk'.",
+    "summary": "Software testing evaluates a product against expected behavior to find defects, covering both verification and validation. It can reveal defects but never prove their absence, so QAs use principles like boundary value analysis, equivalence partitioning, and negative testing to reduce risk efficiently rather than chase impossible perfection.",
+    "example": "Worked example - test design for an age field that must accept 18 to 65 (integers only):\n\nEquivalence classes:\n- Invalid (too low): values < 18\n- Valid: 18 to 65\n- Invalid (too high): values > 65\n- Invalid (non-numeric / format): 'abc', empty, 25.5\n\nBoundary value test cases:\n| # | Input | Type | Expected result |\n| --- | --- | --- | --- |\n| 1 | 17 | negative | Rejected: 'Age must be at least 18' |\n| 2 | 18 | positive | Accepted |\n| 3 | 65 | positive | Accepted |\n| 4 | 66 | negative | Rejected: 'Age must be 65 or less' |\n| 5 | 0 | negative | Rejected |\n| 6 | -1 | negative | Rejected (no negative ages) |\n| 7 | abc | negative | Rejected: 'Enter a valid number' |\n| 8 | (empty) | negative | Rejected: 'Age is required' |",
+    "interactive": "A search box on an e-commerce site is supposed to return matching products. Design at least five test ideas covering both positive and negative testing, and name which principle or technique motivates each idea.",
+    "expected_answer": "Strong answers include: (1) Positive - search an existing product name, expect matching results. (2) Negative - search a non-existent term, expect a graceful 'no results' message, not an error. (3) Boundary - empty search and a very long string (e.g. 256+ chars). (4) Special characters / injection-like input ('<script>', SQL quotes) handled safely. (5) Case-insensitivity and leading/trailing spaces. Good answers tie each to a principle: negative cases reflect 'defects in unhappy paths', boundary inputs reflect boundary value analysis, and grouping similar queries reflects equivalence partitioning (since exhaustive testing is impossible).",
+    "homework": "Choose any login form (real or imagined). Write a test-design document that lists the equivalence classes for the username and password fields, defines boundary values, and produces at least eight test cases mixing positive and negative testing. For each case, state input and expected result.",
+    "expected_result": "A document with clearly separated equivalence classes, identified boundaries (e.g. min/max password length), and 8+ test cases where at least three are negative (invalid email format, empty password, over-length input, locked account). Each case must have a concrete input and a specific expected result, and the submission should show the candidate is not only testing the happy path.",
+    "quiz": [
+      {
+        "question": "What does the principle 'testing shows the presence of defects' mean in practice?",
+        "answers": [
+          "Passing tests prove the software has no bugs",
+          "Testing can find defects but cannot prove that none remain",
+          "Only failed tests count as real testing",
+          "You must test every possible input to be sure"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "For a field accepting integers from 1 to 100, which set best reflects boundary value analysis?",
+        "answers": [
+          "50 and 51 only",
+          "1, 50, and 100 only",
+          "0, 1, 100, and 101",
+          "Every integer from 1 to 100"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "Entering letters into a numeric phone-number field and expecting a validation error is an example of:",
+        "answers": [
+          "Positive testing",
+          "Negative testing",
+          "Verification of the spec",
+          "Exhaustive testing"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "The 'pesticide paradox' in testing means:",
+        "answers": [
+          "Bugs are immune to automation",
+          "Repeating the same tests eventually stops finding new defects, so tests must be updated",
+          "Testing harms the software over time",
+          "Defects spread from one module to another"
+        ],
+        "correct_index": 1
+      }
+    ]
+  },
+  {
+    "title": "Software Development Life Cycle - SDLC",
+    "short_description": "This lesson covers the phases of the Software Development Life Cycle and the main SDLC models, with a focus on where QA contributes in each.",
+    "learning_goals": "Name and order the core SDLC phases (requirements, design, development, testing, deployment, maintenance) and describe the output of each.\nCompare Waterfall, V-Model, and Agile/Scrum and explain when each fits.\nIdentify where QA activities happen in every phase, not just the testing phase.\nExplain why early QA involvement (shift-left) lowers the cost of fixing defects.",
+    "theory": "The Software Development Life Cycle (SDLC) is the structured sequence of phases a software product goes through from idea to retirement. A typical breakdown: (1) Requirements analysis - gather and document what the product must do; (2) Design - architecture, database schema, UI/UX; (3) Implementation/Development - writing the code; (4) Testing - verifying the build against requirements; (5) Deployment - releasing to users; (6) Maintenance - fixing issues and adding improvements after release. Each phase produces an artifact (a requirements spec, a design document, source code, a tested build, a release).\n\nA crucial idea for QA is that quality is not a single phase. QA contributes in every phase: reviewing requirements for testability and ambiguity, reviewing designs for edge cases, writing test cases during development, executing tests in the testing phase, and verifying fixes during maintenance. This is called shift-left: moving testing activities earlier. The reason is cost - the cost of fixing a defect grows roughly an order of magnitude with each phase it survives. A wrong requirement caught during analysis costs a conversation; the same defect caught in production can cost a hotfix, a rollback, and reputational damage.\n\nSDLC models describe how the phases are arranged in time. In Waterfall, phases run strictly sequentially: you finish all requirements, then all design, then all development, then testing. It is simple and works when requirements are stable and well understood (e.g. a fixed-scope government contract), but testing happens late, so defects are found late and are expensive.\n\nThe V-Model is Waterfall bent into a V: each development phase on the left has a corresponding test phase on the right. Requirements map to acceptance testing, system design maps to system testing, and detailed design maps to unit testing. Its strength is that test planning starts early, in parallel with each design phase, which is a natural shift-left.\n\nAgile (commonly via Scrum) replaces one long cycle with short iterations called sprints, typically two weeks. Each sprint delivers a small, potentially shippable increment, and testing happens continuously inside every sprint rather than at the end. Requirements (user stories) can change between sprints. This fits products with evolving requirements and is the dominant model in modern web/product companies. As QA in Agile, you are embedded in the team: you refine stories, define acceptance criteria, test within the sprint, and often automate regression tests.",
+    "key_terms": "SDLC, requirements analysis, design phase, implementation, deployment, maintenance, Waterfall, V-Model, Agile, Scrum, sprint, shift-left",
+    "real_world_example": "Your team is building a payments feature in two-week Scrum sprints. In sprint planning (requirements phase, in Agile terms) you read the user story 'as a user I can pay with a saved card' and immediately ask: what happens if the card is expired, or the network drops mid-payment? Those questions are QA work in the requirements phase - shift-left. By raising them before a line of code is written, the team adds acceptance criteria for failure handling, and the expensive 'double charge on retry' bug never reaches production. Had this been strict Waterfall, you might not have tested until weeks later, when fixing the design flaw would be far costlier.",
+    "step_by_step": "1. Identify which SDLC model your project uses (ask: are phases sequential like Waterfall, paired like V-Model, or iterative like Scrum?).\n2. Map the current phase: are you in requirements, design, development, testing, deployment, or maintenance?\n3. For the current phase, list the QA activity that applies (review requirements, review design, write/execute tests, verify fixes).\n4. Practice shift-left: review requirements and designs for testability and edge cases before coding starts.\n5. Track each requirement to a test (traceability) so nothing ships untested.\n6. After release, feed production issues back into maintenance and update your test suite.",
+    "common_mistakes": "Believing QA only happens in the 'testing' phase and staying silent during requirements and design.\nConfusing the V-Model with Waterfall; the V-Model explicitly pairs each build phase with a test phase.\nThinking Agile means 'no documentation and no planning' rather than iterative, continuously tested increments.\nIgnoring the maintenance phase, where regression testing after each fix is critical.\nNot tracing requirements to test cases, so features ship without coverage.",
+    "practical_use_case": "Knowing the SDLC tells you what is expected of you right now. In a Scrum team you join backlog refinement to question requirements, define acceptance criteria, test stories within the sprint, and run regression before release. In a Waterfall or V-Model project you prepare test plans during the design phase so you are ready when the build arrives. Understanding the model prevents you from being the person who only shows up at the end.",
+    "summary": "The SDLC is the set of phases software passes through from requirements to maintenance, arranged by models such as Waterfall, V-Model, and Agile/Scrum. QA adds value in every phase, and shifting testing left lowers the cost of fixing defects, because a bug caught in requirements is dramatically cheaper than the same bug found in production.",
+    "example": "QA involvement mapped across SDLC phases (Scrum context):\n\n| Phase | Main artifact | QA activity |\n| --- | --- | --- |\n| Requirements (story refinement) | User story + acceptance criteria | Question ambiguity, add edge cases, ensure testability |\n| Design | Mockups, API contract | Review for error states, missing flows, boundary conditions |\n| Development | Source code | Write test cases, pair with devs, prepare test data |\n| Testing | Tested increment | Execute functional/negative/regression tests, log defects |\n| Deployment | Release to production | Smoke test the release, verify in production-like env |\n| Maintenance | Patches, hotfixes | Reproduce production bugs, verify fixes, update regression suite |\n\nCost-of-defect rule of thumb: a defect costs roughly 1 unit in requirements, ~10 in development, and ~100+ in production - the core argument for shift-left.",
+    "interactive": "Your company must build a medical billing system with strict, fixed regulatory requirements that will not change, and full documentation is legally required. Which SDLC model (Waterfall, V-Model, or Agile) would you recommend, and what is the single biggest QA risk of that choice? Justify in 3-4 sentences.",
+    "expected_answer": "A strong answer recommends the V-Model (or Waterfall) because the requirements are fixed and heavy documentation/traceability is mandatory, which suits sequential models; the V-Model is preferable because it pairs each build phase with a test phase and starts test planning early. The biggest QA risk of sequential models is that full system testing happens late, so any defect rooted in early requirements or design is found late and is expensive to fix - mitigated by rigorous requirement reviews and early test-plan creation (shift-left). Agile is a weaker fit here because changing requirements is not expected and strict upfront documentation is required.",
+    "homework": "Take a feature you know (e.g. 'add to cart' on a shopping site). Walk it through all six SDLC phases and, for each phase, write one specific QA activity you would perform and one artifact you would review or produce. Then state which SDLC model you assumed and why.",
+    "expected_result": "A six-row breakdown covering requirements through maintenance, each with a concrete QA activity and a named artifact (not generic 'do testing'). The submission should name a model with justification and demonstrate shift-left thinking by including QA activity in the requirements and design phases, not only the testing phase.",
+    "quiz": [
+      {
+        "question": "Which is the correct typical order of SDLC phases?",
+        "answers": [
+          "Design, Requirements, Testing, Development, Deployment, Maintenance",
+          "Requirements, Design, Development, Testing, Deployment, Maintenance",
+          "Development, Requirements, Design, Deployment, Testing, Maintenance",
+          "Requirements, Development, Design, Deployment, Maintenance, Testing"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "What distinguishes the V-Model from Waterfall?",
+        "answers": [
+          "The V-Model has no testing phase",
+          "The V-Model pairs each development phase with a corresponding test phase, starting test planning early",
+          "The V-Model is fully iterative like Scrum",
+          "The V-Model skips the requirements phase"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "The principle 'shift-left' in QA means:",
+        "answers": [
+          "Move all testing to the very end of the project",
+          "Only automate, never test manually",
+          "Involve testing and quality activities as early as possible in the SDLC",
+          "Let developers handle all testing"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "In Scrum, testing is best described as happening:",
+        "answers": [
+          "Continuously within each sprint",
+          "Only after all sprints are complete",
+          "Only during the maintenance phase",
+          "Never, because developers test their own code"
+        ],
+        "correct_index": 0
+      }
+    ]
+  },
+  {
+    "title": "Software Testing Life Cycle - STLC",
+    "short_description": "This lesson breaks down the Software Testing Life Cycle phases, their entry and exit criteria, and the deliverables a QA produces at each stage.",
+    "learning_goals": "Name and order the STLC phases (requirement analysis, test planning, test case design, environment setup, test execution, test closure) and the deliverable of each.\nDistinguish the STLC from the SDLC and explain how they map onto each other.\nDefine entry and exit criteria and explain why each phase needs them.\nProduce the key STLC artifacts: a test plan outline, a test case, and an RTM (requirements traceability matrix) entry.",
+    "theory": "The Software Testing Life Cycle (STLC) is the testing-specific counterpart of the SDLC. While the SDLC covers building the whole product, the STLC zooms in on the systematic sequence of testing activities. Each STLC phase has defined entry criteria (what must be ready to start), activities, exit criteria (what must be true to finish), and concrete deliverables. This structure is what separates professional testing from ad-hoc clicking.\n\nThe phases, in order, are: (1) Requirement Analysis - the QA team studies the requirements from a testing angle, identifies what is testable, and clarifies ambiguities. Deliverable: a list of testable requirements and questions for analysts; an early RTM may begin here. (2) Test Planning - the test lead defines scope, objectives, strategy, resources, schedule, risks, and tools. Deliverable: the Test Plan and effort estimation. (3) Test Case Design (Development) - writing detailed test cases and test scripts, preparing test data. Deliverable: test cases, test scripts, and a completed Requirements Traceability Matrix linking each requirement to tests. (4) Test Environment Setup - preparing hardware, software, test data, and access; this can run in parallel with case design. Deliverable: a ready environment and a smoke test confirming it works. (5) Test Execution - running the test cases, comparing actual vs expected results, logging defects, and retesting fixes. Deliverable: test execution results, defect reports, and updated RTM showing coverage. (6) Test Closure - evaluating completion against exit criteria, writing a test summary report, and capturing lessons learned. Deliverable: the Test Closure/Summary Report and metrics.\n\nEntry and exit criteria are the gates between phases. For example, the entry criterion for Test Execution is that test cases are reviewed and approved and the environment is ready; the exit criterion might be that all planned high-priority tests are executed and no open critical or blocker defects remain. Without these gates, teams start executing against a half-built environment or sign off a release with known critical bugs.\n\nThe STLC is not a separate timeline bolted onto the SDLC - it runs inside it. In a V-Model, requirement analysis and test planning happen in parallel with the design phases (shift-left), and execution happens during the SDLC testing phase. In Agile, a compressed version of the full STLC repeats inside every sprint: you analyze the story, plan lightly, design and execute tests, and close out, all within two weeks. Understanding the STLC lets you answer the interview-favorite question 'what do you do before you start executing tests?' with a real, ordered process instead of 'I just start clicking'.",
+    "key_terms": "STLC, requirement analysis, test planning, test case design, test environment setup, test execution, test closure, entry criteria, exit criteria, requirements traceability matrix, test summary report",
+    "real_world_example": "Your lead asks you to start executing tests for a new reporting feature 'tomorrow'. Knowing the STLC, you check the entry criteria for the execution phase and find the test environment has no sample data and the staging database is down. You also notice three test cases were never reviewed. Instead of clicking blindly and reporting noise, you flag that environment setup and test case design are incomplete, run a quick smoke test once the environment is fixed, and only then begin execution. The STLC gates saved a day of wasted, unreliable testing.",
+    "step_by_step": "1. Requirement Analysis: read each requirement, mark it testable or not, and list clarification questions; start the RTM.\n2. Test Planning: define scope, approach, tools, schedule, and risks; write the Test Plan and estimate effort.\n3. Test Case Design: write detailed cases with preconditions, steps, and expected results; prepare test data; complete the RTM.\n4. Environment Setup: provision the environment, load test data, verify access, and run a smoke test to confirm readiness.\n5. Test Execution: check entry criteria, run cases, compare actual vs expected, log defects, and retest fixes; keep the RTM updated.\n6. Test Closure: verify exit criteria, write the Test Summary Report with metrics (executed, passed, failed, open defects), and record lessons learned.",
+    "common_mistakes": "Jumping straight to execution and skipping requirement analysis, planning, and case design.\nIgnoring entry/exit criteria, so testing starts on a broken environment or a release ships with open critical bugs.\nConfusing the STLC with the SDLC; the STLC is the testing process that runs inside the SDLC.\nSkipping the requirements traceability matrix, leaving requirements with no mapped tests (coverage gaps).\nForgetting test closure, so the team loses metrics and lessons learned for the next cycle.",
+    "practical_use_case": "The STLC is the backbone of how you organize testing on any ticket or project. In Agile you run a lightweight STLC every sprint; in larger projects you produce formal test plans and summary reports. It is also one of the most common interview topics - being able to walk through the six phases with their entry/exit criteria and deliverables signals you understand structured testing rather than random clicking.",
+    "summary": "The STLC is the structured, phase-by-phase process of testing - requirement analysis, planning, case design, environment setup, execution, and closure - each with entry/exit criteria and deliverables. It runs inside the SDLC (fully in sequential models, compressed per sprint in Agile) and turns testing from ad-hoc clicking into a repeatable, measurable process.",
+    "example": "Worked artifacts for the STLC of a 'password reset' feature:\n\n1) Sample test case (Test Case Design phase):\nTC-PR-001 - Reset password with valid registered email\nPrecondition: user account exists and is active\nSteps:\n  1. Open the login page and click 'Forgot password'\n  2. Enter a registered email (user@example.com)\n  3. Click 'Send reset link'\nExpected result: confirmation message 'Reset link sent' is shown and an email with a valid reset link arrives within 60 seconds; HTTP response 200.\nPriority: High\n\n2) RTM entry (Test Case Design phase):\n| Requirement ID | Requirement | Test Case IDs | Status |\n| --- | --- | --- | --- |\n| REQ-12 | User can reset password via email | TC-PR-001, TC-PR-002, TC-PR-003 | Passed/Failed |\n\n3) Exit criteria for Test Execution (sample): 100% of High-priority cases executed, >= 95% pass rate, zero open Critical/Blocker defects, RTM shows every requirement covered.",
+    "interactive": "List the six STLC phases in order. For each, write the single most important deliverable and one entry or exit criterion. Then state in one sentence how the STLC differs from the SDLC.",
+    "expected_answer": "Order and deliverables: (1) Requirement Analysis - deliverable: list of testable requirements / RTM start; entry: requirements available. (2) Test Planning - deliverable: Test Plan; exit: plan reviewed and approved. (3) Test Case Design - deliverable: test cases + completed RTM; exit: cases reviewed. (4) Environment Setup - deliverable: ready environment + passing smoke test; exit: environment verified. (5) Test Execution - deliverable: execution results + defect reports; entry: env ready and cases approved. (6) Test Closure - deliverable: Test Summary Report + lessons learned; exit: exit criteria met. Difference: the SDLC is the life cycle for building the whole product, while the STLC is the testing-focused life cycle that runs inside it.",
+    "homework": "Pick a small feature (e.g. 'add a product to wishlist'). Produce a mini STLC package: a one-paragraph test plan (scope, approach, risks), three detailed test cases (with preconditions, steps, expected results), a small RTM mapping a requirement to those cases, and one realistic exit criterion for execution.",
+    "expected_result": "A package containing all four artifacts: a short but specific test plan, three well-formed test cases with concrete steps and expected results (at least one negative case), an RTM table linking the requirement to the test case IDs, and a measurable exit criterion (e.g. 'all High cases executed, no open critical defects'). The submission should demonstrate the candidate follows an ordered process rather than improvising.",
+    "quiz": [
+      {
+        "question": "What is the correct order of the main STLC phases?",
+        "answers": [
+          "Test Planning, Requirement Analysis, Execution, Closure, Design, Environment Setup",
+          "Requirement Analysis, Test Planning, Test Case Design, Environment Setup, Test Execution, Test Closure",
+          "Execution, Design, Planning, Closure, Analysis, Environment Setup",
+          "Requirement Analysis, Execution, Test Planning, Closure, Design, Environment Setup"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "What is the main deliverable of the Test Closure phase?",
+        "answers": [
+          "The requirements specification",
+          "The source code",
+          "The Test Summary Report and lessons learned",
+          "The list of testable requirements"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "Why do STLC phases define entry and exit criteria?",
+        "answers": [
+          "To make the documentation longer",
+          "To act as gates so a phase starts only when prerequisites are met and ends only when goals are achieved",
+          "To replace the need for test cases",
+          "Only to satisfy auditors, with no practical use"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "How does the STLC relate to the SDLC?",
+        "answers": [
+          "They are the same thing with different names",
+          "The STLC is the testing-focused process that runs inside the broader SDLC",
+          "The SDLC is a subset of the STLC",
+          "They never overlap in time"
+        ],
+        "correct_index": 1
+      }
+    ]
+  }
+]

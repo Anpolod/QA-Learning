@@ -64,11 +64,10 @@ export function LessonSlideDrawer({ lessonTitle, slides }: LessonSlideDrawerProp
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        className="fixed right-0 top-1/2 z-40 flex -translate-y-1/2 items-center gap-2 rounded-l-md bg-ink px-3 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-slate-800"
+        className="flex w-full items-center gap-2 rounded-md border bg-white px-3 py-2 text-sm transition hover:border-amber hover:bg-slate-50"
         aria-label="Open lesson slides"
       >
-        <Layers className="h-4 w-4 text-amber" />
-        <span className="hidden [writing-mode:vertical-rl] sm:inline">Slides</span>
+        <Layers className="h-4 w-4 text-amber" /> Slides
       </button>
 
       {isOpen ? (

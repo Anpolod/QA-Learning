@@ -22,12 +22,119 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
       "Content-Type": "application/json",
       ...init?.headers
     },
+    // Send the httpOnly auth cookie with every request (the backend reads it as the bearer token).
+    credentials: "include",
     cache: "no-store"
   });
   if (!response.ok) {
-    throw new Error(`API request failed: ${response.status}`);
+    let detail = "";
+    try {
+      const body = await response.json();
+      detail = typeof body?.detail === "string" ? body.detail : "";
+    } catch {
+      // non-JSON error body
+    }
+    // Session cookie expired/invalid: clear the local user so RequireAuth flips
+    // back to the login card instead of leaving the page in a broken signed-in state.
+    if (response.status === 401 && typeof window !== "undefined") {
+      localStorage.removeItem("qa_learning_user");
+      window.dispatchEvent(new Event("auth-change"));
+      throw new Error("Your session expired. Please log in again.");
+    }
+    throw new Error(detail || `API request failed: ${response.status}`);
   }
   return response.json() as Promise<T>;
+}
+
+export type DocType =
+  | "test_case"
+  | "bug_report"
+  | "decision_table"
+  | "test_plan"
+  | "bdd"
+  | "test_summary"
+  | "traceability"
+  | "checklist";
+
+export type LeaderboardRow = {
+  position: number;
+  userId: number;
+  displayName: string;
+  xp: number;
+  level: number;
+  rank: string;
+  achievementsUnlocked: number;
+  completedLessons: number;
+};
+
+export type DocScenario = {
+  id: number;
+  doc_type: DocType;
+  title: string;
+  brief: string;
+  context: string;
+  source: string;
+};
+
+export type DocReview = {
+  attempt_id: number;
+  score: number;
+  summary: string;
+  fields: { name: string; rating: string; comment: string }[];
+  improvements: string[];
+};
+
+export type DocAttempt = {
+  id: number;
+  scenario_id: number;
+  scenario_title: string;
+  doc_type: DocType;
+  score: number;
+  summary: string;
+  created_at: string;
+};
+
+export type DocAttemptDetail = {
+  id: number;
+  doc_type: DocType;
+  scenario_title: string;
+  scenario_brief: string;
+  score: number;
+  fields: Record<string, string>;
+  feedback: DocReview;
+  created_at: string;
+};
+
+// Multipart upload bypasses request() because it must NOT set a JSON Content-Type
+// (the browser sets the multipart boundary itself).
+export async function uploadDocScreenshot(file: File): Promise<{ url: string }> {
+  const form = new FormData();
+  form.append("file", file);
+  const res = await fetch(`${apiUrl()}/api/test-docs/upload`, {
+    method: "POST",
+    body: form,
+    credentials: "include",
+    cache: "no-store"
+  });
+  if (!res.ok) {
+    let detail = "";
+    try {
+      detail = (await res.json())?.detail ?? "";
+    } catch {
+      // ignore
+    }
+    if (res.status === 401 && typeof window !== "undefined") {
+      localStorage.removeItem("qa_learning_user");
+      window.dispatchEvent(new Event("auth-change"));
+      throw new Error("Your session expired. Please log in again.");
+    }
+    throw new Error(detail || `Upload failed: ${res.status}`);
+  }
+  return res.json();
+}
+
+export function publicApiBase() {
+  return publicApiUrl;
 }
 
 export function mediaUrl(path: string) {
@@ -47,44 +154,43 @@ export const api = {
       "/api/auth/login",
       { method: "POST", body: JSON.stringify(body) }
     ),
-  me: (accessToken: string) =>
-    request<UserRead>("/api/auth/me", {
-      headers: { Authorization: `Bearer ${accessToken}` }
-    }),
-  updateProfile: (accessToken: string, body: { fullName: string; goal: string }) =>
+  logout: () => request<{ status: string }>("/api/auth/logout", { method: "POST" }),
+  me: () => request<UserRead>("/api/auth/me"),
+  updateProfile: (body: { fullName: string; goal: string }) =>
     request<UserRead>("/api/auth/profile", {
       method: "PATCH",
-      headers: { Authorization: `Bearer ${accessToken}` },
       body: JSON.stringify(body)
     }),
-  adminUsers: (accessToken: string) =>
-    request<UserRead[]>("/api/auth/admin/users", {
-      headers: { Authorization: `Bearer ${accessToken}` }
-    }),
+  adminUsers: () => request<UserRead[]>("/api/auth/admin/users"),
   adminCreateUser: (
-    accessToken: string,
     body: { email: string; password: string; fullName: string; goal: string; role: "student" | "admin" }
   ) =>
     request<UserRead>("/api/auth/admin/users", {
       method: "POST",
-      headers: { Authorization: `Bearer ${accessToken}` },
       body: JSON.stringify(body)
     }),
   adminUpdateUser: (
-    accessToken: string,
     userId: number,
     body: Partial<{ email: string; password: string; fullName: string; goal: string; role: "student" | "admin" }>
   ) =>
     request<UserRead>(`/api/auth/admin/users/${userId}`, {
       method: "PATCH",
-      headers: { Authorization: `Bearer ${accessToken}` },
       body: JSON.stringify(body)
     }),
-  adminDeleteUser: (accessToken: string, userId: number) =>
+  adminDeleteUser: (userId: number) =>
     request<{ status: string; userId: number }>(`/api/auth/admin/users/${userId}`, {
-      method: "DELETE",
-      headers: { Authorization: `Bearer ${accessToken}` }
+      method: "DELETE"
     }),
+  glossary: () =>
+    request<{ slug: string; term: string; definition: string; category: string }[]>("/api/glossary"),
+  docScenarios: (type: DocType) =>
+    request<DocScenario[]>(`/api/test-docs/scenarios?type=${type}`),
+  generateDocScenario: (doc_type: DocType) =>
+    request<DocScenario>("/api/test-docs/generate", { method: "POST", body: JSON.stringify({ doc_type }) }),
+  reviewDoc: (payload: { scenario_id: number; doc_type: string; fields: Record<string, string> }) =>
+    request<DocReview>("/api/test-docs/review", { method: "POST", body: JSON.stringify(payload) }),
+  docAttempts: () => request<DocAttempt[]>("/api/test-docs/attempts"),
+  docAttempt: (id: number) => request<DocAttemptDetail>(`/api/test-docs/attempts/${id}`),
   courses: () => request<Course[]>("/api/courses"),
   course: (id: string) => request<Course>(`/api/courses/${id}`),
   module: (id: string) => request<Module>(`/api/courses/modules/${id}`),
@@ -102,7 +208,7 @@ export const api = {
       created_at: string;
     }>(`/api/courses/final-projects/${projectId}/submit`, {
       method: "POST",
-      body: JSON.stringify({ user_id: 1, submission_text: submissionText, file_url: fileUrl })
+      body: JSON.stringify({ submission_text: submissionText, file_url: fileUrl })
     }),
   finalProjectSubmissions: () =>
     request<
@@ -277,9 +383,10 @@ export const api = {
         body: JSON.stringify(body)
       }
     ),
-  dashboardProgress: (userId = 1) =>
+  dashboardProgress: () =>
     request<{
       completedLessons: number;
+      completedLessonIds: number[];
       openedLessons: number;
       quizCompleted: number;
       homeworkSubmitted: number;
@@ -293,7 +400,7 @@ export const api = {
       finalProjectsSubmitted: number;
       finalProjectsApproved: number;
       totalFinalProjects: number;
-    }>(`/api/progress/dashboard/${userId}`),
+    }>(`/api/progress/dashboard/me`),
   adminStudentProgress: () =>
     request<
       {
@@ -313,13 +420,13 @@ export const api = {
       `/api/quizzes/${quizId}/submit`,
       {
         method: "POST",
-        body: JSON.stringify({ user_id: 1, answers })
+        body: JSON.stringify({ answers })
       }
     ),
   submitHomework: (homeworkId: number, answerText: string) =>
     request<{ status: string; submissionId: number }>(`/api/homework/${homeworkId}/submit`, {
       method: "POST",
-      body: JSON.stringify({ user_id: 1, answer_text: answerText })
+      body: JSON.stringify({ answer_text: answerText })
     }),
   homeworkSubmissions: () =>
     request<
@@ -355,9 +462,9 @@ export const api = {
   }) =>
     request<{ status: string }>("/api/progress/lesson", {
       method: "POST",
-      body: JSON.stringify({ user_id: 1, ...body })
+      body: JSON.stringify(body)
     }),
-  playerStats: (userId = 1) =>
+  playerStats: () =>
     request<{
       userId: number;
       email: string;
@@ -390,21 +497,8 @@ export const api = {
         unlocked: boolean;
         unlockedAt: string | null;
       }[];
-    }>(`/api/gamification/player/${userId}`),
-  leaderboard: () =>
-    request<
-      {
-        position: number;
-        userId: number;
-        email: string;
-        fullName: string;
-        xp: number;
-        level: number;
-        rank: string;
-        achievementsUnlocked: number;
-        completedLessons: number;
-      }[]
-    >("/api/gamification/leaderboard"),
+    }>(`/api/gamification/player/me`),
+  leaderboard: () => request<LeaderboardRow[]>("/api/gamification/leaderboard"),
   aiChat: (body: { message: string; lessonId: string; mode: string }) =>
     request<{ answer: string; type: string }>("/api/ai/chat", {
       method: "POST",
@@ -437,6 +531,8 @@ export const api = {
     dailyTextLimitPerUser: number;
     dailyImageLimitPerUser: number;
     dailyImageLimitAdmin: number;
+    openaiApiKey: string;
+    openrouterApiKey: string;
   }>) =>
     request<{
       provider: string;
@@ -451,7 +547,7 @@ export const api = {
       openrouterConfigured: boolean;
     }>("/api/ai/admin/settings", {
       method: "PATCH",
-      body: JSON.stringify(body)
+      body: JSON.stringify(body),
     }),
   aiUsage: () =>
     request<{

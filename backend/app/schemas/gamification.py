@@ -48,8 +48,7 @@ class PlayerStatsRead(BaseModel):
 class LeaderboardRow(BaseModel):
     position: int
     userId: int
-    email: str
-    fullName: str
+    displayName: str
     xp: int
     level: int
     rank: str

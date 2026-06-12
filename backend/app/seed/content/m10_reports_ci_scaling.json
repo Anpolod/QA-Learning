@@ -1,0 +1,651 @@
+[
+  {
+    "title": "Reports",
+    "short_description": "How automated test runs produce structured reports that turn raw pass/fail data into actionable information for the team.",
+    "learning_goals": "Explain the difference between console output, machine-readable report formats (JUnit XML, JSON), and human-readable HTML reports.\nGenerate a JUnit XML report from a test run and read its structure (testsuite, testcase, failure).\nIdentify the four core outcomes a report must capture: passed, failed, skipped, and error/broken.\nDecide which report format to publish where (CI dashboard vs. shared HTML vs. Slack summary).",
+    "theory": "A test report is the artifact a test run produces so that humans and tools can understand what happened without re-running the tests. Raw console output (a wall of dots and stack traces) is fine for one developer on one laptop, but it does not scale: a CI server, a manager, and a teammate three time zones away all need the same answer to 'what broke and why?'. Reports solve this by serializing results into a defined structure.\n\nThere are three layers of reports. First, machine-readable formats like JUnit XML and JSON are designed for tools to parse. JUnit XML is the de-facto standard: nearly every CI system (Jenkins, GitHub Actions, GitLab) can ingest it and draw trend graphs. Second, human-readable formats like HTML reports (Allure, pytest-html, Playwright's HTML reporter) give people a clickable view with filters, durations, and embedded screenshots. Third, summary formats like a Slack message or a JSON badge condense everything into one line: '142 passed, 3 failed'.\n\nEvery serious report distinguishes at least four outcomes. Passed means the assertion held. Failed means an assertion was false (the app misbehaved). Error/Broken means the test itself blew up before it could assert (a null reference, a timeout, a missing fixture) — this is a different signal because it usually means a test or environment problem, not a product bug. Skipped means the test was intentionally not run (marked xfail, filtered by tag, or gated behind a feature flag).\n\nGood reports also capture metadata: duration per test (to find slow tests), the test ID and the assertion that failed, the stack trace, and ideally the environment (browser, OS, build number). Flaky-test detection is built on this: if you store reports over time, you can see that test_checkout fails 1 run in 10, which a single run would never reveal.\n\nThe key practice is to always emit a machine-readable report in CI even when the run passes, because trend data is only useful if it is complete. You generate the report as a side effect of the run (a reporter plugin), publish it as a CI artifact, and optionally render an HTML view on top of it.",
+    "key_terms": "JUnit XML, HTML report, machine-readable format, test outcome (passed/failed/skipped/broken), reporter/plugin, test artifact, flaky test, trend report",
+    "real_world_example": "Your nightly regression suite of 800 Playwright tests runs on GitHub Actions. A teammate pings you: 'the build is red'. Instead of re-running 800 tests locally (20 minutes), you open the published HTML report artifact from that run, filter to 'failed', see 2 tests failed in the checkout flow with attached screenshots showing an HTTP 500 on /api/pay, and immediately route it to the payments team with the screenshot and the exact request — all in under two minutes.",
+    "step_by_step": "1. Choose a machine-readable format your CI understands; JUnit XML is the safe default.\n2. Configure your test runner to emit it: e.g. pytest --junitxml=reports/results.xml or Playwright reporter: [['junit', { outputFile: 'results.xml' }], ['html']].\n3. Run the suite locally and open the generated file to confirm it contains testsuite and testcase entries.\n4. Add an HTML reporter on top for humans (pytest-html, Playwright HTML, or Allure).\n5. In CI, run tests then upload both files as build artifacts (e.g. actions/upload-artifact).\n6. Configure CI to parse the JUnit XML so failures appear inline on the run summary.\n7. Add a one-line summary step (counts of passed/failed) posted to Slack or the PR comment.",
+    "common_mistakes": "Only relying on console output, so nobody can inspect a failure after the runner is gone.\nNot distinguishing 'failed' (product bug) from 'broken/error' (test or env bug) and wasting time debugging the wrong thing.\nGenerating the report only on failure, which destroys trend data for passing runs.\nForgetting to upload the report as a CI artifact, so the file exists on the runner but disappears when the job ends.\nTreating skipped tests as passing and shipping with large blocks of silently disabled coverage.",
+    "practical_use_case": "Every CI pipeline you build will publish a report so reviewers can see test results on the pull request without checking out the branch, and so the team can track pass-rate and flakiness trends over weeks.",
+    "summary": "A report turns ephemeral console output into a durable, structured artifact that tools and people can act on. Emit a machine-readable format (JUnit XML) for CI plus a human-readable HTML view, always publish it as an artifact, and make sure it distinguishes passed, failed, broken, and skipped.",
+    "example": "```bash\n# pytest: emit JUnit XML + HTML report in one run\npytest tests/ \\\n  --junitxml=reports/results.xml \\\n  --html=reports/report.html --self-contained-html\n```\n\n```xml\n<!-- reports/results.xml (excerpt) -->\n<testsuite name=\"pytest\" tests=\"3\" failures=\"1\" errors=\"0\" skipped=\"0\" time=\"4.21\">\n  <testcase classname=\"tests.test_login\" name=\"test_valid_login\" time=\"1.02\"/>\n  <testcase classname=\"tests.test_login\" name=\"test_locked_user\" time=\"1.10\">\n    <failure message=\"AssertionError: expected 200 but got 403\">\n      assert response.status_code == 200\n    </failure>\n  </testcase>\n  <testcase classname=\"tests.test_login\" name=\"test_logout\" time=\"0.88\"/>\n</testsuite>\n```",
+    "interactive": "Given this JUnit XML snippet, answer three questions: (1) How many tests ran? (2) Which test failed and what was the assertion? (3) Were any tests skipped?\n\n<testsuite tests=\"5\" failures=\"1\" skipped=\"1\"><testcase name=\"a\"/><testcase name=\"b\"><failure message=\"expected 404 got 200\"/></testcase><testcase name=\"c\"/><testcase name=\"d\"/><testcase name=\"e\"><skipped/></testcase></testsuite>",
+    "expected_answer": "(1) 5 tests ran (tests=\"5\"). (2) Test 'b' failed; the assertion expected an HTTP 404 but the response was 200 (per the failure message). (3) Yes, exactly one was skipped (skipped=\"1\", which is test 'e' with a <skipped/> element). Net result: 3 passed, 1 failed, 1 skipped.",
+    "homework": "Take any small test suite (or write 5 tests, with at least one intentional failure and one skipped test). Run it producing both a JUnit XML and an HTML report. Then write a 4-line summary of the run (passed/failed/skipped/broken counts) as if you were posting it to your team channel, and explain which single failure you would investigate first and why.",
+    "expected_result": "A submission containing: the command used, the generated results.xml (or its key counts), a screenshot or description of the HTML report, and a correct 4-line summary. The reasoning should correctly identify a real 'failed' assertion (product bug) over a 'broken' error or a skip as the first thing to investigate, with a one-sentence justification.",
+    "quiz": [
+      {
+        "question": "Why is JUnit XML preferred over plain console output in a CI pipeline?",
+        "answers": [
+          "It is faster to generate than console output",
+          "It is a machine-readable format that CI tools can parse to build trends and inline failure views",
+          "It compresses the test code so the repo is smaller",
+          "It automatically fixes flaky tests"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "A test crashes with a NullPointerException before reaching any assertion. How should the report classify it?",
+        "answers": [
+          "Passed, because no assertion failed",
+          "Skipped, because it never finished",
+          "Broken/Error, because the test itself failed rather than a product assertion",
+          "Failed, identical to a normal assertion failure"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "Why should you generate the report even when every test passes?",
+        "answers": [
+          "To make the build slower on purpose",
+          "Passing runs do not need reports",
+          "So trend and flakiness data stays complete over time",
+          "Because CI refuses to run without a report file"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "What is the most common reason a generated report is missing after a CI run?",
+        "answers": [
+          "It was never uploaded as a build artifact, so it vanished with the runner",
+          "JUnit XML cannot be saved to disk",
+          "HTML reports delete themselves after 60 seconds",
+          "The test runner overwrote it with console logs"
+        ],
+        "correct_index": 0
+      }
+    ]
+  },
+  {
+    "title": "Allure reports",
+    "short_description": "Using the Allure framework to generate rich, interactive HTML test reports with steps, attachments, severities, and history.",
+    "learning_goals": "Install and wire an Allure adapter into a test framework (pytest, JUnit, or Playwright) and generate a report from results.\nStructure tests with @allure.step, severity, epic/feature/story labels so the report is navigable.\nAttach screenshots, request/response payloads, and logs to specific test steps.\nUse Allure history and categories to spot flaky tests and group failures by defect type.",
+    "theory": "Allure is an open-source reporting framework that turns raw test results into a polished, interactive HTML site. Unlike a flat JUnit XML, Allure produces a multi-tab dashboard: an Overview with pass-rate donut charts, a Suites view, a Graphs view (duration, severity, status distribution), a Timeline showing parallel execution, and a Behaviors view organized by business features rather than file paths.\n\nAllure works in two stages. During the test run, an adapter (allure-pytest, allure-junit5, the Playwright allure-playwright reporter) writes raw result files — one JSON per test plus attachment files — into an allure-results directory. Then a separate command, allure generate or allure serve, consumes that directory and renders the static HTML site. This separation matters: the run produces data, and report generation is a distinct, repeatable step you can run in CI or locally.\n\nThe biggest value of Allure is structured detail per test. You decorate steps with @allure.step('Open login page') so the report shows a readable, collapsible breakdown of what the test did, not just a stack trace. You attach artifacts with allure.attach — a screenshot on failure, the JSON body of an API response, the SQL query that ran — pinned to the exact step where they belong. You tag tests with severity (blocker, critical, normal, minor, trivial) and with epic/feature/story labels so a non-technical stakeholder can filter to 'all critical Checkout tests'.\n\nTwo features make Allure powerful at scale. History: if you copy the previous report's history folder into the new allure-results before generating, Allure shows a retries/trend graph per test, exposing flakiness across runs. Categories: a categories.json file lets you auto-bucket failures by message pattern — e.g. anything matching 'TimeoutError' becomes 'Infrastructure problem' instead of 'Product defect' — so triage is faster.\n\nAllure is framework- and language-agnostic (Java, Python, JS, C#, Ruby), which is why it is one of the most common reporting choices in industry. The trade-off is the extra build step and the need for the Allure CLI/Java runtime to render the site.",
+    "key_terms": "allure-results, allure-report, adapter/reporter, @allure.step, allure.attach, severity, epic/feature/story labels, history trend, categories.json",
+    "real_world_example": "Your team's release manager wants to know if the 'Checkout' feature is safe to ship but cannot read code. You tag your checkout tests with @allure.feature('Checkout') and severity 'blocker'. After the nightly run, you publish the Allure report; she opens the Behaviors tab, filters to Checkout, sees 1 blocker test failed with an attached screenshot of a broken 'Place Order' button and the failing API response body, and holds the release — without ever asking you to dig through logs.",
+    "step_by_step": "1. Install the adapter for your stack, e.g. pip install allure-pytest, and install the Allure CLI (brew install allure or download the release).\n2. Run tests pointing results at a directory: pytest --alluredir=allure-results.\n3. Decorate tests with labels and steps: @allure.feature, @allure.severity, and with allure.step('...').\n4. On failure, attach a screenshot: allure.attach(png_bytes, name='screenshot', attachment_type=allure.attachment_type.PNG).\n5. Render and view locally: allure serve allure-results (opens a temporary site) or allure generate allure-results -o allure-report --clean.\n6. For history, copy the previous allure-report/history into the new allure-results before generating.\n7. In CI, publish allure-report as an artifact or to a static host (GitHub Pages, S3).",
+    "common_mistakes": "Confusing allure-results (raw data) with allure-report (rendered site) and trying to open the JSON directly in a browser.\nForgetting to install the Allure CLI/Java, so the run produces results but no report renders.\nNot copying the history folder between runs, so the trend/flakiness graph is always empty.\nAttaching screenshots at the test level instead of inside the failing step, making them hard to locate.\nOver-tagging every test as 'blocker', which makes severity filtering meaningless.",
+    "practical_use_case": "Allure is the report you publish for cross-functional visibility: QA, devs, and release managers all open the same interactive site after each CI run to see what passed, drill into failures with screenshots, and check whether a failing test is newly broken or chronically flaky.",
+    "summary": "Allure converts raw per-test result files into a rich, navigable HTML dashboard with steps, attachments, severities, behaviors, and history. Remember the two-stage flow (adapter writes allure-results, the CLI renders allure-report) and use steps, attachments, and history to make failures self-explanatory.",
+    "example": "```python\nimport allure\nimport pytest\n\n@allure.epic(\"Web Shop\")\n@allure.feature(\"Checkout\")\n@allure.severity(allure.severity_level.BLOCKER)\ndef test_place_order(page):\n    with allure.step(\"Add item to cart\"):\n        page.goto(\"https://shop.test/product/42\")\n        page.click(\"#add-to-cart\")\n    with allure.step(\"Place order\"):\n        page.click(\"#place-order\")\n        if not page.is_visible(\"#order-confirmed\"):\n            allure.attach(\n                page.screenshot(),\n                name=\"checkout-failure\",\n                attachment_type=allure.attachment_type.PNG,\n            )\n        assert page.is_visible(\"#order-confirmed\"), \"Order confirmation not shown\"\n```\n\n```bash\npytest --alluredir=allure-results\nallure serve allure-results\n```",
+    "interactive": "Take a test you wrote earlier that has at least two logical phases (e.g. login then navigate). Add Allure decorators: one @allure.feature, one @allure.severity, and wrap each phase in an @allure.step / with allure.step block. Describe what the Behaviors tab and the step breakdown should now show.",
+    "expected_answer": "The test should be annotated with a feature label (e.g. @allure.feature('Authentication')) and a severity (e.g. critical). Each phase is wrapped in with allure.step('Log in') and with allure.step('Open dashboard'). The Behaviors tab will list the test under its feature, and clicking the test reveals a collapsible, ordered list of the two named steps with per-step status and timing; if a step fails, its attachments (screenshot) appear nested under that step.",
+    "homework": "Build an Allure report for a suite of at least 6 tests across two features, with at least one intentional failure that attaches a screenshot. Generate the report twice (two runs) carrying history forward so the trend graph is populated. Submit the command sequence and screenshots of the Overview tab, the Behaviors tab, and the failed test with its attached screenshot.",
+    "expected_result": "A submission showing: the adapter and CLI commands, at least two features visible in the Behaviors tab, a failing test with a screenshot attached at the correct step, and a non-empty history/trend graph proving history was carried between the two runs. Severity labels should be applied meaningfully (not everything as blocker).",
+    "quiz": [
+      {
+        "question": "What is the difference between allure-results and allure-report?",
+        "answers": [
+          "They are two names for the same HTML site",
+          "allure-results is raw per-test data written during the run; allure-report is the rendered HTML site generated from it",
+          "allure-report runs the tests and allure-results stores the code",
+          "allure-results is for Java and allure-report is for Python"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "How do you make Allure's trend/flakiness graph show data across runs?",
+        "answers": [
+          "Enable a checkbox in the HTML report",
+          "Run the tests at least 10 times in one command",
+          "Copy the previous report's history folder into allure-results before generating",
+          "Set severity to blocker on every test"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "What is the purpose of categories.json in Allure?",
+        "answers": [
+          "To list every test that should run",
+          "To auto-bucket failures by message pattern (e.g. timeouts as infrastructure vs. product defects)",
+          "To store login credentials for the report site",
+          "To define the color theme of the report"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Where should a failure screenshot be attached for the clearest report?",
+        "answers": [
+          "Inside the specific allure.step where the failure occurred",
+          "At the very top of the test file",
+          "In a separate folder unrelated to the test",
+          "It cannot be attached; Allure only shows text"
+        ],
+        "correct_index": 0
+      }
+    ]
+  },
+  {
+    "title": "Screenshots and videos",
+    "short_description": "Capturing screenshots, videos, and traces of UI test runs so failures can be diagnosed without re-running the test.",
+    "learning_goals": "Configure a UI framework (Playwright, Cypress, Selenium) to capture a screenshot automatically on test failure.\nEnable video recording and decide between always-on, on-failure, and retain-on-failure modes given storage cost.\nUse Playwright trace files to step through a failed run with DOM snapshots and network logs.\nAttach captured media to the test report and avoid leaking sensitive data in screenshots.",
+    "theory": "When a UI test fails in CI, you cannot see what the browser saw — the runner is a headless machine that is already gone. Screenshots, videos, and traces are how you reconstruct the moment of failure. A screenshot is a single PNG of the page at a point in time; a video is the whole run; a trace is a structured recording of every action, DOM snapshot, console message, and network request that you can scrub through afterward.\n\nThe most important capture is the on-failure screenshot. The pattern is: in a teardown/afterEach hook, check if the test failed, and if so, save a full-page screenshot named after the test. This single image answers most 'why did it fail?' questions instantly — you see the unexpected error banner, the missing button, or the wrong page. Playwright and Cypress can do this automatically with a config flag (screenshot: 'only-on-failure'); in raw Selenium you write the hook yourself with driver.save_screenshot().\n\nVideos add temporal context: they show that a modal flashed and disappeared, or that a click landed before the page finished loading. But video is expensive — full runs of a 200-test suite can be gigabytes. So you use modes: 'on' (always, useful for debugging a specific flaky test), 'off', or the pragmatic 'retain-on-failure', which records everything but deletes the video for tests that passed. This keeps storage low while preserving evidence for failures.\n\nPlaywright traces are the most powerful tool here. A trace captures, for each action, a before/after DOM snapshot, the locator used, the network calls, and the console output, all viewable in a time-travel UI (npx playwright show-trace trace.zip). Instead of guessing why a click failed, you see the exact DOM the moment before — for example that the button had display:none, or that an XHR returned HTTP 401 so the page never rendered. Like video, traces are usually configured as 'on-first-retry' to keep cost down.\n\nTwo practical concerns: storage and privacy. Always attach captured media to the report (Allure attachment, Playwright report) and upload as a CI artifact with a retention limit (e.g. 7 days). And be careful with sensitive data — a full-page screenshot of an authenticated session can leak real customer PII or tokens, so mask fields or use test data only.",
+    "key_terms": "on-failure screenshot, full-page screenshot, video recording mode (on/off/retain-on-failure), trace/trace viewer, DOM snapshot, teardown hook, artifact retention, PII masking",
+    "real_world_example": "A login test passes locally but fails only in CI. The screenshot alone shows a generic page, so you enable trace: 'on-first-retry'. Opening the trace viewer, you scrub to the failing click and see in the network panel that GET /api/profile returned HTTP 401 because the CI environment used an expired test token — the button was never disabled, the page simply never loaded the user. You fix the token, not the test.",
+    "step_by_step": "1. Turn on automatic screenshots on failure in your framework config (Playwright: use { screenshot: 'only-on-failure' }).\n2. Enable video with a cost-aware mode, e.g. video: 'retain-on-failure'.\n3. Enable traces for retries: trace: 'on-first-retry'.\n4. If your framework lacks auto-capture (raw Selenium), add an afterEach/teardown that checks test status and calls save_screenshot with a per-test filename.\n5. Attach captured files to your report (allure.attach or the framework's built-in reporter).\n6. In CI, upload the screenshots/videos/traces directory as an artifact with a retention period.\n7. Mask or avoid real PII before capturing on any authenticated screen.",
+    "common_mistakes": "Capturing screenshots only at the end of every test (huge volume) instead of only on failure.\nRecording video 'always on' for the whole suite and blowing up CI storage and run time.\nNaming all screenshots screenshot.png so each test overwrites the previous one.\nForgetting to upload the media as a CI artifact, so it only exists on the dead runner.\nLeaking real customer data or auth tokens in full-page screenshots of authenticated sessions.",
+    "practical_use_case": "Every UI automation project captures on-failure screenshots and on-retry traces so that when a test goes red in CI, the QA can open the artifact, see the broken screen, and triage product bug vs. flaky test vs. environment issue without reproducing it locally.",
+    "summary": "Screenshots, videos, and traces let you diagnose UI failures after the fact without re-running them. Default to on-failure screenshots, cost-aware video (retain-on-failure), and on-retry traces; always attach them to the report and upload as artifacts, while masking sensitive data.",
+    "example": "```javascript\n// playwright.config.ts\nimport { defineConfig } from '@playwright/test';\n\nexport default defineConfig({\n  retries: 1,\n  use: {\n    screenshot: 'only-on-failure',\n    video: 'retain-on-failure',\n    trace: 'on-first-retry',\n  },\n});\n```\n\n```python\n# Raw Selenium teardown: screenshot only when the test failed (pytest)\nimport pytest\n\n@pytest.fixture\ndef driver_with_shot(driver, request):\n    yield driver\n    if request.node.rep_call.failed:\n        name = f\"screenshots/{request.node.name}.png\"\n        driver.save_screenshot(name)\n```",
+    "interactive": "You have a Playwright suite of 300 tests running 4x a day in CI and storage is nearly full, but you still need to debug failures. Choose the screenshot, video, and trace settings you would put in the config and justify each in one sentence.",
+    "expected_answer": "screenshot: 'only-on-failure' — captures evidence only when needed, near-zero cost. video: 'retain-on-failure' — records all but keeps only failure videos, so passing runs add no storage. trace: 'on-first-retry' — full time-travel debugging only for tests that failed once and are being retried, which is exactly when you need deep diagnostics, while keeping volume tiny. Together these give full failure evidence while adding almost nothing for the passing majority of 300 tests x 4 runs.",
+    "homework": "Configure a UI test project to (a) screenshot on failure, (b) record video retain-on-failure, (c) trace on first retry. Write one test that intentionally fails. Run it, then open the trace viewer and identify the exact action that failed and the DOM/network state at that moment. Submit the config, the failing test, and a short note (3-4 sentences) of what the trace revealed.",
+    "expected_result": "A submission with the correct config flags, a deliberately failing test, the generated screenshot/video/trace files, and an accurate description from the trace viewer naming the failing action and the relevant DOM or network detail (e.g. element not visible, or an HTTP 4xx/5xx response). The note should show the learner actually used the trace, not just guessed.",
+    "quiz": [
+      {
+        "question": "Which capture mode best balances debugging value and storage cost for a large suite?",
+        "answers": [
+          "Video 'on' for every test, always",
+          "Screenshot at the start and end of every test",
+          "Screenshot only-on-failure, video retain-on-failure, trace on-first-retry",
+          "No captures at all to save space"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "What unique advantage does a Playwright trace have over a plain screenshot?",
+        "answers": [
+          "It is a smaller file than a screenshot",
+          "It records before/after DOM snapshots, network, and console for each action so you can time-travel through the run",
+          "It automatically fixes the failing test",
+          "It only works for passing tests"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Why must on-failure screenshots use a per-test filename?",
+        "answers": [
+          "To make the files larger",
+          "Otherwise each failing test overwrites the previous screenshot and you lose evidence",
+          "Because CI rejects PNG files",
+          "Filenames have no effect on screenshots"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "What privacy risk comes with full-page screenshots of authenticated sessions?",
+        "answers": [
+          "They can leak real customer PII or auth tokens into the report and artifacts",
+          "They make the test run slower",
+          "They prevent video recording",
+          "There is no privacy risk with screenshots"
+        ],
+        "correct_index": 0
+      }
+    ]
+  },
+  {
+    "title": "Debugging failed tests",
+    "short_description": "A systematic approach to diagnosing why an automated test failed, distinguishing real bugs from flaky tests and environment problems.",
+    "learning_goals": "Triage a failure into one of three buckets: real product bug, flaky/timing test, or environment/data problem.\nRead a stack trace and the failing assertion to find the exact line and expected-vs-actual values.\nReproduce a CI-only failure locally by matching the environment (headless mode, browser version, test data).\nUse retries, traces, and targeted logging to isolate flakiness instead of blindly re-running.",
+    "theory": "Debugging a failed test starts with a triage question, not a code change: is this a real bug, a flaky test, or an environment problem? Real bug means the product genuinely misbehaved — the assertion caught it correctly. Flaky means the test fails intermittently due to timing, ordering, or race conditions, while the product is fine. Environment/data means the test or product is fine but the runner had a stale database, an expired token, a different browser version, or a wrong base URL. Each bucket has a completely different fix, so guessing wrong wastes hours.\n\nThe first concrete step is always to read the actual failure, not the summary. Find the failing assertion and its expected-vs-actual values (assert status == 200 but got 403), then read the stack trace from the bottom up to find the line in your code (not the framework) where it broke. A 403 vs 200 points to auth/permissions; a TimeoutError waiting for a selector points to timing or a missing element; a connection-refused points to environment.\n\nFlakiness is the hardest and most common. Signs: the test passes on re-run, fails only in parallel, or fails only in CI. The usual causes are implicit waits that race (asserting before the element renders), shared state between tests (test order dependence), and time/locale assumptions. The professional fix is not 'add a sleep' — it is to wait on a deterministic condition (element visible, network idle, a specific text) and to make each test independent (fresh data, no reliance on another test having run first). Use retries (e.g. retries: 1) plus traces to detect and study flakiness, but never use retries to permanently paper over a genuinely broken assertion.\n\nFor CI-only failures, the strategy is to make your local environment match CI: run headless, pin the same browser/runner version, use the same base URL and seeded data, and run the test in isolation and in parallel. Reproducing locally is most of the battle; once it fails on your machine you can attach a debugger, add logging, or step through a trace.\n\nFinally, when you cannot reproduce, lean on the artifacts from the previous lessons — screenshots, video, trace, and the report's stack trace — and add targeted logging around the suspicious step rather than re-running the whole suite hoping it goes green. A disciplined loop (hypothesis, smallest reproduction, evidence, fix, verify the fix actually changes the outcome) beats trial-and-error every time.",
+    "key_terms": "triage (bug/flaky/environment), stack trace, expected vs actual, flaky test, race condition / implicit wait, test isolation / order dependence, reproduce locally, retries",
+    "real_world_example": "A test_dashboard_loads test is red in CI but green on your laptop. The stack trace shows TimeoutError waiting for selector '#chart'. You run it headless locally (matching CI) and it now fails too. The trace shows the chart's XHR returned HTTP 200 but 1.8s after the 1s wait expired — a race condition. You replace the fixed wait with await expect(page.locator('#chart')).toBeVisible({ timeout: 10000 }), and it passes reliably in both places. It was a flaky test, not a product bug.",
+    "step_by_step": "1. Read the failing assertion and note expected vs actual values; read the stack trace from the bottom up to your own code line.\n2. Triage: decide bug vs flaky vs environment based on the error type (403 = auth, timeout = timing/missing element, connection refused = environment).\n3. Open the artifacts: screenshot, video, and trace from the failing run.\n4. Try to reproduce locally, matching CI (headless, same browser version, same base URL, seeded data).\n5. If it reproduces, add a debugger/breakpoint or targeted log at the suspicious step.\n6. If it is timing, replace fixed sleeps with a wait on a deterministic condition; if it is shared state, isolate the test's data.\n7. Apply the fix, then run multiple times (and in parallel) to confirm the failure is actually gone, not just hidden by luck.",
+    "common_mistakes": "Re-running the suite until it goes green and calling it fixed, hiding a real flake or bug.\nAdding time.sleep(5) instead of waiting on a deterministic condition, which slows the suite and only sometimes works.\nAssuming every failure is a product bug and filing a ticket without checking environment/data.\nReading only the top of the stack trace (framework internals) instead of finding your own failing line.\nIgnoring test isolation, so a test only passes when another test runs first.",
+    "practical_use_case": "Every day a QA opens a red CI run and must quickly decide: do I file a product bug, fix a flaky test, or fix the environment? This triage-and-reproduce workflow is the core of keeping an automation suite trustworthy.",
+    "summary": "Effective debugging is disciplined triage plus reproduction: classify the failure as bug, flake, or environment; read the real assertion and stack trace; reproduce locally by matching CI; and fix flakiness with deterministic waits and test isolation rather than sleeps or blind re-runs. Always verify the fix changes the outcome reliably.",
+    "example": "```javascript\n// Flaky fix: replace a racy fixed wait with a deterministic condition\n\n// BEFORE (flaky): asserts before the chart may have rendered\nawait page.waitForTimeout(1000);\nexpect(await page.locator('#chart').isVisible()).toBe(true);\n\n// AFTER (stable): wait on the actual condition with a generous timeout\nawait expect(page.locator('#chart')).toBeVisible({ timeout: 10000 });\n\n// Reading a failure to triage it:\n// AssertionError: expected status 200, got 403   -> auth/permission bug or wrong token (env)\n// TimeoutError: locator('#chart') not visible      -> timing/flaky or missing element (bug)\n// Error: connect ECONNREFUSED 127.0.0.1:8080       -> environment: app not running\n```",
+    "interactive": "For each failure message, state the most likely bucket (product bug, flaky/timing, or environment) and your first action: (1) 'expected 201 got 500 on POST /orders', (2) 'TimeoutError waiting for #spinner to disappear, passes on re-run', (3) 'ECONNREFUSED to http://localhost:3000'.",
+    "expected_answer": "(1) Likely a product bug (server error 500 on a valid create); first action: capture the response body and reproduce the API call to confirm the backend is erroring, then file a bug. (2) Flaky/timing — it passes on re-run, so it is a race; first action: replace any fixed wait with a deterministic wait on the spinner being detached and run it several times to confirm. (3) Environment — the app under test is not running/reachable; first action: verify the service is up and the base URL/port are correct in the test config before touching the test logic.",
+    "homework": "Find or create one genuinely flaky test (e.g. one with a racy fixed wait) and one test that fails due to a product-style bug (a wrong assertion expectation that reflects a real mismatch). For each, write a short triage note: the bucket, the evidence you used (assertion, stack trace, trace), and the fix you applied. Show the before/after for the flaky one.",
+    "expected_result": "Two triage notes correctly classifying the failures. The flaky one should show a before (sleep or immediate assert) and an after (deterministic wait) plus evidence that it now passes reliably across several runs. The bug one should reference the actual expected-vs-actual mismatch and the correct conclusion (fix product or fix a wrong expectation), not a blind re-run.",
+    "quiz": [
+      {
+        "question": "A test fails with TimeoutError but passes when you re-run it. What is the most likely category?",
+        "answers": [
+          "A confirmed product bug to file immediately",
+          "A flaky/timing issue, likely a race condition",
+          "A compiler error",
+          "An environment outage"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "What is the recommended fix for a test that asserts before an element has rendered?",
+        "answers": [
+          "Add a fixed time.sleep(5) before the assertion",
+          "Re-run the suite until it passes",
+          "Wait on a deterministic condition such as the element being visible",
+          "Delete the assertion"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "A test fails only in CI, not locally. What is the best first step?",
+        "answers": [
+          "Disable the test permanently",
+          "Make your local run match CI (headless, same browser/version, same base URL and data) to reproduce it",
+          "Increase all timeouts to 10 minutes",
+          "Assume CI is broken and ignore it"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "An assertion fails with 'expected 200, got 403'. Which bucket does a 403 most strongly suggest first?",
+        "answers": [
+          "Authentication/permission or wrong token issue",
+          "A flaky timing race",
+          "A missing CSS selector",
+          "A disk space problem"
+        ],
+        "correct_index": 0
+      }
+    ]
+  },
+  {
+    "title": "CI/CD basics",
+    "short_description": "What continuous integration and continuous delivery/deployment mean and where automated tests fit into the pipeline.",
+    "learning_goals": "Define CI, CD (delivery), and CD (deployment) and explain how they differ.\nDescribe the typical pipeline stages: checkout, build, unit tests, integration/E2E tests, package, deploy.\nExplain why fast, reliable tests are a prerequisite for CI and how the test pyramid affects pipeline speed.\nIdentify what should block a merge (gate) versus what should only warn.",
+    "theory": "Continuous Integration (CI) is the practice of merging every developer's work into a shared branch frequently — often many times a day — and automatically building and testing it each time. The goal is to catch integration problems within minutes of a commit, not weeks later during a painful 'merge day'. CI's core promise is a fast, automated feedback loop: push code, and a server tells you within minutes whether it builds and the tests pass.\n\nContinuous Delivery (CD) extends CI: after tests pass, the system automatically packages the build into a deployable artifact and keeps it always ready to ship, but a human clicks the button to release to production. Continuous Deployment (also CD) goes one step further: if all automated checks pass, the change goes to production automatically with no human gate. The distinction matters in interviews and on the job: 'CD' is ambiguous, so you say 'delivery' (human approves release) or 'deployment' (fully automatic).\n\nA pipeline is an ordered sequence of stages, usually defined in a YAML file in the repo. A typical order is: checkout the code, install dependencies, build/compile, run fast unit tests, run slower integration and end-to-end tests, build a deployable artifact (a Docker image or package), and finally deploy to a staging or production environment. Each stage runs only if the previous one passed; the first failure stops the pipeline (fail fast) so you do not waste 20 minutes of E2E tests on code that does not even compile.\n\nThis is where the test pyramid drives pipeline design. Many fast unit tests run first (seconds), fewer integration tests next, and a small number of slow end-to-end tests last. Putting fast tests early gives the quickest possible feedback and saves runner minutes (which cost money). If your E2E suite is flaky or takes 40 minutes, CI becomes a bottleneck people learn to ignore — so reliability and speed of tests are prerequisites, not nice-to-haves.\n\nFinally, you decide gates: which checks block a merge versus merely warn. Compile errors, failing unit tests, and critical E2E tests should be required status checks that block the merge. A slow nightly performance suite or a known-flaky test might only warn or run on a schedule. Getting gates right keeps the main branch always releasable, which is the whole point of CI.",
+    "key_terms": "Continuous Integration, Continuous Delivery, Continuous Deployment, pipeline/stage, fail fast, build artifact, status check / gate, test pyramid",
+    "real_world_example": "A developer opens a pull request adding a discount feature. CI automatically runs: it builds in 30 seconds, runs 400 unit tests in 45 seconds (1 fails — a rounding bug in the discount math), and stops there without wasting time on the 12-minute E2E suite. The PR shows a red required check 'unit-tests', so it cannot be merged. The developer fixes the rounding bug, pushes again, all checks go green, and a reviewer merges — the main branch was never broken.",
+    "step_by_step": "1. Decide your pipeline goal: CI only, CI + delivery (manual release), or full deployment.\n2. List the stages in order: checkout, install, build, unit tests, integration tests, E2E tests, package, deploy.\n3. Order tests by the pyramid: fast unit first, slow E2E last, so failures surface quickly and fail fast.\n4. Define which checks are required status checks that block merging vs. which only warn.\n5. Write the pipeline as YAML in the repo and trigger it on push and pull_request.\n6. Make the test stages emit reports/artifacts (from earlier lessons) so failures are inspectable.\n7. Protect the main branch so it cannot be merged into unless the required checks pass.",
+    "common_mistakes": "Confusing Continuous Delivery (human approves release) with Continuous Deployment (fully automatic).\nRunning slow E2E tests before fast unit tests, so feedback takes 30 minutes instead of 1.\nNot making any check a required gate, so broken code reaches the main branch.\nLeaving flaky tests as blocking gates, training the team to click 'merge anyway' and ignore CI.\nNever publishing reports/artifacts, so a red pipeline gives no information to debug with.",
+    "practical_use_case": "On any modern team, every push and pull request triggers a CI pipeline that builds and tests the change; QA relies on it to ensure no regression reaches the main branch, and uses its reports to triage failures before release.",
+    "summary": "CI means integrating and testing every change automatically and fast; CD means delivery (human-approved release) or deployment (fully automatic). Pipelines run ordered stages that fail fast, with fast unit tests first and slow E2E last, and required gates that keep the main branch releasable.",
+    "example": "```yaml\n# A minimal CI pipeline (GitHub Actions syntax) showing ordered, fail-fast stages\nname: ci\non: [push, pull_request]\njobs:\n  build-and-test:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4            # checkout\n      - uses: actions/setup-node@v4\n        with: { node-version: '20' }\n      - run: npm ci                          # install\n      - run: npm run build                   # build\n      - run: npm run test:unit               # fast unit tests run first\n      - run: npm run test:e2e                # slow E2E only if unit passed\n```",
+    "interactive": "Order these pipeline steps for fastest feedback and explain why: run E2E tests, checkout code, run unit tests, install dependencies, build. Then state which two steps you would make required (blocking) status checks.",
+    "expected_answer": "Correct order: checkout code -> install dependencies -> build -> run unit tests -> run E2E tests. Reason: each step depends on the previous, and fast unit tests must run before slow E2E so the most common failures (compile, unit) surface in seconds and fail fast, saving runner minutes. Required blocking checks should be 'build' and 'run unit tests' (and ideally critical E2E); these guarantee the merged code compiles and core logic passes, keeping the main branch releasable. A slow or flaky full E2E suite is a candidate for warn-only or scheduled runs.",
+    "homework": "Write (on paper or in YAML) a CI pipeline for a small app with both unit and E2E tests. Order the stages correctly, mark which stages are required gates, and write 3-4 sentences explaining where CI ends and CD (delivery vs deployment) would begin for this project, and why you would choose one over the other.",
+    "expected_result": "A pipeline with correctly ordered fail-fast stages (checkout/install/build/unit/E2E/package), unit and build marked as required gates, and a clear, correct explanation distinguishing delivery (human approves) from deployment (automatic), with a justified choice for the given app (e.g. delivery for a product that needs a human release decision).",
+    "quiz": [
+      {
+        "question": "What is the difference between Continuous Delivery and Continuous Deployment?",
+        "answers": [
+          "They are identical terms",
+          "Delivery keeps a release-ready build that a human approves to ship; Deployment ships to production automatically",
+          "Delivery is for code and Deployment is for documentation",
+          "Deployment requires manual approval; Delivery is automatic"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Why are fast unit tests run before slow E2E tests in a pipeline?",
+        "answers": [
+          "Unit tests are less important so they go first",
+          "To fail fast and give the quickest feedback while saving runner minutes",
+          "E2E tests cannot run on CI",
+          "It makes no difference to feedback speed"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "What is the main purpose of a required status check (gate) on a pull request?",
+        "answers": [
+          "To slow down merging",
+          "To send email notifications",
+          "To prevent merging code that fails critical checks, keeping the main branch releasable",
+          "To format the code automatically"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "What problem does leaving a flaky test as a blocking gate cause?",
+        "answers": [
+          "It makes the pipeline faster",
+          "It trains the team to ignore CI and merge anyway, eroding trust in the gate",
+          "It automatically fixes the flakiness",
+          "Nothing; flaky tests are fine as gates"
+        ],
+        "correct_index": 1
+      }
+    ]
+  },
+  {
+    "title": "GitHub Actions",
+    "short_description": "Building CI workflows with GitHub Actions: workflows, jobs, steps, triggers, and running automated tests on every push and PR.",
+    "learning_goals": "Write a workflow YAML file in .github/workflows that triggers on push and pull_request.\nStructure a workflow into jobs and steps, using actions (uses) and shell commands (run).\nUse a matrix to run tests across multiple versions (e.g. Node 18, 20, 22) in parallel.\nCache dependencies, upload test reports as artifacts, and use secrets safely.",
+    "theory": "GitHub Actions is GitHub's built-in CI/CD system. You define automation in YAML files placed in the .github/workflows directory of your repo; GitHub detects them and runs them on its hosted runners (fresh virtual machines) whenever a trigger event occurs. There is no separate server to maintain — the config lives with the code.\n\nThe hierarchy is workflow -> jobs -> steps. A workflow is one YAML file with a name and an on: trigger (e.g. push, pull_request, schedule, or workflow_dispatch for manual runs). A workflow contains one or more jobs; by default jobs run in parallel on separate runners, but you can chain them with needs:. Each job runs on a specified runner (runs-on: ubuntu-latest) and contains an ordered list of steps. A step is either uses: a pre-built action from the marketplace (like actions/checkout@v4 to clone your repo, or actions/setup-node@v4 to install Node) or run: a shell command (run: npm test). Steps in a job share the same filesystem and run in order.\n\nThree features make Actions practical for QA. First, the matrix strategy runs the same job many times with different parameters in parallel — for example testing on Node 18, 20, and 22, or on three browsers — which catches version-specific failures cheaply. Second, caching (actions/cache or the built-in cache in setup-node) restores node_modules between runs so npm ci is fast. Third, artifacts: actions/upload-artifact uploads your JUnit XML, Allure results, screenshots, and traces from the runner so you can download and inspect them after the run, since the runner itself is destroyed when the job ends.\n\nSecurity is handled through secrets. You never hardcode tokens or passwords; you store them in the repo's Settings > Secrets, and reference them as ${{ secrets.MY_TOKEN }} inside run/env. GitHub masks secret values in logs. Variables that are not sensitive go in env: blocks or repository variables.\n\nA typical QA workflow: on every pull request, check out the code, set up the language runtime with caching, install dependencies, run the tests, and on completion (even on failure, using if: always()) upload the report and any screenshots/traces as artifacts. This gives reviewers a green/red check plus downloadable evidence directly on the PR.",
+    "key_terms": "workflow, job, step, uses vs run, trigger/event (push, pull_request, workflow_dispatch), matrix strategy, runner, artifact, secret, actions/cache",
+    "real_world_example": "Your team supports Node 18 and 20 in production. A contributor's PR passes on Node 20 but a matrix job reveals it fails on Node 18 because they used a syntax only available in Node 20. The PR shows two checks: 'test (18)' red and 'test (20)' green. Without the matrix this would have shipped and broken Node 18 customers; instead the contributor fixes the compatibility issue before merge, and the uploaded Allure artifact shows exactly which test failed.",
+    "step_by_step": "1. Create .github/workflows/ci.yml in your repo.\n2. Set the trigger: on: [push, pull_request].\n3. Define a job with runs-on: ubuntu-latest.\n4. Add steps: actions/checkout@v4, then actions/setup-node@v4 (with cache: 'npm'), then run: npm ci, then run: npm test.\n5. Add a matrix to test multiple runtime versions in parallel (strategy.matrix.node: [18, 20, 22]).\n6. Add an upload step with actions/upload-artifact and if: always() to publish reports/screenshots even on failure.\n7. Store any tokens in repo Secrets and reference them as ${{ secrets.NAME }}; never hardcode them.\n8. Open a PR and confirm the checks appear and block merge when red.",
+    "common_mistakes": "Forgetting actions/checkout, so the runner has no source code and every command fails.\nHardcoding tokens/passwords in the YAML instead of using ${{ secrets.* }}.\nNot using if: always() on the artifact upload step, so reports are never uploaded when tests fail (exactly when you need them).\nSkipping dependency caching, making every run install from scratch and burning runner minutes.\nPutting the workflow file outside .github/workflows so GitHub never runs it.",
+    "practical_use_case": "GitHub Actions is the CI most commonly used on GitHub-hosted projects; as a QA you write and maintain the workflow that runs the automation suite on every PR, publishes the report, and gates merges.",
+    "summary": "GitHub Actions runs YAML-defined workflows of jobs and steps on hosted runners triggered by repo events. Use checkout + setup + install + test steps, a matrix for cross-version coverage, caching for speed, if: always() artifact uploads for reports, and secrets for credentials.",
+    "example": "```yaml\n# .github/workflows/ci.yml\nname: ci\non: [push, pull_request]\njobs:\n  test:\n    runs-on: ubuntu-latest\n    strategy:\n      matrix:\n        node: [18, 20, 22]\n    steps:\n      - uses: actions/checkout@v4\n      - uses: actions/setup-node@v4\n        with:\n          node-version: ${{ matrix.node }}\n          cache: 'npm'\n      - run: npm ci\n      - run: npx playwright install --with-deps\n      - run: npm test\n        env:\n          API_TOKEN: ${{ secrets.API_TOKEN }}\n      - uses: actions/upload-artifact@v4\n        if: always()\n        with:\n          name: report-node-${{ matrix.node }}\n          path: playwright-report/\n```",
+    "interactive": "Look at this step list and find the two bugs: 1) `- run: npm ci`  2) `- uses: actions/setup-node@v4`  3) `- run: npm test` with `API_KEY: abcd1234` written inline. The workflow has no checkout step. Identify both problems and write the corrected ordering.",
+    "expected_answer": "Bug 1: there is no actions/checkout step, so the repo source is never on the runner and npm ci/npm test will fail; checkout must be the first step. Bug 2: the API key is hardcoded inline (API_KEY: abcd1234) instead of using a secret. Corrected order: (1) - uses: actions/checkout@v4, (2) - uses: actions/setup-node@v4, (3) - run: npm ci, (4) - run: npm test with env API_KEY: ${{ secrets.API_KEY }}. setup-node must also come before npm ci so the Node runtime exists.",
+    "homework": "Create a GitHub Actions workflow for a test project that: triggers on push and pull_request, uses a matrix of at least two runtime versions, caches dependencies, runs the suite, and uploads the test report as an artifact with if: always(). Use at least one secret. Open a PR and submit the workflow file plus a screenshot of the checks (including a red matrix cell if you can produce one).",
+    "expected_result": "A valid workflow file containing checkout, runtime setup with caching, a multi-version matrix, the test run referencing a secret via ${{ secrets.* }} (no hardcoded credentials), and an upload-artifact step guarded by if: always(). The PR screenshot should show per-matrix status checks, demonstrating the workflow actually ran on the PR.",
+    "quiz": [
+      {
+        "question": "What is the correct hierarchy in a GitHub Actions workflow?",
+        "answers": [
+          "step -> job -> workflow",
+          "workflow -> job -> step",
+          "runner -> workflow -> action",
+          "pipeline -> stage -> task"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Why must actions/checkout be one of the first steps?",
+        "answers": [
+          "It speeds up the runner boot time",
+          "It clones your repository onto the runner; without it there is no source code to build or test",
+          "It is required to upload artifacts",
+          "It installs Node.js"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Why add if: always() to the artifact upload step?",
+        "answers": [
+          "To run the upload twice",
+          "So reports and screenshots are uploaded even when tests fail, which is exactly when you need them",
+          "To make the job pass even if tests fail",
+          "It has no effect"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "How should an API token be provided to a workflow step?",
+        "answers": [
+          "Hardcoded directly in the YAML file",
+          "Printed to the logs first",
+          "Committed in a .env file in the repo",
+          "Stored as a repository secret and referenced via ${{ secrets.NAME }}"
+        ],
+        "correct_index": 3
+      }
+    ]
+  },
+  {
+    "title": "Docker basics",
+    "short_description": "Using Docker containers to run tests in a consistent, reproducible environment that behaves the same on every machine and in CI.",
+    "learning_goals": "Explain what a container is and how it differs from a virtual machine, and why it solves 'works on my machine'.\nRead and write a basic Dockerfile and build an image, then run it as a container.\nMount the project, pass environment variables, and run a test suite inside a container.\nUse a prebuilt image (e.g. the official Playwright image) and docker compose to run app + tests together.",
+    "theory": "Docker packages an application and everything it needs to run — the OS libraries, the language runtime, the browser binaries, the dependencies — into a single image. From that image you start containers: isolated, lightweight processes that behave identically wherever Docker runs. This directly kills the 'works on my machine' problem: if the test passes inside the container on your laptop, it passes inside the same container in CI, because it is literally the same environment.\n\nA container is not a virtual machine. A VM virtualizes hardware and runs a full guest OS (gigabytes, slow to boot). A container shares the host kernel and isolates only the process and filesystem, so it is much smaller (often tens to hundreds of MB) and starts in seconds. For testing this means you can spin up a clean, known browser/runtime environment per run without the overhead of a VM.\n\nYou define an image with a Dockerfile — a recipe of instructions. FROM picks a base image (e.g. FROM mcr.microsoft.com/playwright:v1.49.0-jammy, which already contains browsers and their OS dependencies). WORKDIR sets the working directory. COPY brings your files in. RUN executes build-time commands like npm ci. CMD defines the default command the container runs, such as npm test. You build it with docker build -t my-tests . and run it with docker run my-tests.\n\nTwo runtime mechanics matter for QA. Volumes/bind mounts (docker run -v $(pwd):/app) map a host directory into the container so test artifacts (reports, screenshots) written inside the container appear on your host afterward. Environment variables (docker run -e BASE_URL=https://staging.app) inject configuration at run time without rebuilding the image — the same image points at staging or production depending on the variable.\n\nFor end-to-end testing you often need more than one service: the app, a database, and the test runner. docker compose lets you declare all of them in one compose.yaml and start them together with docker compose up, on a shared network where they can reach each other by service name (e.g. the tests hit http://app:3000). Using the official Playwright/Selenium images saves you from manually installing browsers and their system libraries, which is the most error-prone part of UI testing in CI.",
+    "key_terms": "image, container, Dockerfile, FROM/RUN/COPY/CMD, base image, volume / bind mount, environment variable, docker compose, container vs VM",
+    "real_world_example": "Your Playwright tests pass on your Mac but fail in CI with 'browser not found' and missing system libraries. Instead of debugging the runner's OS packages, you switch the CI job to run inside the official mcr.microsoft.com/playwright image, which ships with Chromium, Firefox, WebKit and all their dependencies. The tests now run in the exact same containerized environment locally and in CI, and the 'works on my machine' gap disappears.",
+    "step_by_step": "1. Write a Dockerfile: pick a base (FROM node:20 or the Playwright image), set WORKDIR, COPY package files, RUN npm ci, COPY the rest, set CMD [\"npm\",\"test\"].\n2. Build the image: docker build -t my-tests .\n3. Run the tests in a container: docker run --rm my-tests\n4. Bind-mount to get artifacts out: docker run --rm -v $(pwd)/report:/app/report my-tests\n5. Pass configuration via env: docker run --rm -e BASE_URL=https://staging.app my-tests\n6. For multi-service E2E, write a compose.yaml with app, db, and tests services and run docker compose up --abort-on-container-exit.\n7. In CI, run the job inside the same image (container: in GitHub Actions) so local and CI environments match.",
+    "common_mistakes": "Confusing an image (the built template) with a container (a running instance of it).\nForgetting a bind mount, so reports/screenshots are written inside the container and vanish when it stops.\nInstalling browsers manually on a plain base image instead of using the official Playwright/Selenium image, leading to missing system libraries.\nCopying the whole project before npm ci, defeating Docker layer caching and making every build slow.\nHardcoding the environment (staging URL) into the image instead of passing it as an environment variable at run time.",
+    "practical_use_case": "QA teams run their automation suite inside Docker so every developer, every CI run, and every machine uses an identical browser/runtime environment, eliminating environment-specific flakiness and making CI setup a one-line 'use this image'.",
+    "summary": "Docker packages tests and their entire environment into an image you run as identical, disposable containers anywhere, killing 'works on my machine'. Use a Dockerfile (FROM/WORKDIR/COPY/RUN/CMD), bind mounts for artifacts, environment variables for config, official images for browsers, and compose to run app plus tests together.",
+    "example": "```dockerfile\n# Dockerfile for a Playwright test suite\nFROM mcr.microsoft.com/playwright:v1.49.0-jammy\nWORKDIR /app\nCOPY package*.json ./\nRUN npm ci                 # cached layer: only re-runs if deps change\nCOPY . .\nCMD [\"npm\", \"test\"]\n```\n\n```bash\n# Build once, then run anywhere\ndocker build -t my-tests .\n# Run, pass the target env, and mount the report directory out to the host\ndocker run --rm \\\n  -e BASE_URL=https://staging.app \\\n  -v \"$(pwd)/playwright-report:/app/playwright-report\" \\\n  my-tests\n```",
+    "interactive": "Explain in your own words why this command lets you get the HTML report onto your laptop after the container exits: docker run --rm -v $(pwd)/report:/app/report my-tests. Then explain what would happen to the report if you omitted the -v flag.",
+    "expected_answer": "The -v $(pwd)/report:/app/report flag bind-mounts the host folder ./report onto /app/report inside the container, so anything the tests write to /app/report (the HTML report) is actually written to your laptop's ./report directory and persists after the container stops. Without -v, the report is written only to the container's own ephemeral filesystem; when the container exits (and --rm removes it), that filesystem is destroyed and the report is gone, even though the tests ran successfully.",
+    "homework": "Containerize a small test suite: write a Dockerfile (use the Playwright image or a Node base), build the image, and run the suite in a container with the report bind-mounted to your host and the base URL passed as an environment variable. Submit the Dockerfile, the exact docker build and docker run commands, and proof (the report file or a screenshot) that the artifact reached your host.",
+    "expected_result": "A working Dockerfile with sensible layer ordering (copy package files and npm ci before copying the rest), correct build/run commands, a bind mount that brings the report onto the host, and an env-var-driven base URL. The proof should show the report existing on the host filesystem after the container exited, demonstrating the volume worked.",
+    "quiz": [
+      {
+        "question": "What is the key difference between a container and a virtual machine?",
+        "answers": [
+          "A container runs a full guest OS; a VM shares the host kernel",
+          "A container shares the host kernel and isolates the process, so it is smaller and starts in seconds; a VM virtualizes hardware with a full guest OS",
+          "There is no difference",
+          "Containers can only run on Windows"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "What is the difference between a Docker image and a container?",
+        "answers": [
+          "An image is a running instance; a container is the template",
+          "They are the same thing",
+          "An image is the built template; a container is a running instance of that image",
+          "An image can only be used once"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "Why use the official Playwright Docker image instead of a plain node image?",
+        "answers": [
+          "It is smaller than every other image",
+          "It already includes the browsers and their system libraries, avoiding 'browser not found' errors",
+          "It runs tests automatically without any config",
+          "It disables flaky tests"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Your test report is written inside the container but missing on your host after the run. What did you most likely forget?",
+        "answers": [
+          "A bind mount/volume (-v) to map the report directory to the host",
+          "The FROM instruction",
+          "To install Node",
+          "The --rm flag"
+        ],
+        "correct_index": 0
+      }
+    ]
+  },
+  {
+    "title": "Environment variables",
+    "short_description": "Using environment variables to configure tests (URLs, credentials, secrets) without hardcoding them, across local, CI, and Docker.",
+    "learning_goals": "Explain why configuration and secrets must live in environment variables, not in code.\nRead environment variables in your test code (process.env / os.environ) with safe defaults.\nManage variables across contexts: a local .env file, CI secrets, and docker run -e.\nKeep secrets out of version control and logs, and separate sensitive from non-sensitive config.",
+    "theory": "An environment variable is a key-value pair provided to a process by its environment rather than written in its source code. Tests use them for everything that changes between runs or must stay secret: the base URL of the system under test, API tokens, database connection strings, the target browser, and feature flags. The rule of thumb is the Twelve-Factor App principle: strict separation of config from code, so the exact same test code runs against local, staging, and production simply by changing variables.\n\nThe reason this matters is twofold. First, portability: if BASE_URL is hardcoded as http://localhost:3000, your tests only work on your machine; reading it from an env var lets the same suite point at https://staging.app in CI without code changes. Second, security: secrets like API keys or passwords must never be committed to the repo, because git history is forever and public repos leak them instantly. Environment variables let the value live outside the code — in your shell, a CI secret store, or a Docker flag.\n\nIn code you read them through the language's environment API: process.env.BASE_URL in Node, os.environ.get('BASE_URL') in Python. Always provide a safe default or fail loudly for required values — process.env.BASE_URL || 'http://localhost:3000' for an optional one, but for a required secret you should throw a clear error if it is missing rather than sending a request with 'undefined' in the header.\n\nManaging variables differs by context. Locally, developers use a .env file (loaded by dotenv or the framework) holding non-production values; this file is listed in .gitignore so it is never committed, and a committed .env.example documents the required keys without their values. In CI, sensitive values go in the platform's secret store (GitHub Secrets) and are injected as env vars at run time. In Docker, you pass them with docker run -e KEY=value or an --env-file. The same variable name flows through all three layers; only the source changes.\n\nFinally, treat sensitive and non-sensitive config differently. A base URL or a timeout is not secret and can sit in .env.example or repo variables. A token or password is secret: it goes in a secret store, is masked in logs, and is never printed. A common, dangerous mistake is logging the whole environment or echoing a token for debugging — CI logs are often visible to many people.",
+    "key_terms": "environment variable, config vs code separation (Twelve-Factor), .env file, .gitignore, secret store / CI secret, process.env / os.environ, default value, masking secrets",
+    "real_world_example": "Your team needs the same Cypress suite to run against three environments. Instead of three copies of the code, you read CYPRESS_BASE_URL from the environment: locally your .env sets it to http://localhost:3000, the staging CI job sets it from a repository variable to https://staging.shop.com, and the production smoke-test job sets it to https://shop.com. The API token comes from GitHub Secrets in CI and from your gitignored local .env on your laptop. One codebase, three targets, no secrets in git.",
+    "step_by_step": "1. Identify everything that changes between environments or is secret: base URL, tokens, DB strings, browser, feature flags.\n2. Replace each hardcoded value with a read from the environment (process.env.X / os.environ.get('X')).\n3. For required secrets, throw a clear error if the variable is missing; for optional config, supply a safe default.\n4. Create a local .env with dev values and add .env to .gitignore.\n5. Commit a .env.example listing every key with placeholder/empty values to document the contract.\n6. In CI, add sensitive values to the secret store and non-sensitive ones to variables; inject them as env vars.\n7. In Docker, pass them via -e KEY=value or --env-file; never bake secrets into the image.\n8. Audit logs and code to ensure no secret is printed.",
+    "common_mistakes": "Hardcoding base URLs or tokens directly in the test code so it only works in one environment.\nCommitting the .env file (with real secrets) to git instead of gitignoring it.\nPrinting or logging secrets (echo $TOKEN or logging process.env) into CI logs visible to many people.\nNot failing loudly when a required variable is missing, so requests go out with 'undefined' and fail confusingly.\nReusing production secrets in local/CI test runs instead of dedicated test credentials.",
+    "practical_use_case": "Every automation project uses environment variables so the same suite runs against local, staging, and production by swapping variables, and so credentials live in secret stores rather than the codebase — a daily part of writing and running tests safely.",
+    "summary": "Environment variables separate configuration and secrets from code, letting one test suite target any environment by changing values and keeping credentials out of git. Read them via process.env/os.environ with safe defaults, manage them through .env (gitignored) locally, secret stores in CI, and -e flags in Docker, and never log secrets.",
+    "example": "```javascript\n// config.js  — read config from the environment, with a default and a required-check\nconst BASE_URL = process.env.BASE_URL || 'http://localhost:3000';\n\nconst API_TOKEN = process.env.API_TOKEN;\nif (!API_TOKEN) {\n  throw new Error('API_TOKEN is required but was not set in the environment');\n}\n\nmodule.exports = { BASE_URL, API_TOKEN };\n```\n\n```bash\n# .gitignore must contain:\n.env\n\n# .env (local only, never committed)\nBASE_URL=http://localhost:3000\nAPI_TOKEN=local-dev-token-123\n\n# Same suite against staging via Docker:\ndocker run --rm -e BASE_URL=https://staging.app -e API_TOKEN=$STAGING_TOKEN my-tests\n```",
+    "interactive": "Refactor this hardcoded test config so it reads from the environment with a default for the URL and a required-check for the token: `const url = 'http://localhost:3000'; const token = 'sk_live_abcd1234';`. Then list the one file you must add to .gitignore.",
+    "expected_answer": "Refactored: const url = process.env.BASE_URL || 'http://localhost:3000'; const token = process.env.API_TOKEN; if (!token) throw new Error('API_TOKEN is required'); The URL has a safe default; the token is required and the code fails loudly if it is missing, and the real secret 'sk_live_abcd1234' is removed from the code entirely. The file to add to .gitignore is .env (the local file that will hold the real values). A .env.example with empty placeholders should be committed instead.",
+    "homework": "Take a test project with at least one hardcoded URL and one hardcoded credential. Move both to environment variables (default for the URL, required-check for the secret), create a gitignored .env and a committed .env.example, and run the suite once against a local target and once against a different target by only changing the variable. Submit the diff, the .env.example, and the two commands used.",
+    "expected_result": "A diff that removes hardcoded values in favor of process.env/os.environ reads with a default and a required-check, a .gitignore entry for .env, a committed .env.example documenting all keys (no real secrets), and evidence that the same code ran against two different targets purely by changing the variable. No secret should appear in the committed files or logs.",
+    "quiz": [
+      {
+        "question": "Why should the base URL of the system under test be an environment variable?",
+        "answers": [
+          "To make the test code longer",
+          "So the same test code can run against local, staging, and production by changing only the variable",
+          "Because URLs cannot be stored as strings",
+          "It makes tests run faster"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "What is the correct way to handle the local .env file in git?",
+        "answers": [
+          "Commit it with real secrets so teammates can use them",
+          "Add it to .gitignore and commit a .env.example with placeholder values instead",
+          "Email it to the team",
+          "Store it inside the Docker image"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "What should your code do when a required secret env var is missing?",
+        "answers": [
+          "Silently use the string 'undefined'",
+          "Skip all tests without warning",
+          "Throw a clear error so the failure is obvious rather than confusing",
+          "Generate a random token"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "Which practice is dangerous when handling secrets in CI?",
+        "answers": [
+          "Storing them in the platform's secret store",
+          "Injecting them as environment variables at run time",
+          "Printing or echoing the secret value into the build logs",
+          "Using dedicated test credentials instead of production ones"
+        ],
+        "correct_index": 2
+      }
+    ]
+  },
+  {
+    "title": "Test configuration",
+    "short_description": "Centralizing test settings (timeouts, base URL, retries, browsers, environments) in config files so behavior is consistent and tunable.",
+    "learning_goals": "Use a framework config file (playwright.config.ts, cypress.config.js, pytest.ini/conftest.py) to set global defaults.\nConfigure timeouts, retries, base URL, reporters, and parallelism in one place rather than per test.\nDefine multiple projects/profiles (browsers or environments) and select them at run time.\nLayer configuration so environment variables override file defaults for CI.",
+    "theory": "Test configuration is the single source of truth for how your suite behaves: where it points, how long it waits, how many times it retries, which browsers it runs, how it reports, and how many tests run in parallel. Centralizing these settings in a config file (instead of repeating them in every test) means you change a timeout or a base URL once and the whole suite obeys, and a new teammate can read one file to understand the suite's behavior.\n\nThe key settings every QA tunes are: baseURL (so tests use relative paths like page.goto('/login')), timeouts (the global test timeout and per-action/assertion timeouts that prevent hangs), retries (re-run a failed test N times to absorb known flakiness in CI while keeping it 0 locally so flakes are visible), the reporter list (JUnit for CI plus HTML/Allure for humans, from earlier lessons), and workers/parallelism (how many tests run at once). Setting these globally keeps behavior consistent and removes copy-pasted magic numbers from individual tests.\n\nMost frameworks support multiple projects or profiles in one config. In Playwright a projects array defines, say, a chromium, firefox, and webkit project, each with its own settings, and you run all or one with --project=chromium. The same mechanism handles environments: you can define a 'staging' project and a 'production smoke' project that differ only in baseURL and which tests they include (via grep/tags). This lets one config serve cross-browser and cross-environment needs.\n\nConfiguration should be layered, not duplicated. The base case is sensible file defaults. The next layer is environment variables that override them for CI — for example baseURL: process.env.BASE_URL || 'http://localhost:3000', and retries: process.env.CI ? 2 : 0 so retries are on in CI and off locally. This pattern ties directly to the previous lesson: the file defines structure and defaults, env vars inject the per-context values. The result is one config that works on a laptop and in CI without edits.\n\nA good configuration discipline also keeps tests free of incidental settings. A test should express intent ('log in, then assert the dashboard loads'), not housekeeping (timeouts, retries, base URL). When those leak into tests, the suite becomes inconsistent and hard to tune; when they live in config, the suite is predictable and a single change ripples everywhere correctly.",
+    "key_terms": "config file, baseURL, timeout, retries, reporter, workers/parallelism, project/profile, environment override, conftest.py / pytest.ini",
+    "real_world_example": "Your CI suite is flaky on slow runners: tests fail because the default 5-second timeout is too short under load. Instead of editing dozens of tests, you change one line in playwright.config.ts to set actionTimeout to 15000 and retries to process.env.CI ? 2 : 0. Locally retries stay 0 so you still see real flakes, but in CI each test gets two retries and a longer timeout, and the whole suite stabilizes from a single, reviewable change.",
+    "step_by_step": "1. Create or open your framework's config file (playwright.config.ts, cypress.config.js, or pytest.ini/conftest.py).\n2. Set baseURL so tests can use relative paths.\n3. Set global and per-action/assertion timeouts to prevent hangs.\n4. Set retries conditionally: 0 locally, 2 in CI (retries: process.env.CI ? 2 : 0).\n5. Configure the reporter list: JUnit for CI plus HTML/Allure for humans.\n6. Set workers/parallelism appropriate to the environment.\n7. Define multiple projects for browsers and/or environments and select with --project.\n8. Override the per-context values (baseURL, retries) from environment variables so one config serves local and CI.",
+    "common_mistakes": "Hardcoding timeouts, retries, and base URLs inside individual tests, making the suite inconsistent and impossible to tune centrally.\nUsing the same retries value everywhere, e.g. retries on locally, which hides real flakes from the author.\nSetting absolute URLs in every test instead of a baseURL plus relative paths.\nDuplicating whole config files per environment instead of layering env-var overrides over one config.\nForgetting to register the CI reporter (JUnit), so CI shows no parsed results.",
+    "practical_use_case": "Every automation project keeps a central config that QA tunes whenever the suite needs different behavior per environment (timeouts, retries, base URL, browsers), so changes are made once, reviewed in one place, and applied consistently across local and CI runs.",
+    "summary": "Test configuration centralizes baseURL, timeouts, retries, reporters, parallelism, and browser/environment profiles so the suite behaves consistently and is tuned in one place. Layer it so file defaults provide structure and environment variables override per-context values, keeping retries off locally and on in CI, and keep these settings out of individual tests.",
+    "example": "```typescript\n// playwright.config.ts — one config, layered with env overrides and multiple projects\nimport { defineConfig, devices } from '@playwright/test';\n\nexport default defineConfig({\n  use: {\n    baseURL: process.env.BASE_URL || 'http://localhost:3000',\n    actionTimeout: 15000,\n  },\n  timeout: 30000,                          // per-test timeout\n  retries: process.env.CI ? 2 : 0,         // retries in CI only\n  workers: process.env.CI ? 4 : undefined, // parallelism\n  reporter: [['junit', { outputFile: 'results.xml' }], ['html']],\n  projects: [\n    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },\n    { name: 'firefox',  use: { ...devices['Desktop Firefox'] } },\n    { name: 'webkit',   use: { ...devices['Desktop Safari'] } },\n  ],\n});\n```",
+    "interactive": "Your suite fails intermittently in CI but you must still see real flakes locally. Write the single config line for retries that achieves this, and explain in one sentence why a constant value (e.g. retries: 2 everywhere) would be wrong.",
+    "expected_answer": "Config line: retries: process.env.CI ? 2 : 0. This gives 2 retries in CI (to absorb known infrastructure flakiness so the pipeline is stable) but 0 retries locally (so when a test flakes on the author's machine it fails visibly and gets fixed). A constant retries: 2 everywhere would be wrong because it would silently hide genuine flakiness and even real bugs during local development, since a test that fails once but passes on retry would still report green and the author would never notice the problem.",
+    "homework": "Refactor a test project so that baseURL, timeouts, retries, reporters, and parallelism all live in the config file, with baseURL and retries overridden by environment variables (retries off locally, on in CI). Add at least two browser projects. Run the suite once locally and once simulating CI (CI=true) and submit the config plus the two run commands and their differing behavior (e.g. retries triggered only with CI=true).",
+    "expected_result": "A single config file holding all global settings, with baseURL: process.env.BASE_URL || default and retries: process.env.CI ? n : 0, at least two browser projects, and registered JUnit + HTML reporters. Evidence should show identical code running with different behavior between the local run (0 retries) and the CI-simulated run (retries active), proving the layering works without editing tests.",
+    "quiz": [
+      {
+        "question": "Why set baseURL in the config instead of full URLs in each test?",
+        "answers": [
+          "It makes tests run faster",
+          "So tests use relative paths and the whole suite can be pointed at a new environment from one place",
+          "Full URLs are not allowed in tests",
+          "It disables retries"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "What is the recommended retries setting for stability without hiding flakes?",
+        "answers": [
+          "retries: 5 everywhere",
+          "retries: 0 everywhere",
+          "retries: process.env.CI ? 2 : 0 — on in CI, off locally",
+          "retries: process.env.CI ? 0 : 2 — off in CI, on locally"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "What do Playwright 'projects' let you do?",
+        "answers": [
+          "Store secrets securely",
+          "Define multiple profiles (e.g. browsers or environments) in one config and select them at run time",
+          "Replace the need for a config file",
+          "Automatically write the tests for you"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Why is layering file defaults with environment-variable overrides better than duplicating a config per environment?",
+        "answers": [
+          "It uses more files, which is clearer",
+          "One config stays the single source of truth while env vars inject per-context values, avoiding drift between duplicated copies",
+          "Environment variables cannot be used in config files",
+          "Duplicating configs is required by all frameworks"
+        ],
+        "correct_index": 1
+      }
+    ]
+  },
+  {
+    "title": "Parallel test execution",
+    "short_description": "Running tests concurrently across workers and machines to cut suite time, and writing tests that stay correct under parallelism.",
+    "learning_goals": "Explain how parallelism (workers/shards) reduces wall-clock time and the trade-offs involved.\nConfigure parallel workers in a framework and sharding across multiple CI machines.\nWrite isolated, independent tests that do not share state, order, or fixed data so they pass in parallel.\nDiagnose and fix failures that appear only under parallel execution (data collisions, port clashes, shared sessions).",
+    "theory": "Parallel test execution runs many tests at the same time instead of one after another, cutting wall-clock time dramatically: a 400-test suite that takes 40 minutes serially can finish in 5 minutes across 8 workers. There are two levels. Local/in-process parallelism uses multiple workers (processes or threads) on one machine — Playwright's workers, pytest-xdist's -n, Cypress parallelization. Sharding splits the suite across multiple machines in CI — each shard runs a slice (e.g. shard 1/4) and the results are merged. You combine both: 4 machines x 4 workers = 16 tests running at once.\n\nThe trade-offs are real. More workers means more CPU/RAM and, for UI tests, more browser instances — past a point you saturate the machine and tests get slower or flakier, so you tune workers to the runner's cores (often workers = cpu_cores or a bit less). Sharding adds coordination overhead and requires merging reports from each shard. And crucially, parallelism only works if tests are independent; otherwise you trade time for flakiness.\n\nTest independence is the heart of this topic. Under parallelism, tests run in unpredictable order and at the same time, so any shared mutable state causes intermittent failures. The classic bugs: two tests creating a user with the same hardcoded email collide on a unique constraint; tests sharing one logged-in session step on each other's cart; a test that assumes a previous test seeded data fails when that test runs on a different worker; two tests binding the same fixed port clash. These pass serially and fail randomly in parallel, which is why parallel-only failures are a common and confusing class of flakiness.\n\nThe fixes are disciplined isolation. Generate unique data per test (user_${uuid}@test.com, a random run-scoped namespace) so no two tests collide. Give each test its own fresh fixtures and, for UI, its own browser context/session rather than a shared login. Never rely on execution order — each test sets up everything it needs and tears it down. Avoid fixed shared resources (ports, files, a single shared record); use per-worker or randomized resources. Many frameworks expose a worker index you can use to partition data (e.g. a database schema per worker).\n\nIn practice you cap parallelism in config (workers: process.env.CI ? 4 : undefined), shard in CI with a matrix, and merge the per-shard reports into one. The payoff is a suite that gives feedback in minutes instead of an hour — but only if every test owns its own state.",
+    "key_terms": "worker, shard/sharding, wall-clock time, test isolation/independence, race condition, unique test data, worker index, report merging, resource contention",
+    "real_world_example": "Your team enables 6 parallel workers to speed up CI, and suddenly test_register fails about 1 run in 3 with 'email already exists'. Serially it always passed. The cause: every run of the test used the hardcoded email new@test.com, and in parallel two workers tried to create it at once, hitting the unique constraint. You change it to generate user_${crypto.randomUUID()}@test.com per test; the collision disappears and the suite now runs in 6 minutes instead of 30.",
+    "step_by_step": "1. Measure your serial suite time to know your baseline and target.\n2. Enable in-process workers in config (Playwright workers, pytest -n auto), set to roughly the runner's CPU cores.\n3. Run the suite in parallel locally and watch for new, intermittent failures.\n4. Make each failing test independent: unique data per test, fresh fixtures, its own session/context, no order dependence.\n5. Replace fixed shared resources (ports, emails, single records) with randomized or per-worker ones.\n6. In CI, add sharding via a matrix (e.g. shard 1/4 ... 4/4) to spread across machines.\n7. Merge the per-shard reports into a single report for review.\n8. Tune worker count until you get the best time without saturation or new flakiness.",
+    "common_mistakes": "Using hardcoded shared test data (same email/username) so parallel tests collide on unique constraints.\nSharing one logged-in session or browser context across tests, so they interfere with each other's state.\nRelying on test execution order or on another test having seeded data, which breaks once tests run on different workers.\nCranking workers far beyond CPU cores, saturating the machine and making tests slower and flakier.\nSharding in CI but forgetting to merge the per-shard reports, so you only see one fragment of the results.",
+    "practical_use_case": "QA teams run large suites in parallel and sharded across CI machines so the full regression gives feedback in minutes rather than an hour, which requires every test to be written independently — a constant design constraint when authoring automation.",
+    "summary": "Parallelism (workers on a machine plus sharding across machines) slashes suite time, but only works when tests are fully independent — unique data, fresh fixtures, own sessions, no order dependence, no fixed shared resources. Tune workers to the cores, shard in CI and merge reports, and treat parallel-only failures as a signal of hidden shared state.",
+    "example": "```javascript\n// 1) Config: parallel workers locally, capped in CI\n// playwright.config.ts\nexport default defineConfig({\n  fullyParallel: true,\n  workers: process.env.CI ? 4 : undefined,\n});\n```\n\n```javascript\n// 2) Make a test independent: generate unique data per test\nimport { test, expect } from '@playwright/test';\n\ntest('registers a new user', async ({ page }) => {\n  const email = `user_${crypto.randomUUID()}@test.com`; // never collides in parallel\n  await page.goto('/register');\n  await page.fill('#email', email);\n  await page.fill('#password', 'P@ssw0rd!');\n  await page.click('#submit');\n  await expect(page.locator('#welcome')).toBeVisible();\n});\n```\n\n```yaml\n# 3) CI sharding across 4 machines, then merge reports\nstrategy:\n  matrix:\n    shard: [1, 2, 3, 4]\nsteps:\n  - run: npx playwright test --shard=${{ matrix.shard }}/4\n```",
+    "interactive": "A test passes alone and serially but fails about 1 in 4 runs once you enable 4 workers, with the error 'duplicate key value violates unique constraint'. Diagnose the root cause and write the one-line fix.",
+    "expected_answer": "Root cause: the test uses hardcoded, shared test data (e.g. a fixed email or username) for a field with a unique constraint. Under parallelism, two workers run the test at overlapping times and both try to insert the same value, so one hits the duplicate-key error — a race condition caused by non-isolated data, which is why it only appears in parallel. One-line fix: generate unique per-test data, e.g. const email = `user_${crypto.randomUUID()}@test.com`; (or append a timestamp/UUID/worker index) so no two parallel runs ever use the same value.",
+    "homework": "Take a suite of at least 10 tests, measure its serial run time, then enable parallel workers and fix any parallel-only failures by making tests independent (unique data, fresh fixtures, no shared session/order). Then shard it across at least 2 CI jobs and merge the reports. Submit: the before/after wall-clock times, the specific isolation fixes you made, and proof the merged report covers all shards.",
+    "expected_result": "Evidence of a meaningful wall-clock reduction from parallelism, at least one concrete isolation fix (e.g. replacing hardcoded data with unique data, or giving each test its own session) with a short explanation of the parallel-only failure it resolved, a working CI shard configuration, and a single merged report covering all shards rather than a fragment. Worker count should be reasonable relative to available cores.",
+    "quiz": [
+      {
+        "question": "What is the difference between workers and sharding?",
+        "answers": [
+          "They are the same thing",
+          "Workers run tests in parallel on one machine; sharding splits the suite across multiple machines",
+          "Workers split across machines; sharding runs on one machine",
+          "Sharding is only for unit tests"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "A test passes serially but fails intermittently only under parallelism. What is the most likely cause?",
+        "answers": [
+          "The test framework is broken",
+          "Shared mutable state (e.g. hardcoded data, a shared session, or order dependence) colliding between parallel tests",
+          "The machine has too many CPU cores",
+          "Parallelism is not supported by the language"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Why is generating unique data per test important under parallel execution?",
+        "answers": [
+          "It makes the report look nicer",
+          "It prevents collisions on unique constraints when multiple workers run the same test at once",
+          "It is only needed for serial runs",
+          "It reduces the number of workers needed"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "What happens if you set far more workers than the runner has CPU cores?",
+        "answers": [
+          "Tests always run faster, with no downside",
+          "The machine saturates, often making tests slower and flakier",
+          "The framework refuses to start",
+          "Sharding is automatically enabled"
+        ],
+        "correct_index": 1
+      }
+    ]
+  },
+  {
+    "title": "Final Automation QA project",
+    "short_description": "A capstone project where you build a complete, CI-integrated automation framework for a real-style web app and deliver it like a job-ready engineer.",
+    "learning_goals": "Design and implement a maintainable test framework (Page Object Model, fixtures, config) for both UI and API layers.\nIntegrate the suite into CI (GitHub Actions) with reporting, artifacts, environment variables, and merge gates.\nApply scaling practices: Dockerized runs, parallel/sharded execution, and environment-driven configuration.\nDeliver a documented, reviewable project (README, test plan, traceability) that demonstrates job-ready quality.",
+    "theory": "This capstone ties together every topic in the module into one deliverable: a working automation framework for a real-style web application (for example an e-commerce demo like saucedemo.com or a to-do/CRUD app), wired into CI, reporting, and run at scale. The goal is not a pile of test scripts but an engineered project a hiring manager or team lead would accept — structured, documented, reliable, and reproducible.\n\nScope. Pick an app with login, a list/catalog, and a multi-step flow (e.g. add to cart and checkout, or create/edit/delete a record). Cover it at two layers: UI tests for the critical user journeys (login, the happy-path flow, and at least one negative case like invalid login), and API tests for the backend endpoints behind those flows (auth returning HTTP 200 with a token, creating a resource returning 201, fetching a missing resource returning 404). Aim for roughly 15-25 meaningful tests — enough to demonstrate structure and parallelism, not so many that they are padding.\n\nArchitecture. Apply the patterns from the course: a Page Object Model so locators and page actions live in page classes, reusable fixtures/setup for authentication and test data, and a central config (baseURL, timeouts, retries, reporters, projects) overridden by environment variables. Tests must be independent so they run in parallel: unique data per test, fresh sessions, no order dependence. Secrets (any API token, test credentials) come from environment variables and a gitignored .env / CI secret store, never from code.\n\nCI and scaling. The suite runs on GitHub Actions on every push and pull_request: checkout, setup with caching, install browsers, run the tests across a matrix or with sharding for speed, and upload an Allure/HTML report plus screenshots/traces as artifacts using if: always(). At least the core tests are a required status check that gates merging. Optionally containerize the run with the official Playwright image so local and CI environments match. Reports should include on-failure screenshots and on-retry traces so any red run is diagnosable without re-running.\n\nDeliverables and acceptance. The project is judged like real work: a README explaining how to install, configure (env vars), run locally, run in Docker, and read the report; a short test plan / traceability note mapping each requirement to its test(s); green CI on a pull request with the report artifact attached; correct use of POM, config, parallelism, and secrets; and at least one demonstrated negative test and one intentional-failure run showing the report, screenshot, and trace working. The bar is: another engineer can clone the repo, set the env vars, and get the same passing run with an inspectable report — that is what 'job-ready' means.",
+    "key_terms": "capstone framework, Page Object Model, fixtures, UI + API coverage, CI integration, Allure/HTML reporting, parallel/sharded execution, environment configuration, traceability, merge gate",
+    "real_world_example": "You join a team and are asked to 'set up automation for the checkout flow from scratch.' That request is exactly this capstone: choose the critical journeys, build a POM-based framework with fixtures and a config, cover UI and the API behind it, wire it into GitHub Actions with reports and artifacts, make it run in parallel and in Docker, gate the merge on it, and hand over a README so the rest of the team can run and extend it. Delivering this capstone is rehearsing your first real automation task.",
+    "step_by_step": "1. Choose the target app and write a one-page test plan listing the user journeys and API endpoints to cover.\n2. Scaffold the framework: install the runner, set up the config (baseURL, timeouts, retries, reporters, projects) with env-var overrides.\n3. Build Page Objects for each page and reusable fixtures for auth and test data.\n4. Write UI tests for the critical journeys plus at least one negative case; write API tests asserting correct status codes (200/201/404) and payloads.\n5. Make every test independent: unique data, fresh sessions, no order dependence, so the suite runs in parallel.\n6. Add reporting: Allure or HTML plus JUnit XML, with on-failure screenshots and on-retry traces.\n7. Create the GitHub Actions workflow: triggers, caching, browser install, matrix/sharding, run, and if: always() artifact upload; reference secrets via ${{ secrets.* }}.\n8. Optionally containerize with the Playwright image and run the CI job inside it.\n9. Make the core tests a required status check on PRs.\n10. Write the README and traceability note, open a pull request, and verify a green run with an attached report artifact.",
+    "common_mistakes": "Writing many shallow, copy-pasted tests instead of a smaller, well-structured POM-based suite with real coverage.\nHardcoding URLs, credentials, and waits in tests instead of using config and environment variables.\nSubmitting tests that only pass serially and break under the parallel CI run.\nForgetting if: always() so reports/artifacts are missing on the exact failing runs that matter.\nNo README or traceability, so a reviewer cannot install, configure, run, or understand what is covered.",
+    "practical_use_case": "This is the deliverable you produce when joining a project that has no automation yet, or when a portfolio/interview asks you to demonstrate end-to-end automation skills: a complete, CI-integrated, documented framework that the team can run and extend from day one.",
+    "summary": "The capstone integrates the whole module: a POM-based framework covering UI and API for a real-style app, configured via environment variables, reported with Allure/HTML plus screenshots and traces, run in parallel/sharded inside CI with merge gates, and delivered with a README and traceability. Acceptance means another engineer can clone it, set env vars, and reproduce a green, inspectable run.",
+    "example": "```\nAcceptance checklist (capstone)\n[ ] App + scope: login, one multi-step flow, one negative case chosen\n[ ] 15-25 meaningful tests across UI and API (assert 200/201/404 where relevant)\n[ ] Page Object Model + reusable fixtures for auth/data\n[ ] Central config: baseURL, timeouts, retries (CI?2:0), reporters, projects\n[ ] Env vars for BASE_URL + secrets; .env gitignored, .env.example committed\n[ ] All tests independent -> pass under parallel workers\n[ ] Reporting: Allure/HTML + JUnit, on-failure screenshots, on-retry traces\n[ ] GitHub Actions: push+PR triggers, caching, browser install, matrix/shard\n[ ] Artifacts uploaded with if: always(); report visible on the PR\n[ ] Core tests = required status check (merge gate)\n[ ] (Bonus) Dockerized run using the official Playwright image\n[ ] README (install/config/run/Docker/report) + traceability table\n```\n\n```yaml\n# .github/workflows/ci.yml (capstone CI core)\nname: e2e\non: [push, pull_request]\njobs:\n  test:\n    runs-on: ubuntu-latest\n    strategy:\n      matrix: { shard: [1, 2] }\n    steps:\n      - uses: actions/checkout@v4\n      - uses: actions/setup-node@v4\n        with: { node-version: '20', cache: 'npm' }\n      - run: npm ci\n      - run: npx playwright install --with-deps\n      - run: npx playwright test --shard=${{ matrix.shard }}/2\n        env:\n          BASE_URL: ${{ secrets.BASE_URL }}\n          API_TOKEN: ${{ secrets.API_TOKEN }}\n      - uses: actions/upload-artifact@v4\n        if: always()\n        with: { name: report-${{ matrix.shard }}, path: playwright-report/ }\n```",
+    "interactive": "Draft a one-page project plan for your capstone: name the target app, list the 3-4 user journeys and 2-3 API endpoints you will cover, the test count target, the patterns you will use (POM, fixtures, config), and the CI/reporting/scaling features you will include. Keep it to a single page.",
+    "expected_answer": "A focused plan that names a concrete app (e.g. saucedemo.com), lists critical journeys (valid login, add-to-cart + checkout, and a negative case like locked-out user) and the API endpoints behind them with expected status codes (login 200 + token, create 201, missing resource 404), targets ~15-25 tests, and commits to specific architecture (Page Object Model, auth/data fixtures, central config with env overrides) and operational features (GitHub Actions on push/PR, Allure/HTML + JUnit reporting, on-failure screenshots and on-retry traces, parallel workers and/or sharding, secrets via the secret store, merge gate). The plan should be realistic in scope and map each journey to planned tests, showing the learner understands the full pipeline rather than just writing scripts.",
+    "homework": "Build and submit the complete capstone: the framework repository (POM, fixtures, config), UI + API tests (15-25, including a negative case and correct status-code assertions), environment-variable configuration with a gitignored .env and committed .env.example, a GitHub Actions workflow with reporting/artifacts/merge gate and parallel or sharded execution, optional Dockerization, and a README plus a traceability table. Open a pull request showing a green CI run with the report artifact attached, and include one demonstration of an intentional failure that produces a screenshot and trace in the report.",
+    "expected_result": "A reviewable repository where another engineer can clone it, set the documented env vars, and reproduce a green run. It must show: a clean POM structure and fixtures; central config with env overrides and CI-only retries; independent tests that pass in parallel; UI and API coverage with real assertions (including 404 and at least one negative UI case); a working GitHub Actions pipeline with caching, matrix/sharding, if: always() artifact upload, secrets used safely, and a required-check merge gate; an Allure/HTML report with on-failure screenshots and on-retry traces; and a clear README and traceability table mapping requirements to tests. The intentional-failure demo should prove the report, screenshot, and trace machinery works end to end.",
+    "quiz": [
+      {
+        "question": "What best distinguishes a job-ready capstone from a pile of test scripts?",
+        "answers": [
+          "It has the most tests possible",
+          "It is an engineered, documented, CI-integrated framework (POM, config, reporting, gates) another engineer can clone and reproduce",
+          "It runs only on the author's laptop",
+          "It avoids using any configuration files"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Why should the capstone cover both UI and API layers?",
+        "answers": [
+          "To double the number of tests",
+          "API tests are easier so they pad the count",
+          "UI tests validate user journeys while API tests verify the backend behavior (e.g. 200/201/404) faster and more directly",
+          "Because UI tests cannot assert status codes at all"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "In the capstone CI, why must the artifact upload use if: always()?",
+        "answers": [
+          "To upload the artifact twice for safety",
+          "So the report, screenshots, and traces are still uploaded when tests fail, which is exactly when they are needed",
+          "To make the failing job report success",
+          "It is only needed when all tests pass"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Which is a required quality bar for the capstone's tests?",
+        "answers": [
+          "They share one login session to save time",
+          "They depend on running in a fixed order",
+          "They are independent (unique data, fresh sessions) so they pass under parallel/sharded execution",
+          "They hardcode the staging URL and a real token in the code"
+        ],
+        "correct_index": 2
+      }
+    ]
+  }
+]

@@ -17,7 +17,7 @@ services:
     build:
       context: ./backend
     env_file:
-      - .env.example
+      - .env
     environment:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/qa_learning
     ports:
@@ -31,6 +31,8 @@ services:
   frontend:
     build:
       context: ./frontend
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
     environment:
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
       API_INTERNAL_URL: http://backend:8000

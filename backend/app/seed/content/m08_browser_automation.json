@@ -1,0 +1,356 @@
+[
+  {
+    "title": "Selenium basics",
+    "short_description": "Introduces Selenium WebDriver and how to drive a real browser to automate UI tests.",
+    "learning_goals": "Install and configure Selenium WebDriver with a browser driver and run a first script.\nWrite a script that opens a page, finds an element, interacts with it, and reads back state.\nUse the four-step WebDriver lifecycle (start driver, navigate, act, quit) correctly.\nUnderstand why explicit waits matter and avoid time.sleep() in real suites.",
+    "theory": "Selenium WebDriver is a library that lets your test code control a real browser (Chrome, Firefox, Edge, Safari) the same way a user does: opening URLs, clicking, typing, and reading what is on screen. It works by talking to a separate browser-specific driver process (for example chromedriver) over the W3C WebDriver protocol, which is an HTTP/JSON wire protocol. Your script sends a command like \"click element id=42\" and the driver translates it into real browser actions.\n\nEvery Selenium script follows the same lifecycle. First you create a driver instance (driver = webdriver.Chrome()), which launches the browser. Then you navigate with driver.get(url). Then you locate elements with driver.find_element(By.ID, ...) and act on them via .click() or .send_keys(). Finally you must call driver.quit() to close the browser and free the driver process; forgetting this leaves zombie browser windows and leaked memory on CI machines.\n\nSelenium itself does not include assertions or a test runner. In practice you pair it with a framework such as pytest (Python) or JUnit/TestNG (Java). Selenium drives the browser; the framework decides pass/fail and reports results. This separation is why \"Selenium\" usually means \"Selenium plus pytest\" on the job.\n\nThe single biggest beginner pitfall is timing. Modern web apps render content asynchronously, so an element may not exist the millisecond after navigation. The wrong fix is time.sleep(5); the right fix is an explicit wait (WebDriverWait) that polls until a condition is true, up to a timeout. We cover that depth in the Waiting strategies lesson, but you need to know from day one that bare sleeps make suites slow and flaky.\n\nSince Selenium 4, driver binaries are managed automatically by Selenium Manager, so you usually no longer download chromedriver by hand. Selenium 4 is also fully W3C-compliant, which improved cross-browser consistency over the older Selenium 3 JSON Wire Protocol.",
+    "key_terms": "WebDriver, chromedriver, By locator strategy, send_keys, WebDriverWait, W3C WebDriver protocol, Selenium Manager, driver.quit()",
+    "real_world_example": "A QA at an e-commerce company is asked to automate the smoke test for login. Every release, someone manually opened the site, typed a known username and password, clicked Sign in, and checked the dashboard appeared. With Selenium they write a 15-line script that does exactly that and asserts the URL changed to /dashboard. It now runs on every pull request in CI, catching a broken login form before it reaches production.",
+    "step_by_step": "1. Install Python 3 and run: pip install selenium pytest\n2. In a file test_login.py, import webdriver and By: from selenium import webdriver and from selenium.webdriver.common.by import By\n3. Create the driver: driver = webdriver.Chrome() (Selenium Manager fetches the driver automatically).\n4. Navigate: driver.get(\"https://practicetestautomation.com/practice-test-login/\")\n5. Find and fill fields: driver.find_element(By.ID, \"username\").send_keys(\"student\")\n6. Submit and verify: click the button, then assert the success text or URL is present.\n7. Always close: put driver.quit() in a finally block or pytest fixture so the browser closes even when the test fails.\n8. Run it: pytest test_login.py and read the report.",
+    "common_mistakes": "Forgetting driver.quit(), leaving dozens of orphaned browser processes on the CI agent.\nUsing time.sleep() everywhere instead of explicit waits, making the suite slow and flaky.\nManually downloading and pinning chromedriver versions when Selenium 4 Manager already handles it.\nPutting assertions inside the Selenium code and treating Selenium as a test framework on its own, instead of letting pytest/JUnit own pass/fail.\nHard-coding absolute screen coordinates or relying on element order instead of stable locators.",
+    "practical_use_case": "Daily, Selenium powers regression and smoke suites that run on every build in Jenkins, GitHub Actions, or GitLab CI. QA engineers use it to automate repetitive end-to-end flows (login, checkout, search) so humans can focus on exploratory and edge-case testing.",
+    "summary": "Selenium WebDriver lets test code drive a real browser through a driver process using the W3C protocol, following a start-navigate-act-quit lifecycle. It is paired with a runner like pytest for assertions and reporting. Master explicit waits early and always quit the driver to keep suites fast and clean.",
+    "example": "```python\nfrom selenium import webdriver\nfrom selenium.webdriver.common.by import By\nfrom selenium.webdriver.support.ui import WebDriverWait\nfrom selenium.webdriver.support import expected_conditions as EC\n\ndriver = webdriver.Chrome()\ntry:\n    driver.get(\"https://practicetestautomation.com/practice-test-login/\")\n    driver.find_element(By.ID, \"username\").send_keys(\"student\")\n    driver.find_element(By.ID, \"password\").send_keys(\"Password123\")\n    driver.find_element(By.ID, \"submit\").click()\n\n    # Wait until the success message appears, then assert\n    success = WebDriverWait(driver, 10).until(\n        EC.visibility_of_element_located((By.CLASS_NAME, \"post-title\"))\n    )\n    assert \"Logged In Successfully\" in success.text\n    print(\"PASS: login smoke test\")\nfinally:\n    driver.quit()\n```",
+    "interactive": "Write a Selenium script that opens https://www.saucedemo.com/, logs in with username standard_user and password secret_sauce, and prints whether the inventory page loaded by checking that the URL contains 'inventory'.",
+    "expected_answer": "A correct answer creates a Chrome driver, calls driver.get on the URL, fills By.ID 'user-name' and 'password', clicks the login button (By.ID 'login-button'), then verifies with an explicit wait or an assert that 'inventory' is in driver.current_url. It must call driver.quit() in a finally block. Example check: assert 'inventory' in driver.current_url. Bonus: uses WebDriverWait instead of sleep.",
+    "homework": "Automate a full login smoke test for https://www.saucedemo.com/ using Selenium and pytest. Cover both a successful login (standard_user) and a failed login (locked_out_user), asserting the correct outcome in each case. Use a pytest fixture for driver setup/teardown.",
+    "expected_result": "A test_login.py with two pytest tests sharing a fixture that creates and quits the driver. The success test asserts the URL contains 'inventory'. The failure test asserts the error banner text contains 'locked out'. No bare time.sleep() calls; explicit waits or expected_conditions used. pytest runs both tests green.",
+    "quiz": [
+      {
+        "question": "What does Selenium WebDriver actually communicate with to control the browser?",
+        "answers": [
+          "The operating system's accessibility API directly",
+          "A browser-specific driver process over the W3C WebDriver protocol",
+          "The browser's DevTools console only",
+          "A cloud service that streams the browser"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Why is time.sleep(5) discouraged in Selenium tests?",
+        "answers": [
+          "It is not valid Python syntax",
+          "It closes the browser prematurely",
+          "It wastes time and still causes flakiness; explicit waits polling a condition are better",
+          "Selenium forbids any pause in scripts"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "What is the consequence of forgetting driver.quit()?",
+        "answers": [
+          "Orphaned browser and driver processes leak on the machine",
+          "The test cannot find elements",
+          "Assertions are skipped",
+          "Selenius Manager re-downloads the driver"
+        ],
+        "correct_index": 0
+      },
+      {
+        "question": "Which statement about Selenium and test frameworks is correct?",
+        "answers": [
+          "Selenium includes its own assertion library and runner",
+          "Selenium drives the browser while a framework like pytest or JUnit handles assertions and reporting",
+          "You must write your own HTTP client to use Selenium",
+          "Selenium replaces the need for any CI system"
+        ],
+        "correct_index": 1
+      }
+    ]
+  },
+  {
+    "title": "Playwright basics",
+    "short_description": "Introduces Playwright, a modern browser automation framework with auto-waiting and a clean async API.",
+    "learning_goals": "Install Playwright, its browsers, and run the first generated example test.\nWrite a test using the page object and Playwright's web-first locators.\nExplain how auto-waiting removes most explicit waits compared with Selenium.\nUse the codegen recorder and the trace viewer to build and debug tests.",
+    "theory": "Playwright is a browser automation library from Microsoft that controls Chromium, Firefox, and WebKit (Safari's engine) with one API. Unlike Selenium, it does not talk over the W3C WebDriver protocol; it uses each browser's native debugging protocol (for Chromium, the Chrome DevTools Protocol), which gives it tighter control and faster, more reliable communication.\n\nIts defining feature is auto-waiting. Before every action Playwright runs actionability checks: it waits until the element is attached to the DOM, visible, stable (not animating), enabled, and receives events (not covered by another element). This means page.click(\"button\") automatically waits for the button to be clickable, eliminating most of the explicit-wait code that Selenium scripts need. The default timeout for these checks is 30 seconds.\n\nPlaywright promotes web-first, user-facing locators such as page.get_by_role(\"button\", name=\"Submit\"), get_by_text(...), and get_by_label(...). These mirror how users and assistive technology perceive the page and are far more resilient than brittle CSS or XPath. Locators are lazy: they describe how to find an element and are re-resolved each time they are used, so they survive re-renders.\n\nPlaywright ships batteries-included. It has its own test runner (@playwright/test for JavaScript/TypeScript, pytest plugin for Python) with built-in web-first assertions like expect(locator).to_be_visible() that auto-retry until the condition holds or times out. It also provides browser contexts, which are isolated, lightweight sessions (like a fresh incognito profile) that make parallel, independent tests cheap.\n\nTwo tools dramatically speed up daily work. Codegen (playwright codegen <url>) records your clicks and types and generates working test code. The Trace Viewer captures a DOM snapshot, screenshots, network log, and console for every step, so when a CI test fails you can scrub through exactly what happened instead of guessing.",
+    "key_terms": "auto-waiting, actionability checks, get_by_role, browser context, web-first assertions, Chrome DevTools Protocol, codegen, trace viewer",
+    "real_world_example": "A team migrating from a flaky Selenium suite keeps getting random failures because elements load late. A QA engineer rewrites the checkout flow in Playwright. Because Playwright auto-waits for each button and field to be actionable, the random timeouts disappear, the suite runs in parallel across three browser contexts, and a failing run produces a trace.zip the engineer opens to see the exact step where a modal blocked the Pay button.",
+    "step_by_step": "1. Initialize the project: npm init playwright@latest (this installs the runner and downloads Chromium, Firefox, and WebKit).\n2. Open the example spec in tests/ and run it: npx playwright test\n3. Generate code by recording: npx playwright codegen https://www.saucedemo.com/ and perform a login; copy the generated script.\n4. Replace brittle selectors with role/label locators, e.g. page.get_by_placeholder(\"Username\").\n5. Add a web-first assertion: await expect(page).toHaveURL(/inventory/);\n6. Run headed to watch it: npx playwright test --headed\n7. Capture a trace on failure: configure trace: 'on-first-retry' and open it with npx playwright show-trace trace.zip\n8. Run the full suite in parallel; Playwright uses workers automatically.",
+    "common_mistakes": "Adding manual sleeps or waitForTimeout even though Playwright already auto-waits, slowing tests for no reason.\nForgetting that the API is asynchronous and omitting await, so actions never actually run or assertions pass falsely.\nUsing fragile CSS/XPath when get_by_role or get_by_label would be stable and readable.\nReusing one browser context across tests and leaking state instead of isolating each test in its own context.\nMixing Playwright's auto-retrying expect with plain assertions, losing the auto-wait benefit.",
+    "practical_use_case": "Playwright is used day-to-day for end-to-end and cross-browser regression testing of web apps, especially where Selenium flakiness was a problem. Teams use codegen to bootstrap tests quickly and the trace viewer to debug CI failures without reproducing them locally.",
+    "summary": "Playwright drives Chromium, Firefox, and WebKit through native protocols with built-in auto-waiting, web-first locators, isolated browser contexts, and a bundled test runner with auto-retrying assertions. Codegen and the trace viewer make authoring and debugging fast. The result is less timing code and far fewer flaky tests than classic Selenium.",
+    "example": "```javascript\n// tests/login.spec.js\nconst { test, expect } = require('@playwright/test');\n\ntest('standard user can log in', async ({ page }) => {\n  await page.goto('https://www.saucedemo.com/');\n  await page.getByPlaceholder('Username').fill('standard_user');\n  await page.getByPlaceholder('Password').fill('secret_sauce');\n  await page.getByRole('button', { name: 'Login' }).click();\n\n  // Web-first assertion auto-waits until the URL matches\n  await expect(page).toHaveURL(/inventory/);\n  await expect(page.getByText('Products')).toBeVisible();\n});\n```",
+    "interactive": "Using Playwright, write a test that opens https://playwright.dev/, clicks the 'Get started' link, and asserts that the page heading 'Installation' is visible. Use role-based locators and a web-first assertion.",
+    "expected_answer": "A correct answer uses async/await with the { page } fixture, calls page.goto('https://playwright.dev/'), then page.getByRole('link', { name: 'Get started' }).click(), and asserts await expect(page.getByRole('heading', { name: 'Installation' })).toBeVisible(). It must not include manual sleeps and must use the auto-retrying expect. Every action and assertion is awaited.",
+    "homework": "Use playwright codegen to record a login on https://www.saucedemo.com/, then clean the generated test: replace any brittle selectors with get_by_role/get_by_placeholder, add an assertion that the URL contains 'inventory', and configure the project so a trace is captured on first retry. Run it across all three browsers (chromium, firefox, webkit).",
+    "expected_result": "A login.spec file using role/placeholder locators and an auto-retrying expect on the URL. playwright.config sets trace: 'on-first-retry' and a projects array for the three browsers. npx playwright test passes on all three. The submission notes how to open the generated trace.zip with show-trace.",
+    "quiz": [
+      {
+        "question": "What is Playwright's auto-waiting?",
+        "answers": [
+          "A fixed 5-second pause before each action",
+          "Actionability checks that wait until an element is visible, stable, enabled, and receiving events before acting",
+          "A retry of the whole test on failure",
+          "A way to slow tests down for screenshots"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Which locator is the most resilient and recommended in Playwright?",
+        "answers": [
+          "An absolute XPath to the element",
+          "A locator by deep CSS nth-child chain",
+          "get_by_role with an accessible name",
+          "A locator by element index in the DOM"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "What is a browser context in Playwright?",
+        "answers": [
+          "An isolated, incognito-like session that makes independent parallel tests cheap",
+          "The single global browser window shared by all tests",
+          "The network proxy used to record traffic",
+          "A configuration file for selectors"
+        ],
+        "correct_index": 0
+      },
+      {
+        "question": "Why might a Playwright test silently pass without doing anything?",
+        "answers": [
+          "The browser was not installed",
+          "An await was forgotten on the async action or assertion",
+          "Auto-waiting was disabled by default",
+          "The trace viewer was not configured"
+        ],
+        "correct_index": 1
+      }
+    ]
+  },
+  {
+    "title": "Browser automation",
+    "short_description": "Covers the broader concepts of browser automation: when to automate, headless vs headed, the DOM, and running in CI.",
+    "learning_goals": "Decide which UI flows are worth automating versus testing manually or at the API level.\nExplain how the DOM, page lifecycle, and rendering affect automation reliability.\nRun automation headless and headed and know when each is appropriate.\nIntegrate a browser suite into CI with parallelism, retries, and artifacts.",
+    "theory": "Browser automation means programmatically driving a web browser to reproduce user interactions: navigation, clicks, form input, and verification. Tools like Selenium, Playwright, and Cypress all do this; the underlying concepts are shared. Automation operates on the DOM (Document Object Model), the live tree of elements the browser builds from HTML. Your script finds nodes in this tree and acts on them, so understanding that the DOM changes dynamically (single-page apps re-render, AJAX injects nodes) is the key to writing stable tests.\n\nA crucial discipline is choosing what to automate. The test pyramid suggests many fast unit tests, fewer integration tests, and a small number of slow, brittle end-to-end UI tests. Browser automation lives at the top, so reserve it for high-value user journeys (login, checkout, search) rather than validating logic that an API or unit test could cover faster and more reliably. Automating everything through the UI produces slow, flaky suites.\n\nBrowsers run in two modes. Headed shows a visible window, which is useful for development and debugging. Headless runs without a visible UI, which is faster and the default on CI servers that have no display. Modern Chrome headless behaves almost identically to headed, but occasionally rendering or viewport differences cause a test to pass headed and fail headless, so know how to switch and reproduce.\n\nReliability comes from anchoring on stable signals, not timing luck. Wait for elements and network/idle states rather than fixed delays, prefer test-friendly attributes like data-testid over visual position, and keep tests independent so one failure does not cascade. Each test should set up its own data and clean up after itself.\n\nIn production, browser suites run in CI on every push. Good setups run tests in parallel across workers and browsers, retry only flaky tests a limited number of times, and save artifacts (screenshots, videos, traces, HTML reports) on failure so engineers can debug a CI run without reproducing it locally. Cross-browser coverage (Chromium, Firefox, WebKit) catches engine-specific bugs.",
+    "key_terms": "DOM, headless mode, test pyramid, end-to-end test, data-testid, CI artifacts, flakiness, test isolation",
+    "real_world_example": "A SaaS team's nightly UI suite takes 40 minutes and fails randomly twice a week, eroding trust. A QA engineer audits it, moves dozens of field-validation checks down to fast API tests, keeps only six critical end-to-end journeys in the browser layer, enables 4 parallel workers, sets retries to 1, and uploads screenshots on failure. Runtime drops to 7 minutes and the suite becomes trustworthy enough to block merges.",
+    "step_by_step": "1. List your app's user journeys and rank them by business risk; pick the top 5-8 for UI automation.\n2. For each, decide if a lower layer (API/unit) could cover it more cheaply; push it down if so.\n3. Add stable hooks in the app: data-testid attributes on key elements.\n4. Write each test to create its own data and assert a user-visible outcome.\n5. Run locally headed to confirm behavior, then headless to match CI.\n6. Add the suite to CI (GitHub Actions/Jenkins) with parallel workers and a small retry count.\n7. Configure artifacts: capture screenshots/video/trace on failure and upload them.\n8. Monitor flaky tests over time and quarantine or fix them rather than blindly re-running.",
+    "common_mistakes": "Automating everything through the UI instead of pushing logic checks down to API/unit tests, creating a slow inverted pyramid.\nTests depending on each other's state or execution order, so one failure cascades.\nUsing fixed sleeps and brittle selectors (CSS by position) instead of waits and data-testid.\nIgnoring headless-versus-headed differences and being surprised when CI fails but local passes.\nMasking flakiness with unlimited retries instead of diagnosing the root cause.",
+    "practical_use_case": "Browser automation is used daily to run regression and smoke suites on every commit, validate critical user journeys before release, and provide cross-browser coverage. It frees QA from repetitive manual clicking so they can do exploratory and risk-based testing.",
+    "summary": "Browser automation drives a real browser over the DOM to verify user journeys, and works best when reserved for a small set of high-value flows at the top of the test pyramid. Reliability comes from stable locators, proper waits, and isolated tests, not timing luck. In production it runs headless in CI with parallelism, limited retries, and failure artifacts.",
+    "example": "```yaml\n# .github/workflows/e2e.yml — running a Playwright suite headless in CI\nname: E2E\non: [push]\njobs:\n  test:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - uses: actions/setup-node@v4\n        with: { node-version: 20 }\n      - run: npm ci\n      - run: npx playwright install --with-deps\n      - run: npx playwright test --workers=4 --retries=1\n      - uses: actions/upload-artifact@v4\n        if: failure()\n        with:\n          name: playwright-report\n          path: playwright-report/\n```",
+    "interactive": "You have a registration page with 12 input fields and complex validation rules. Decide which checks belong in the browser automation layer and which should move to API or unit tests, and justify your split in 4-5 sentences.",
+    "expected_answer": "A strong answer keeps one or two end-to-end browser tests for the happy-path registration and a key visible error (e.g., duplicate email shows the right message), because these verify the real user journey and rendering. It moves the bulk of field-level validation (min/max length, format/regex, boundary values, required fields) down to fast API or unit tests, since those exercise the same logic without a browser and run far faster and more reliably. The justification should reference the test pyramid: few slow UI tests, many fast lower-level tests, avoiding an inverted pyramid.",
+    "homework": "Take an existing app (or saucedemo.com) and design a browser automation plan: list the user journeys, mark which 5 you would automate at the UI level and why, specify the data-testid hooks you would request from developers, and write the CI configuration (parallel workers, retries, failure artifacts) you would use. Implement at least 2 of the journeys.",
+    "expected_result": "A short plan document plus working code. The plan ranks journeys by risk, explicitly pushes low-value checks to API/unit, and lists requested data-testid hooks. The CI config sets parallel workers, retries=1, and uploads artifacts on failure. At least two journeys are implemented as isolated tests that create their own data and assert a user-visible result; both run green headless.",
+    "quiz": [
+      {
+        "question": "According to the test pyramid, browser end-to-end tests should be:",
+        "answers": [
+          "The largest layer, covering every input validation",
+          "A small layer reserved for high-value user journeys",
+          "Eliminated entirely in favor of manual testing",
+          "Equal in number to unit tests"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "What is the DOM in the context of browser automation?",
+        "answers": [
+          "The browser's download manager",
+          "A static copy of the original HTML file",
+          "The live tree of elements the browser builds and updates, which scripts query and act on",
+          "The network request log"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "Why might a test pass headed but fail headless?",
+        "answers": [
+          "Headless mode disables JavaScript",
+          "Headless cannot click elements",
+          "Headless never loads CSS",
+          "Subtle rendering or viewport differences between the modes"
+        ],
+        "correct_index": 3
+      },
+      {
+        "question": "What is the best response to a consistently flaky end-to-end test?",
+        "answers": [
+          "Set retries to unlimited so it eventually passes",
+          "Diagnose the root cause (waits, isolation, data) and fix or quarantine it",
+          "Delete all assertions",
+          "Run it only headed forever"
+        ],
+        "correct_index": 1
+      }
+    ]
+  },
+  {
+    "title": "Locators",
+    "short_description": "Teaches how to find elements reliably using CSS, XPath, and modern user-facing locators, and how to avoid brittle selectors.",
+    "learning_goals": "Write CSS selectors and XPath expressions to target elements precisely.\nChoose stable locators (id, data-testid, role) over brittle position-based ones.\nUse user-facing locators (by role, label, text) for resilient, accessible tests.\nDebug a locator that matches zero or multiple elements.",
+    "theory": "A locator is the instruction your automation uses to find an element on the page. The quality of your locators determines how stable your tests are: a brittle locator breaks every time a developer changes unrelated markup, while a stable one survives redesigns. Getting locators right is the single highest-leverage skill in UI automation.\n\nThe most common strategy is CSS selectors. You target by id (#login), class (.btn-primary), attribute ([data-testid=\"submit\"]), or combinations and hierarchy (form input[type=\"email\"]). CSS is concise and fast. The preferred anchor is a dedicated test attribute like data-testid, because it is added on purpose for testing and is not affected by styling or copy changes. Avoid auto-generated class names (e.g., css-1x7y from CSS-in-JS) because they change on every build.\n\nXPath is a more powerful query language that can navigate up and down the tree and match on text, for example //button[text()=\"Submit\"] or //label[.=\"Email\"]/following-sibling::input. Use it when CSS cannot express the relationship you need, such as selecting a parent or matching by visible text. The downside is that long absolute XPaths like /html/body/div[2]/div/form/input are extremely brittle; always prefer short, attribute-based relative XPaths.\n\nModern frameworks promote user-facing locators that mirror how a real user or screen reader perceives the page: by ARIA role and accessible name (get_by_role(\"button\", name=\"Add to cart\")), by label, by placeholder, by text, and by alt text. These are the most resilient because they tie the test to user-visible behavior rather than implementation details, and they double as a light accessibility check. Playwright recommends these by default; Selenium achieves similar robustness with stable ids and data attributes.\n\nWhen a locator fails it is almost always one of two cases: it matches zero elements (wrong selector, wrong frame, or element not yet rendered) or it matches multiple and the tool acts on the wrong one or errors out (strict mode). Debug by testing the selector in the browser DevTools console with document.querySelectorAll(\"...\") for CSS or $x(\"...\") for XPath, which immediately shows the match count.",
+    "key_terms": "CSS selector, XPath, data-testid, ARIA role, accessible name, strict mode, relative vs absolute XPath, querySelectorAll",
+    "real_world_example": "A QA engineer's checkout test breaks after a frontend refactor. The old locator was .col-2 > div:nth-child(3) > button, which depended on layout. The developers moved a column and the button is now the 4th child, so the test clicks the wrong element. The engineer asks the team to add data-testid=\"place-order\" to the button and rewrites the locator to [data-testid=\"place-order\"]; it now survives any future layout change.",
+    "step_by_step": "1. Open the target element in DevTools (right-click, Inspect).\n2. Look for a stable hook in this order: data-testid, then id, then a role + accessible name, then a meaningful attribute.\n3. If none exists, request a data-testid from developers; it is the cheapest reliability win.\n4. Write the selector and verify the match count in the console: document.querySelectorAll('[data-testid=\"place-order\"]').length should be 1.\n5. If you must use XPath, write a short relative one anchored on text or attribute, never an absolute path.\n6. Prefer user-facing locators (get_by_role/get_by_label) when your framework supports them.\n7. Re-run the test and confirm exactly one element is targeted; fix strict-mode multiple-match errors by narrowing the selector.\n8. Avoid auto-generated class names and nth-child position selectors.",
+    "common_mistakes": "Using absolute XPath or nth-child position selectors that break on any layout change.\nAnchoring on auto-generated/hashed class names that change every build.\nWriting selectors that match multiple elements and not noticing the tool acts on the wrong one (or hits strict-mode errors).\nForgetting the element is inside an iframe, so the locator finds nothing.\nMatching on volatile copy text that changes with localization instead of a stable role or test id.",
+    "practical_use_case": "Every UI test depends on locators, so QA engineers spend real time choosing and maintaining them daily. Good locator hygiene (data-testid, roles) is the main lever that keeps a suite from constantly breaking on cosmetic UI changes.",
+    "summary": "A locator tells automation how to find an element, and its stability determines test reliability. Prefer dedicated hooks (data-testid, id) and user-facing locators (role, label, text) over position-based CSS or absolute XPath. Verify match counts in DevTools, and reach for relative XPath only when CSS cannot express the relationship.",
+    "example": "```python\nfrom selenium.webdriver.common.by import By\n\n# BEST: dedicated test attribute (stable across redesigns)\ndriver.find_element(By.CSS_SELECTOR, '[data-testid=\"place-order\"]').click()\n\n# GOOD: stable id\ndriver.find_element(By.ID, 'login-button').click()\n\n# OK: relative XPath matching visible text when no id/test-id exists\ndriver.find_element(By.XPATH, '//button[normalize-space()=\"Submit\"]').click()\n\n# AVOID: absolute / position-based selectors that break on layout changes\n# driver.find_element(By.CSS_SELECTOR, '.col-2 > div:nth-child(3) > button')\n# driver.find_element(By.XPATH, '/html/body/div[2]/div/form/input')\n```",
+    "interactive": "Given this HTML: <form><label for=\"email\">Email</label><input id=\"email\" data-testid=\"email-field\" class=\"css-7h3k\"></form>, write three different locators that target the input and rank them from most to least stable, explaining why.",
+    "expected_answer": "Most stable: [data-testid=\"email-field\"] (a dedicated test hook unaffected by styling or copy). Next: #email (the id is meaningful and stable, though ids can change). Acceptable user-facing option: locate by the label text 'Email' (get_by_label('Email')), which ties to user-visible behavior. Least stable: .css-7h3k, because it is an auto-generated CSS-in-JS class that changes on every build and must be avoided. The ranking should explain that test ids and ids are intentional and durable, role/label locators are resilient and accessible, and hashed classes and position selectors are brittle.",
+    "homework": "Take a real page (e.g., saucedemo.com or your app's login) and document a locator for 8 interactive elements. For each, record the selector you chose, the match count from DevTools, and why it is stable. Replace at least two brittle locators (nth-child or hashed class) you find in an existing test with stable ones.",
+    "expected_result": "A table of 8 elements, each with a locator, a verified match count of exactly 1, and a one-line stability justification favoring data-testid/id/role over position or hashed classes. The submission shows a before/after for at least two brittle locators that were replaced, with the tests still passing.",
+    "quiz": [
+      {
+        "question": "Which locator is generally the most stable choice?",
+        "answers": [
+          "An auto-generated class like .css-1x7y",
+          "An absolute XPath such as /html/body/div[2]/button",
+          "A dedicated data-testid attribute",
+          "A :nth-child position selector"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "When is XPath the right tool over CSS?",
+        "answers": [
+          "When you need to select a parent element or match by visible text",
+          "Always, because XPath is faster than CSS",
+          "Only for selecting by id",
+          "When the page has no JavaScript"
+        ],
+        "correct_index": 0
+      },
+      {
+        "question": "How do you quickly check how many elements a CSS selector matches?",
+        "answers": [
+          "Restart the browser",
+          "Run document.querySelectorAll('selector').length in the DevTools console",
+          "Read the network tab",
+          "Increase the test timeout"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "What is a user-facing locator?",
+        "answers": [
+          "A locator that uses the element's database primary key",
+          "A locator based on absolute pixel coordinates",
+          "A locator based on raw inline style attributes",
+          "A locator that finds elements by role, label, placeholder, or visible text the way a user perceives them"
+        ],
+        "correct_index": 3
+      }
+    ]
+  },
+  {
+    "title": "Assertions",
+    "short_description": "Explains how assertions verify expected behavior in automated UI tests, including hard vs soft and auto-retrying assertions.",
+    "learning_goals": "Write assertions that check user-visible outcomes, not just that code ran.\nDistinguish hard assertions (stop on failure) from soft assertions (collect failures).\nUse auto-retrying web-first assertions to avoid timing flakiness.\nProduce clear failure messages that speed up debugging.",
+    "theory": "An assertion is the statement in a test that defines what 'correct' means: it compares an actual value against an expected value and fails the test if they differ. Without assertions a test only proves the script did not crash, not that the application behaved correctly. The assertion is the part that actually catches bugs, so a test with weak assertions can pass while the feature is broken.\n\nAssertions come in two failure styles. A hard assertion stops the test immediately on the first failure (the typical assert in pytest, Assert.assertEquals in JUnit). A soft assertion records the failure but lets the test continue, then reports all collected failures at the end; this is useful when you want to verify many independent things on one page (price, title, stock badge) in a single run instead of fixing and re-running one at a time. TestNG's SoftAssert and Playwright's expect.soft are common examples.\n\nIn UI automation, timing makes naive assertions flaky. If you assert immediately that an element is visible, it may not have rendered yet, so the assertion fails intermittently. Modern frameworks solve this with web-first, auto-retrying assertions: Playwright's expect(locator).to_be_visible() re-checks the condition repeatedly until it passes or a timeout (default 5 seconds for assertions) elapses. This combines waiting and asserting, removing most explicit waits. With Selenium you replicate this by combining WebDriverWait/expected_conditions before a plain assert.\n\nGood assertions check the right thing at the right level. Assert on user-visible outcomes (the success banner text, the URL, the cart count) rather than internal implementation. Be specific: assert the exact expected text or value, not just that an element merely exists, so a wrong-but-present value still fails. Where appropriate, verify boundaries and error states too, for example that submitting an empty required field shows the correct message or that an API returns HTTP 404 for a missing resource.\n\nFinally, write assertions with clear messages. assert actual == expected, f\"Expected cart count 3, got {actual}\" turns a cryptic failure into an instantly understandable one, which matters enormously when a CI run fails at 2 a.m. and someone else has to read the log.",
+    "key_terms": "assertion, hard assertion, soft assertion, web-first assertion, auto-retry, expected vs actual, assertion message, expected_conditions",
+    "real_world_example": "A QA engineer tests a product page that should show the title, a $19.99 price, and an 'In stock' badge. Using hard assertions, the test fails on the first wrong field and hides the others, forcing repeated runs. The engineer switches to soft assertions (expect.soft) so a single run reports that the price is wrong AND the badge says 'Out of stock', letting developers fix both issues at once.",
+    "step_by_step": "1. Identify the user-visible outcome that proves the feature works (e.g., 'Order confirmed' text and URL /confirmation).\n2. Choose the assertion type: hard for a critical precondition, soft when checking several independent fields.\n3. Prefer an auto-retrying web-first assertion so timing is handled: await expect(locator).toHaveText('Order confirmed').\n4. Be specific: assert the exact expected value, not just existence.\n5. Add a clear message describing expected vs actual.\n6. Include negative/boundary assertions where relevant (empty field error, 404 response).\n7. Run the test and deliberately break the app once to confirm the assertion actually fails (a test that can't fail is worthless).\n8. Review the failure output to ensure it is readable.",
+    "common_mistakes": "Writing tests with no real assertion, so they pass as long as the script doesn't throw.\nAsserting only that an element exists instead of checking its exact value, letting wrong content pass.\nUsing immediate assertions on async content instead of auto-retrying or waiting first, causing flakiness.\nUsing a hard assertion in the middle of many independent checks, hiding all later failures.\nWriting cryptic assertions with no message, making CI failures hard to diagnose.",
+    "practical_use_case": "Assertions are the core of every automated test a QA writes; they encode the acceptance criteria. Daily, QA engineers translate requirements ('after checkout the user sees an order number') into precise assertions that block releases when violated.",
+    "summary": "An assertion compares actual to expected and is what actually catches bugs, so it must check the right user-visible value precisely. Use hard assertions to stop on critical failures and soft assertions to collect multiple independent checks in one run. Prefer auto-retrying web-first assertions to beat timing flakiness, and always include clear failure messages.",
+    "example": "```javascript\nconst { test, expect } = require('@playwright/test');\n\ntest('checkout shows confirmation', async ({ page }) => {\n  // ... perform checkout ...\n\n  // Auto-retrying (web-first) hard assertions: wait until true or fail\n  await expect(page).toHaveURL(/confirmation/);\n  await expect(page.getByTestId('order-status')).toHaveText('Order confirmed');\n\n  // Soft assertions: report ALL failures in one run\n  await expect.soft(page.getByTestId('order-total')).toHaveText('$19.99');\n  await expect.soft(page.getByTestId('stock-badge')).toHaveText('In stock');\n});\n```\n\n```python\n# Selenium + pytest equivalent with a clear message\nactual = driver.find_element(By.CSS_SELECTOR, '[data-testid=\"cart-count\"]').text\nassert actual == \"3\", f\"Expected cart count 3 but got {actual!r}\"\n```",
+    "interactive": "A login test currently ends with: assert driver.find_element(By.ID, 'welcome'). Explain why this assertion is weak and rewrite it to be meaningful, including a clear failure message.",
+    "expected_answer": "The assertion is weak because find_element returns an element object (truthy) as long as the element exists; it does not verify the correct user or any visible text, and it throws rather than asserts if the element is missing. A meaningful version checks the actual visible content, e.g.: actual = driver.find_element(By.ID, 'welcome').text; assert actual == 'Welcome, student', f\"Expected greeting 'Welcome, student' but got {actual!r}\". Even better: wait for visibility first with WebDriverWait/expected_conditions, then assert the exact text. The answer should mention asserting a specific value and adding a message.",
+    "homework": "Write a test for a product detail page that verifies the title, price, and availability badge. Use soft assertions so a single run reports every mismatch, and add clear messages. Then write one negative test asserting that submitting the 'Add to cart' form with quantity 0 shows the correct validation error.",
+    "expected_result": "A test using soft/auto-retrying assertions on three specific values (exact title, exact price like $19.99, exact badge text) each with a readable message, so one run surfaces all failures. A separate negative test asserts the exact validation message for the boundary quantity 0. Each assertion checks an exact value, not mere existence, and the candidate demonstrates the tests fail when the app is deliberately broken.",
+    "quiz": [
+      {
+        "question": "What is the purpose of an assertion in an automated test?",
+        "answers": [
+          "To navigate to the next page",
+          "To compare an actual value against an expected one and fail the test if they differ",
+          "To make the test run faster",
+          "To install the browser driver"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "What is the difference between a hard and a soft assertion?",
+        "answers": [
+          "Hard assertions only work in Java",
+          "Soft assertions never fail the test",
+          "A hard assertion stops on first failure; a soft assertion records failures and continues, reporting all at the end",
+          "There is no difference"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "Why are web-first (auto-retrying) assertions valuable in UI testing?",
+        "answers": [
+          "They re-check the condition until it passes or times out, removing most timing flakiness",
+          "They make assertions optional",
+          "They disable waiting entirely",
+          "They only check that an element exists"
+        ],
+        "correct_index": 0
+      },
+      {
+        "question": "Why is assert find_element(By.ID, 'welcome') a weak assertion?",
+        "answers": [
+          "find_element is not a real method",
+          "It checks the page title instead of the element",
+          "It runs too slowly",
+          "It only confirms the element exists, not that it contains the correct value"
+        ],
+        "correct_index": 3
+      }
+    ]
+  },
+  {
+    "title": "Waiting strategies",
+    "short_description": "Explains implicit, explicit, and fluent waits and how to handle asynchronous pages without flaky time-based sleeps.",
+    "learning_goals": "Explain why fixed sleeps cause flaky, slow tests and avoid them.\nUse explicit waits with conditions to synchronize on real page state.\nDistinguish implicit, explicit, and fluent waits and when each applies.\nWait correctly for AJAX, spinners, animations, and navigation.",
+    "theory": "Waiting strategies solve the central problem of UI automation: the test code runs faster than the browser renders. After a click, content may load via AJAX hundreds of milliseconds later, so acting immediately fails. A waiting strategy synchronizes the test with the application's real state instead of guessing how long things take.\n\nThe naive approach is a fixed sleep (time.sleep(3)), and it is an anti-pattern. It is simultaneously too slow (it always waits the full duration even when the element appeared in 200 ms) and too fragile (on a slow CI run 3 seconds is not enough and the test fails). Fixed sleeps are the number-one cause of flaky suites; avoid them.\n\nSelenium offers three real strategies. An implicit wait is a global setting (driver.implicitly_wait(10)) that tells the driver to poll for up to N seconds whenever an element is not immediately found. It is simple but blunt, applies to every lookup, and does not handle conditions like 'element is clickable'. An explicit wait (WebDriverWait(driver, 10).until(EC.element_to_be_clickable(...))) waits for a specific condition on a specific element and is the recommended approach; expected_conditions provides ready-made checks like visibility_of_element_located, element_to_be_clickable, text_to_be_present_in_element, and invisibility_of_element_located (handy for waiting out a spinner). A fluent wait is a configurable explicit wait where you set the timeout, polling interval, and exceptions to ignore, useful for custom conditions.\n\nA critical rule: do not mix implicit and explicit waits. Combining them can make timeouts add up unpredictably (a known Selenium gotcha), producing waits much longer than expected. Pick explicit waits as your default and avoid setting a global implicit wait alongside them.\n\nPlaywright and Cypress largely automate this. Playwright's actions and web-first assertions auto-wait for actionability and conditions, so you rarely write explicit waits; when you do need to synchronize on something non-element-based you use page.wait_for_load_state(), wait_for_url(), or wait_for_response(). Across all tools the principle is identical: wait for a meaningful signal (element visible, network response received, spinner gone, URL changed), never for a fixed number of seconds.",
+    "key_terms": "implicit wait, explicit wait, fluent wait, WebDriverWait, expected_conditions, auto-waiting, polling interval, wait_for_load_state",
+    "real_world_example": "A QA engineer's search test types a query and immediately checks the results list, which intermittently fails because results arrive via AJAX after a spinner. Adding time.sleep(2) makes it pass locally but it still fails on the slower CI agent. The engineer replaces the sleep with an explicit wait: first wait for the spinner to disappear with EC.invisibility_of_element_located, then wait for the first result row to be visible. The test becomes both faster and reliable on every machine.",
+    "step_by_step": "1. Identify the asynchronous event you depend on (AJAX response, spinner gone, element visible, URL change).\n2. Never use time.sleep; choose a condition-based wait instead.\n3. In Selenium, set up WebDriverWait once: wait = WebDriverWait(driver, 10).\n4. Wait for the right condition: EC.element_to_be_clickable for buttons, visibility_of_element_located for content, invisibility_of_element_located for spinners.\n5. Do not also set a global implicit wait; keep explicit waits as the single strategy.\n6. For navigation or network in Playwright, use page.wait_for_url(...) or page.wait_for_response(...).\n7. Choose a sensible timeout (often 10 s) and a small polling interval; fail fast rather than hanging for minutes.\n8. Re-run on a slow environment to confirm reliability, then verify the test still fails quickly when the element truly never appears.",
+    "common_mistakes": "Using time.sleep() everywhere, producing slow and flaky tests.\nMixing implicit and explicit waits, causing unpredictable, additive timeouts.\nWaiting for the wrong condition (presence in DOM) when you actually need visibility or clickability.\nForgetting to wait for a loading spinner to disappear before reading results.\nSetting absurdly long timeouts that hide real bugs and make failures take minutes to surface.",
+    "practical_use_case": "Waiting strategies are applied in nearly every UI test a QA writes, because real apps load content asynchronously. Choosing condition-based waits over sleeps is the main thing that keeps a regression suite green and fast across local machines and CI agents of varying speed.",
+    "summary": "Waiting strategies synchronize tests with the app's real state so flaky timing failures disappear. Avoid fixed sleeps; prefer explicit (condition-based) waits in Selenium and rely on auto-waiting in Playwright. Never mix implicit and explicit waits, and always wait for a meaningful signal such as visibility, clickability, a vanished spinner, or a received network response.",
+    "example": "```python\nfrom selenium.webdriver.support.ui import WebDriverWait\nfrom selenium.webdriver.support import expected_conditions as EC\nfrom selenium.webdriver.common.by import By\n\nwait = WebDriverWait(driver, 10)\n\ndriver.find_element(By.ID, \"search\").send_keys(\"laptop\\n\")\n\n# 1) Wait for the loading spinner to disappear (don't read results too early)\nwait.until(EC.invisibility_of_element_located((By.CSS_SELECTOR, \".spinner\")))\n\n# 2) Wait for the first result to be visible, then assert\nfirst = wait.until(\n    EC.visibility_of_element_located((By.CSS_SELECTOR, '[data-testid=\"result-0\"]'))\n)\nassert \"laptop\" in first.text.lower()\n\n# DO NOT do this:  import time; time.sleep(3)\n```\n\n```javascript\n// Playwright auto-waits; only explicit waits for non-element signals\nawait page.getByPlaceholder('Search').fill('laptop');\nawait page.waitForResponse(r => r.url().includes('/api/search') && r.status() === 200);\nawait expect(page.getByTestId('result-0')).toBeVisible(); // auto-retries\n```",
+    "interactive": "A test does: button.click(); time.sleep(2); assert results_visible. It still fails sometimes on CI. Explain why and rewrite the synchronization using an explicit wait.",
+    "expected_answer": "It fails because time.sleep(2) is a guess: on a slow CI agent the results may take longer than 2 seconds, so the assertion runs before they appear; on a fast machine it wastes time. The fix waits for the real condition. Example: wait = WebDriverWait(driver, 10); after the click, optionally wait for the spinner to vanish with EC.invisibility_of_element_located((By.CSS_SELECTOR, '.spinner')), then wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, '[data-testid=\"result-0\"]'))) before asserting. The answer should reject sleep, use a condition-based explicit wait, and not also add a global implicit wait.",
+    "homework": "Find or write a test that uses time.sleep on an AJAX-driven page (e.g., a search or filter). Replace every sleep with explicit waits that target the real conditions (spinner gone, element visible/clickable, response received). Measure and report the runtime before and after, and confirm it passes reliably across at least 5 consecutive runs.",
+    "expected_result": "A test with all sleeps removed and replaced by WebDriverWait/expected_conditions (or Playwright auto-wait/wait_for_response) targeting meaningful signals, with no mixing of implicit and explicit waits. The submission reports a before/after runtime (typically faster) and shows 5 consecutive green runs, plus a note that the test still fails quickly when the element genuinely never appears.",
+    "quiz": [
+      {
+        "question": "Why is time.sleep() considered an anti-pattern for waiting?",
+        "answers": [
+          "It is too slow when content is ready early and too short on slow machines, causing flakiness",
+          "It is not supported in CI",
+          "It only works in Playwright",
+          "It permanently blocks the browser"
+        ],
+        "correct_index": 0
+      },
+      {
+        "question": "What does an explicit wait do that an implicit wait does not?",
+        "answers": [
+          "It applies globally to every element lookup",
+          "It waits for a specific condition (like clickable or visible) on a specific element",
+          "It disables all assertions",
+          "It downloads the browser driver"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Why should you avoid mixing implicit and explicit waits in Selenium?",
+        "answers": [
+          "It is syntactically illegal",
+          "Implicit waits override assertions",
+          "Their timeouts can combine unpredictably, producing much longer waits than intended",
+          "Explicit waits stop working entirely"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "Which is the correct condition to wait out a loading spinner before reading results?",
+        "answers": [
+          "presence_of_element_located for the spinner",
+          "element_to_be_clickable for the spinner",
+          "A fixed time.sleep matching the spinner duration",
+          "invisibility_of_element_located for the spinner"
+        ],
+        "correct_index": 3
+      }
+    ]
+  }
+]

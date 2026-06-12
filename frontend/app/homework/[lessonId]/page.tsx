@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { Bot, Send, Upload } from "lucide-react";
+import { RequireAuth } from "@/components/auth/RequireAuth";
+import { BackLink } from "@/components/ui/BackLink";
 import { api } from "@/lib/api";
 
 export default function HomeworkPage() {
@@ -42,7 +44,9 @@ export default function HomeworkPage() {
   }
 
   return (
+    <RequireAuth>
     <main className="mx-auto max-w-4xl px-4 py-8">
+      <BackLink href={`/lessons/${params.lessonId}`} label="Back to lesson" />
       <h1 className="text-3xl font-bold">Homework</h1>
       <section className="mt-6 rounded-lg border border-slate-200 bg-white p-5">
         <h2 className="font-semibold">Task description</h2>
@@ -80,5 +84,6 @@ export default function HomeworkPage() {
         {aiFeedback ? <p className="mt-4 whitespace-pre-wrap rounded-md bg-slate-50 p-4 text-sm text-slate-700">{aiFeedback}</p> : null}
       </section>
     </main>
+    </RequireAuth>
   );
 }

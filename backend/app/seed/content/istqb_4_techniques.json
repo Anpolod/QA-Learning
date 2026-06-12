@@ -1,0 +1,562 @@
+[
+  {
+    "section": "istqb",
+    "title": "Test techniques overview",
+    "short_description": "An overview of how the CTFL v4.0 syllabus categorizes test techniques into black-box, white-box, and experience-based families and how each derives coverage items and test cases from a test basis.",
+    "learning_goals": "(K2) Explain the characteristics, commonalities, and differences between black-box, white-box, and experience-based test techniques.\n(K1) Recall the relationship between test basis, test conditions, test cases, and coverage items.\n(K2) Distinguish when each category of technique is appropriate for a given test object and test basis.\n(K2) Explain how coverage is measured and why 100% coverage of a chosen criterion does not mean exhaustive testing.",
+    "theory": "The ISTQB CTFL v4.0 syllabus splits test techniques into three categories. Black-box test techniques (also called behavior-based or specification-based) derive test conditions, test cases, and test data from the test basis (requirements, user stories, specifications) without reference to the internal structure of the test object. White-box test techniques (structure-based) derive tests from the internal structure or implementation, such as code, architecture, or call flows. Experience-based test techniques use the knowledge and experience of testers to design tests for things not easily covered by the other two categories.\n\nThe syllabus defines a precise vocabulary you must use correctly. The test basis is the body of knowledge used as the basis for test analysis and design. A test condition is a testable aspect of a component or system identified during test analysis. A test case is a set of preconditions, inputs, actions, expected results, and postconditions developed during test design. A coverage item is an attribute or combination of attributes derived from one or more test conditions by using a test technique; coverage is the degree to which coverage items have been exercised, expressed as a percentage.\n\nBlack-box techniques in the syllabus are equivalence partitioning, boundary value analysis, decision table testing, and state transition testing. Their common feature is that coverage is measured against the specification, and gaps in the specification cannot be detected by these techniques alone. White-box techniques in the syllabus are statement testing and branch testing; their strength is that coverage is measured against the actual code, exposing untested executable lines and decision outcomes.\n\nExperience-based techniques include error guessing, exploratory testing, and checklist-based testing. They complement the structured techniques: they find defects the specification never described and adapt to information learned during testing, but coverage is harder to measure objectively and results depend heavily on the tester's skill.\n\nA central syllabus principle (Principle 2, exhaustive testing is impossible) underlies all techniques: you can never test every input combination, so techniques exist to select a small, justifiable subset. Achieving 100% coverage of a chosen criterion (for example 100% statement coverage) is not the same as testing everything; it only means every coverage item of that one criterion was exercised. Choosing the right technique depends on the test object, the test basis available, the risk level, regulatory context, tester skill, and time.",
+    "key_terms": "black-box test technique, white-box test technique, experience-based test technique, test basis, test condition, test case, coverage item, coverage",
+    "real_world_example": "A team is testing a loan-eligibility module. The business analyst's specification (test basis) lists income brackets and age limits, so the testers apply black-box techniques (equivalence partitioning and boundary value analysis) to derive cases from it. A developer then shares the source code, revealing an undocumented branch that rejects applicants with a flagged account; the team adds white-box branch testing to exercise that hidden decision. Finally a senior tester runs an exploratory session and guesses at malformed currency inputs the spec never mentioned, catching a crash. All three categories together give far better defect detection than any one alone.",
+    "step_by_step": "1. Identify the test object and gather the available test basis (requirements, user stories, code, models).\n2. Decide which category fits: specification available but no code access -> black-box; code/structure available and structural coverage required -> white-box; gaps, low-detail specs, or high-risk areas -> add experience-based.\n3. Perform test analysis to identify test conditions from the test basis.\n4. Apply the chosen technique to derive coverage items from those test conditions.\n5. Design test cases (preconditions, inputs, actions, expected results, postconditions) that exercise the coverage items.\n6. Measure coverage as exercised coverage items divided by total coverage items, expressed as a percentage.\n7. Combine categories where risk justifies it, and document which technique produced each case for traceability.",
+    "common_mistakes": "Believing 100% coverage of one criterion equals exhaustive or defect-free testing.\nConfusing black-box and white-box: trying to design statement or branch coverage without access to the code.\nTreating experience-based testing as 'unstructured clicking' rather than a recognized, complementary technique.\nMixing up test condition (a testable aspect) with coverage item (the attribute derived from it by a technique) and test case.\nThinking one technique is universally best, instead of choosing based on test basis, risk, and context.",
+    "practical_use_case": "On the job you constantly decide which technique to reach for when a story arrives. On the exam, the Test Analysis and Design chapter (Chapter 4) repeatedly asks you to classify a named technique as black-box, white-box, or experience-based, and to match a scenario to the most suitable technique, so memorizing the three categories and their members is essential.",
+    "summary": "Test techniques fall into three CTFL categories: black-box (specification-based), white-box (structure-based), and experience-based. Each derives coverage items and test cases differently, measures coverage against a different reference, and suits different situations. They are complementary, and full coverage of one criterion never means exhaustive testing.",
+    "example": "Test object: a 'transfer funds' feature. Test basis available and technique mapping:\n\n```\n| Test basis available        | Category        | Technique example        | Coverage measured against |\n|-----------------------------|-----------------|--------------------------|---------------------------|\n| Requirement: amount 1-10000 | Black-box       | Boundary value analysis  | Specification boundaries  |\n| Source code with if/else    | White-box       | Branch testing           | Code decision outcomes    |\n| Tester intuition on edge    | Experience-based| Error guessing           | Tester's defect knowledge |\n```\n\nFrom the requirement 'amount must be 1-10000', black-box BVA yields coverage items 0, 1, 10000, 10001. From the code, branch testing finds an extra decision (insufficient-funds) producing 2 more coverage items. Error guessing adds negative and non-numeric inputs. Coverage for branch testing is reported as exercised branches / total branches x 100%.",
+    "interactive": "You are given a 'change password' feature. You have the written acceptance criteria and access to the source code, and a day to test. List which technique category you would use for: (a) the length rule '8-64 characters', (b) an undocumented code path that logs out other sessions, and (c) unusual inputs like emoji and pasted whitespace. Justify each choice using CTFL terminology.",
+    "expected_answer": "(a) Black-box: the length rule comes from the specification (test basis) without needing code, so equivalence partitioning plus boundary value analysis fit; coverage items are 7, 8, 64, 65. (b) White-box: the path is visible only in the code's internal structure, so branch (or statement) testing is needed to ensure that decision outcome is exercised; coverage is measured against the code. (c) Experience-based: emoji and pasted whitespace are not in the specification, so error guessing or an exploratory session is appropriate, complementing the structured techniques. A strong answer notes that combining all three gives better defect detection than any alone and that 100% coverage of any one criterion is not exhaustive testing.",
+    "homework": "Take one real user story from any project. Identify its test basis, list two test conditions, then show how each of the three technique categories could contribute test cases for that story. Produce a short table mapping technique category -> specific technique -> what it would catch that the others might miss.",
+    "expected_result": "A table with three rows (black-box, white-box, experience-based), each naming a specific syllabus technique, the coverage items or focus it produces, and the unique value it adds. The submission correctly uses the terms test basis, test condition, coverage item, and coverage, and explicitly states that full coverage of one criterion is not exhaustive testing.",
+    "quiz": [
+      {
+        "question": "According to the CTFL v4.0 syllabus, which set of techniques are all black-box (specification-based)?",
+        "answers": [
+          "Statement testing, branch testing, error guessing",
+          "Equivalence partitioning, boundary value analysis, decision table testing, state transition testing",
+          "Exploratory testing, checklist-based testing, branch testing",
+          "Boundary value analysis, statement testing, error guessing"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "What is a coverage item as defined by the syllabus?",
+        "answers": [
+          "A defect found during test execution",
+          "The body of knowledge used as the basis for test design",
+          "An attribute or combination of attributes derived from test conditions by using a test technique",
+          "A set of preconditions, inputs, actions, expected results, and postconditions"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "Which statement about achieving 100% coverage of a chosen criterion is correct?",
+        "answers": [
+          "It guarantees the software is defect-free",
+          "It is equivalent to exhaustive testing",
+          "It only means every coverage item of that one criterion was exercised, not that everything was tested",
+          "It is impossible to ever measure"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "A tester has no access to the code but has a detailed requirements document. Which technique category is directly applicable?",
+        "answers": [
+          "White-box techniques",
+          "Black-box techniques",
+          "Only experience-based techniques",
+          "Path coverage techniques"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "What primarily distinguishes experience-based techniques from the other two categories?",
+        "answers": [
+          "They rely on the knowledge and experience of testers and find defects not easily covered by structured techniques",
+          "They always achieve measurable 100% coverage",
+          "They require access to the source code",
+          "They can only be used after release"
+        ],
+        "correct_index": 0
+      }
+    ]
+  },
+  {
+    "section": "istqb",
+    "title": "Equivalence Partitioning",
+    "short_description": "A black-box technique that divides the input or output data of a test object into partitions that the test object is expected to handle the same way, so one value per partition represents the whole class.",
+    "learning_goals": "(K3) Apply equivalence partitioning to derive test cases from a given specification.\n(K2) Explain why one representative value per partition is sufficient and how invalid partitions are handled.\n(K2) Distinguish valid and invalid equivalence partitions and identify them for inputs and outputs.\n(K2) Measure equivalence partitioning coverage as exercised partitions over total partitions.",
+    "theory": "Equivalence partitioning (EP) divides the data handled by the test object into partitions (also called equivalence classes) in which the test object is expected to behave the same way for every member of the partition. The core assumption is that if one value in a partition reveals a defect, every value in that partition is likely to reveal it too, and if one value passes, the others in that partition probably pass as well. Therefore a single representative value per partition is enough, dramatically reducing the number of tests.\n\nPartitions exist for valid values (valid equivalence partitions, handled normally) and for invalid values (invalid equivalence partitions, that should be rejected or trigger error handling). The syllabus stresses that partitions can be identified for any data element related to the test object, including inputs, outputs, internal values, time-related values, and interface parameters, not only input fields.\n\nA partition can itself be divided into sub-partitions when the test object handles parts of it differently. For example, the valid range 1-100 might split into 1-50 and 51-100 if the specification says they map to different prices. Partitions should not overlap and together should cover the full range of possible values.\n\nThe coverage criterion for EP is the percentage of identified equivalence partitions exercised by at least one test case, divided by the total number of identified partitions, expressed as a percentage. To achieve 100% partition coverage, you need test cases covering every valid and every invalid partition.\n\nAn important exam rule from the syllabus: to keep test cases independent and avoid masking defects, each test case should cover at most one invalid partition. If a single test combines two invalid inputs, the first error may stop processing and hide whether the second was handled, so invalid partitions are usually exercised one at a time, while several valid partitions may be combined in one test.",
+    "key_terms": "equivalence partitioning, equivalence partition, valid partition, invalid partition, coverage, test condition, test case, black-box test technique",
+    "real_world_example": "An online store applies free shipping based on order total. The specification says: under 25.00 = no free shipping (paid shipping), 25.00 to 199.99 = free standard shipping, 200.00 and above = free express shipping; negative and non-numeric totals are invalid. The tester identifies three valid partitions (each mapping to a different shipping outcome) and two invalid partitions (negative, non-numeric). Picking 10.00, 80.00, 350.00, -5.00, and 'abc' as representatives exercises all five partitions with just five tests instead of trying hundreds of amounts.",
+    "step_by_step": "1. Identify the data element to partition (input field, output, internal value, or parameter).\n2. From the specification, determine the ranges or sets of values the test object treats the same way.\n3. Split these into valid partitions (accepted) and invalid partitions (rejected/error).\n4. Sub-divide any partition the test object handles differently into sub-partitions.\n5. Choose one representative value from each partition.\n6. Design test cases: combine valid partitions freely, but cover only one invalid partition per test case.\n7. Calculate coverage = exercised partitions / total partitions x 100%, and add cases until you reach the target.",
+    "common_mistakes": "Combining two invalid partitions in one test case, so the first error masks the second.\nForgetting to partition outputs and internal values, partitioning only obvious input fields.\nLetting partitions overlap or leaving gaps so the full data range is not covered.\nWriting many tests inside the same partition (redundant) while missing other partitions entirely.\nAssuming EP alone is enough and skipping boundary value analysis, which targets the edges between partitions.",
+    "practical_use_case": "EP is the first technique you apply to almost any field with distinct value groups (status codes, ranges, categories) to slash test counts while staying systematic. On the exam you are frequently given a specification with ranges and asked to count the partitions or pick the minimum set of values for 100% partition coverage, and to recognize the one-invalid-partition-per-test rule.",
+    "summary": "Equivalence partitioning groups data into partitions the test object treats identically, then tests one representative per partition for both valid and invalid classes. It minimizes redundant tests while keeping coverage measurable, and the key discipline is covering only one invalid partition per test case. It pairs naturally with boundary value analysis.",
+    "example": "Specification: a discount field accepts an integer percentage from 0 to 70; values outside this range or non-integers are rejected.\n\n```\nPartitions:\n  P1 invalid (low):   < 0          rep: -5\n  P2 valid:           0 to 70      rep: 35\n  P3 invalid (high):  > 70         rep: 90\n  P4 invalid (type):  non-integer  rep: \"x\"\n\nTest cases for 100% partition coverage (one invalid per case):\n| ID | Input | Partition        | Expected result        |\n|----|-------|------------------|------------------------|\n| E1 | 35    | P2 valid         | Accepted               |\n| E2 | -5    | P1 invalid low   | Rejected: out of range |\n| E3 | 90    | P3 invalid high  | Rejected: out of range |\n| E4 | x     | P4 invalid type  | Rejected: not a number |\n```\n\nCoverage achieved: 4 of 4 partitions exercised = 100% equivalence partition coverage with 4 test cases.",
+    "interactive": "A web form field 'quantity' accepts whole numbers 1 to 99; 0 and above 99 are rejected, and blank is rejected. Identify all equivalence partitions (valid and invalid), pick one representative value for each, and state how many test cases you need for 100% partition coverage.",
+    "expected_answer": "Partitions: valid 1-99 (rep 50); invalid below range 0 or lower (rep 0); invalid above range >99 (rep 100); invalid blank/empty (rep ''). That is one valid and three invalid partitions = four partitions, so four test cases give 100% partition coverage, each invalid partition exercised in its own case. A strong answer notes that combining 0 and 100 into one test would violate the one-invalid-partition-per-test rule and could mask a defect, and that boundary value analysis would additionally test 1, 99, 100.",
+    "homework": "Choose a real input from an app you use that has at least three distinct value groups (for example a shipping cost tier or an age-based category). Document the specification, list every valid and invalid equivalence partition, choose representative values, and write the minimum test cases for 100% partition coverage following the one-invalid-per-test rule.",
+    "expected_result": "A document containing the specification, a complete and non-overlapping partition list separated into valid and invalid, one representative value per partition, and a test-case table reaching 100% partition coverage where each test case covers at most one invalid partition. Coverage is calculated explicitly as exercised partitions over total partitions.",
+    "quiz": [
+      {
+        "question": "What is the underlying assumption of equivalence partitioning?",
+        "answers": [
+          "Every input value must be tested individually",
+          "All members of a partition are processed in the same way, so one representative value suffices",
+          "Only boundary values matter",
+          "Invalid values never need testing"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "To keep defects from being masked, how many invalid partitions should a single test case typically cover?",
+        "answers": [
+          "As many as possible to save time",
+          "At most one",
+          "Exactly two",
+          "None, invalid partitions are never tested"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "A field accepts ages 18-65; below 18 and above 65 are invalid, and blank is invalid. How many equivalence partitions are there?",
+        "answers": [
+          "2",
+          "3",
+          "4",
+          "5"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "Equivalence partitions can be identified for which of the following?",
+        "answers": [
+          "Only input fields visible on the screen",
+          "Inputs, outputs, internal values, and interface parameters",
+          "Only the source code branches",
+          "Only invalid data"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "How is equivalence partitioning coverage measured?",
+        "answers": [
+          "Number of test cases divided by number of requirements",
+          "Number of defects found divided by partitions",
+          "Number of partitions exercised divided by total number of partitions, as a percentage",
+          "Number of boundaries tested divided by partitions"
+        ],
+        "correct_index": 2
+      }
+    ]
+  },
+  {
+    "section": "istqb",
+    "title": "Boundary Value Analysis",
+    "short_description": "A black-box technique that tests the values at the edges of equivalence partitions, where defects cluster, using either the 2-value or 3-value boundary approach.",
+    "learning_goals": "(K3) Apply boundary value analysis to derive test cases using the 2-value and 3-value approaches.\n(K2) Explain why boundaries are especially defect-prone and how BVA relates to equivalence partitioning.\n(K2) Identify the boundaries of ordered equivalence partitions for a given specification.\n(K2) Measure boundary value coverage as exercised boundary values over total boundary values.",
+    "theory": "Boundary value analysis (BVA) is an extension of equivalence partitioning that focuses on the boundaries of partitions, the minimum and maximum values of an ordered partition. It is based on the observation that defects cluster at boundaries, because programmers frequently make off-by-one errors (using < instead of <=, or the wrong limit). BVA only applies to partitions that are ordered and made up of numeric or sequential data, so the values have neighbors.\n\nThe syllabus describes two variants. The 2-value boundary value analysis tests each boundary value and its closest neighbor in the adjacent partition. For a partition with boundary b, you test b and the value just across the boundary (b-1 or b+1, depending on direction). The 3-value boundary value analysis tests each boundary value together with both of its neighbors: the value before, the boundary itself, and the value after. The 3-value approach is more rigorous and can catch defects the 2-value approach misses, at the cost of more test cases.\n\nFor example, the valid partition 1-100 has two boundaries: a lower boundary at 1 and an upper boundary at 100. With the 2-value approach you test 0,1 (lower) and 100,101 (upper). With the 3-value approach you test 0,1,2 (lower) and 99,100,101 (upper).\n\nCoverage for BVA is the percentage of boundary values exercised by tests divided by the total number of identified boundary values. To reach 100% boundary coverage with the chosen approach, every boundary value (and its required neighbors) must be exercised.\n\nBVA is always used together with equivalence partitioning: EP tells you the partitions, and BVA tells you which specific values at their edges to test. A common exam trap is forgetting that the value just outside the valid range belongs to an adjacent partition and is itself a boundary to test, and confusing how many test values the 2-value versus 3-value approach requires.",
+    "key_terms": "boundary value analysis, boundary value, 2-value boundary value analysis, 3-value boundary value analysis, equivalence partition, coverage, off-by-one error, black-box test technique",
+    "real_world_example": "A payroll system pays overtime only for hours strictly above 40 per week. A tester applies BVA to the 40-hour boundary. With the 3-value approach they test 39 (no overtime), 40 (the boundary, no overtime per spec), and 41 (overtime begins). The test at 40 immediately exposes an off-by-one bug where the developer wrote hours >= 40, paying overtime one hour too early. Plain equivalence partitioning with a single value like 50 would have missed this defect entirely.",
+    "step_by_step": "1. Apply equivalence partitioning first to identify the ordered partitions.\n2. For each ordered partition, identify its minimum and maximum boundary values.\n3. Choose the 2-value or 3-value approach based on required rigor.\n4. For 2-value: test each boundary and its nearest neighbor across the boundary.\n5. For 3-value: test each boundary together with the value immediately before and immediately after it.\n6. Design test cases with expected results that reflect which partition each value belongs to.\n7. Calculate coverage = boundary values exercised / total boundary values x 100%.",
+    "common_mistakes": "Testing only the valid boundary and forgetting the value just outside it in the adjacent partition.\nConfusing the count of values: 2-value uses the boundary plus one neighbor; 3-value uses the boundary plus both neighbors.\nApplying BVA to unordered or categorical data (like colors or country codes) where boundaries do not exist.\nAssuming BVA replaces equivalence partitioning rather than complementing it.\nUsing the midpoint of a range as a 'boundary', boundaries are the edges, not the middle.",
+    "practical_use_case": "BVA is the go-to technique for any numeric range, date range, length limit, or quota on the job, since edge defects are the most common functional bugs. The exam loves to ask you to list the exact boundary values for a given range under the 2-value or 3-value approach, or to count how many test values a specification requires, so know both approaches precisely.",
+    "summary": "Boundary value analysis tests the edges of ordered equivalence partitions, where off-by-one defects concentrate. The 2-value approach tests each boundary plus its nearest neighbor; the 3-value approach tests each boundary plus both neighbors. BVA always accompanies equivalence partitioning and applies only to ordered, numeric or sequential data.",
+    "example": "Specification: a hotel booking accepts a number of nights from 1 to 30; outside this range is rejected.\n\nOrdered valid partition: 1-30. Boundaries: lower = 1, upper = 30.\n\n```\n2-value approach (boundary + nearest neighbor across the edge):\n| ID | Input | Expected result | Boundary tested |\n|----|-------|-----------------|-----------------|\n| B1 | 0     | Rejected        | lower (outside) |\n| B2 | 1     | Accepted        | lower (inside)  |\n| B3 | 30    | Accepted        | upper (inside)  |\n| B4 | 31    | Rejected        | upper (outside) |\n\n3-value approach (boundary + both neighbors):\n  lower: 0, 1, 2\n  upper: 29, 30, 31\n  -> values tested: 0,1,2,29,30,31 (6 test cases)\n```\n\nCoverage: with the 2-value approach, 4 of 4 boundary values exercised = 100%. With the 3-value approach, 6 of 6 = 100%.",
+    "interactive": "A withdrawal limit allows amounts from 20 to 500 inclusive. List the exact values you would test using (a) the 2-value approach and (b) the 3-value approach, and state how many test cases each requires.",
+    "expected_answer": "Boundaries are the lower edge 20 and the upper edge 500. (a) 2-value approach: 19, 20 at the lower boundary and 500, 501 at the upper boundary, that is four values / four test cases. (b) 3-value approach: 19, 20, 21 at the lower boundary and 499, 500, 501 at the upper boundary, that is six values / six test cases. A strong answer notes that 19 and 501 fall in the invalid (rejected) partitions while 20 and 500 are accepted, and that BVA is applied after equivalence partitioning identified the 20-500 ordered partition.",
+    "homework": "Pick a numeric or date range from a real application (a password length rule, an age limit, a date picker, etc.). Document the specification, identify the ordered partition(s) and their boundaries, then produce test-case tables for both the 2-value and the 3-value approaches, including expected results and the coverage achieved.",
+    "expected_result": "A submission with the specification, the ordered partitions and their min/max boundaries, two test-case tables (2-value and 3-value) showing the exact boundary values, expected results that correctly reflect which partition each value belongs to, and a stated coverage percentage for each approach. It correctly distinguishes the value just inside from the value just outside each boundary.",
+    "quiz": [
+      {
+        "question": "Why does boundary value analysis focus on the edges of partitions?",
+        "answers": [
+          "Because edge values are easier to type",
+          "Because defects such as off-by-one errors tend to cluster at boundaries",
+          "Because the middle of a range is always correct",
+          "Because boundaries are the only values in a partition"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "For the valid range 1-100, which values does the 3-value boundary approach test at the lower boundary?",
+        "answers": [
+          "1 only",
+          "0 and 1",
+          "0, 1, and 2",
+          "1, 50, and 100"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "Boundary value analysis can be applied to which kind of data?",
+        "answers": [
+          "Ordered numeric or sequential partitions",
+          "Unordered categorical sets such as colors",
+          "Boolean flags only",
+          "Any data regardless of order"
+        ],
+        "correct_index": 0
+      },
+      {
+        "question": "How does BVA relate to equivalence partitioning?",
+        "answers": [
+          "It replaces equivalence partitioning entirely",
+          "It is unrelated to equivalence partitioning",
+          "It extends equivalence partitioning by testing the boundaries of the identified partitions",
+          "It is a white-box technique unrelated to partitions"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "A range is 10-20 inclusive. Using the 2-value approach, which set of values is correct?",
+        "answers": [
+          "10 and 20 only",
+          "9, 10, 20, 21",
+          "9, 10, 11, 19, 20, 21",
+          "10, 15, 20"
+        ],
+        "correct_index": 1
+      }
+    ]
+  },
+  {
+    "section": "istqb",
+    "title": "Decision Table Testing",
+    "short_description": "A black-box technique that records combinations of conditions and their resulting actions in a table, useful when behavior depends on several interacting logical rules.",
+    "learning_goals": "(K3) Apply decision table testing to derive test cases from a set of conditions and actions.\n(K2) Explain how a decision table represents combinations of conditions and corresponding actions as rules.\n(K2) Distinguish full (exhaustive) decision tables from collapsed tables and explain minimum-coverage criteria.\n(K2) Identify infeasible rule combinations and the effect of don't-care entries.",
+    "theory": "Decision table testing is a black-box technique for systems whose behavior depends on combinations of conditions. The technique records the conditions (the inputs, often expressed as true/false, or as ranges/values) and the resulting actions (the outputs or behaviors) of the test object in a table. Each column of the table is a rule: a unique combination of condition values together with the action(s) the system should produce for that combination.\n\nIn the table, the condition rows show every combination of condition outcomes, and the action rows show what should happen for each combination. Entries are typically 'T' (true), 'F' (false), and sometimes '-' for a don't-care condition whose value does not affect the outcome for that rule. For actions, 'X' (or 'Y') marks an action that occurs for that rule.\n\nA full (exhaustive) decision table with n binary conditions has 2 to the power n rules. Many of these may be impossible (infeasible) given the business logic, or several rules may produce the same action regardless of one condition. A collapsed (minimized) decision table merges rules using don't-care entries to remove redundant or infeasible combinations, producing fewer columns while preserving the logic.\n\nThe minimum coverage criterion for decision table testing is to have at least one test case per rule (per column) in the table, which means exercising every feasible combination of conditions that the table represents. Coverage is the percentage of rules exercised by test cases divided by the total number of rules.\n\nThe strength of decision tables is that they make complex business rules explicit and expose combinations that requirements often leave undefined; the act of building the table itself reveals gaps and contradictions in the specification. They are ideal when discount logic, eligibility rules, or configuration options interact, but become unwieldy when there are many conditions, in which case collapsing or pairwise techniques help.",
+    "key_terms": "decision table testing, condition, action, rule, full decision table, collapsed decision table, don't-care, coverage",
+    "real_world_example": "An insurance quote depends on three conditions: applicant is a member (T/F), applicant is under 25 (T/F), and the car is electric (T/F). The actions are a base premium plus possible surcharges and discounts. The tester builds a decision table with 2x2x2 = 8 rules, then notices that for non-members the electric discount never applies, allowing several rules to collapse using don't-care entries. Building the table reveals an undefined case (member, under 25, electric) the business analyst never specified, prompting a clarification before any code is even written.",
+    "step_by_step": "1. Identify all conditions (causes) the test object evaluates and all actions (effects) it can take.\n2. List every condition as a row in the upper part of the table; list every action as a row in the lower part.\n3. Construct the columns: for n binary conditions, create 2 to the power n combinations for a full table.\n4. Fill in the action rows for each rule, marking which actions occur.\n5. Remove or merge infeasible rules and combine rules that share outcomes using don't-care ('-') entries to collapse the table.\n6. Derive at least one test case per remaining rule (column).\n7. Calculate coverage = rules exercised / total rules x 100%.",
+    "common_mistakes": "Forgetting that a full table with n binary conditions has 2^n rules, miscounting columns.\nIgnoring infeasible combinations and writing impossible test cases, or conversely deleting feasible rules.\nMisreading don't-care ('-') as 'false' instead of 'value does not matter for this rule'.\nStopping at the first rule that passes instead of covering every rule for minimum coverage.\nUsing a decision table for a simple range better served by equivalence partitioning or boundary analysis.",
+    "practical_use_case": "Decision tables shine on the job whenever eligibility, pricing, permissions, or configuration logic combines several flags, and they double as a requirements-review tool because gaps surface immediately. On the exam you are often asked to count the rules in a full table (2^n), to read which action a given rule produces, or to identify the minimum number of test cases for full rule coverage.",
+    "summary": "Decision table testing captures combinations of conditions and the actions they trigger as rules in a table, making interacting business logic explicit and testable. A full table has 2^n rules for n binary conditions and can be collapsed with don't-care entries; minimum coverage requires at least one test case per feasible rule. It excels at exposing undefined and contradictory rule combinations.",
+    "example": "Online store: free shipping is granted if the customer is a member OR the order total is at least 50. Conditions: C1 member?, C2 order >= 50?. Action: A1 free shipping.\n\n```\nFull decision table (2 conditions -> 4 rules):\n| Rule        | R1 | R2 | R3 | R4 |\n|-------------|----|----|----|----|\n| C1 member?  | T  | T  | F  | F  |\n| C2 >= 50?   | T  | F  | T  | F  |\n|-------------|----|----|----|----|\n| A1 free ship| X  | X  | X  |    |\n\nTest cases (one per rule):\n| ID | Member | Total | Expected         |\n|----|--------|-------|------------------|\n| D1 | yes    | 80    | Free shipping    |\n| D2 | yes    | 30    | Free shipping    |\n| D3 | no     | 80    | Free shipping    |\n| D4 | no     | 30    | Paid shipping    |\n```\n\nCoverage: 4 of 4 rules exercised = 100% rule coverage. Because A1 occurs whenever C1 OR C2 is true, the table can collapse to 'C1=T (C2 don't-care) -> free' and 'C2=T (C1 don't-care) -> free' and 'both F -> paid', but the full table guarantees no combination is missed.",
+    "interactive": "A login feature locks an account when BOTH of these are true: the password is wrong AND it is the third consecutive failed attempt. Build the full decision table for the two conditions, mark the lock action, and state how many test cases give 100% rule coverage.",
+    "expected_answer": "Conditions: C1 password wrong? and C2 third consecutive failure?. Full table has 2^2 = 4 rules: (T,T) lock; (T,F) no lock, just reject; (F,T) no lock (a correct password succeeds); (F,F) no lock, success. Only the (T,T) rule triggers the lock action. Four rules require four test cases for 100% rule coverage. A strong answer notes that (F,T) and (F,F) are essentially the same successful-login outcome and could collapse with a don't-care on C2 when the password is correct, and that building the table exposes whether the spec defines what happens on a correct password during a lock streak.",
+    "homework": "Find or invent a real feature governed by at least three boolean conditions (for example a checkout discount, an access-control rule, or a notification trigger). Build the full decision table, mark all actions, identify and justify any infeasible rules, collapse the table with don't-care entries, and write the minimum set of test cases for full rule coverage.",
+    "expected_result": "A submission containing a correctly sized full decision table (2^n rules for n conditions), accurate action markings, identification of infeasible combinations with justification, a collapsed table using don't-care entries, and a test-case set covering every feasible rule once, with the coverage percentage stated. Any specification gaps revealed by the table are noted.",
+    "quiz": [
+      {
+        "question": "How many rules does a full decision table have for 4 independent binary conditions?",
+        "answers": [
+          "4",
+          "8",
+          "16",
+          "32"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "In a decision table, what does a '-' (don't-care) entry for a condition mean?",
+        "answers": [
+          "The condition is always false for that rule",
+          "The condition's value does not affect the outcome for that rule",
+          "The condition was not tested",
+          "The rule is infeasible"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "What is the minimum coverage criterion for decision table testing?",
+        "answers": [
+          "One test case for the whole table",
+          "At least one test case per condition",
+          "At least one test case per rule (column) in the table",
+          "One test case per action only"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "What is a key benefit of building a decision table during test analysis?",
+        "answers": [
+          "It measures code statement coverage",
+          "It guarantees the code has no bugs",
+          "It makes combinations of conditions explicit and often reveals gaps or contradictions in the requirements",
+          "It replaces the need for boundary value analysis on ranges"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "When is decision table testing the most appropriate technique?",
+        "answers": [
+          "When behavior depends on a single numeric range",
+          "When behavior depends on combinations of several interacting conditions",
+          "When testing requires access to the source code structure",
+          "When the system has many sequential states and transitions"
+        ],
+        "correct_index": 1
+      }
+    ]
+  },
+  {
+    "section": "istqb",
+    "title": "State Transition Testing",
+    "short_description": "A black-box technique that models a test object as states, events, transitions, and actions, deriving test cases that exercise valid (and optionally invalid) transitions of a state transition diagram or table.",
+    "learning_goals": "(K3) Apply state transition testing to derive test cases from a state transition diagram or table.\n(K2) Explain the elements of a state transition model: states, events, transitions, actions, and guards.\n(K2) Distinguish the coverage criteria: all states, all valid transitions (0-switch), and all transitions.\n(K2) Identify invalid transitions and the value of a state transition table in finding them.",
+    "theory": "State transition testing models the behavior of a test object that responds differently depending on its current condition or history. The model consists of states (the conditions the system can be in), events (the triggers or inputs), transitions (movements from one state to another caused by an event), and optional actions and guard conditions. It is represented as a state transition diagram (a graph of states and arrows) or a state transition table (a grid listing every state-event combination).\n\nA transition is fired by an event when the system is in a particular state; it may have a guard condition that must be true for the transition to occur, and it may produce an action (an output) as a side effect. A valid transition is one defined in the model. An invalid transition is a state-event combination that should not cause a state change (or should be rejected); these are often left blank in the diagram but appear explicitly in the state transition table, which is why the table is valuable for finding missing or improper handling.\n\nThe syllabus defines coverage criteria of increasing strength. All states coverage requires test cases that visit every state at least once, but it is weak because it does not guarantee every transition is exercised. All valid transitions coverage (also called 0-switch coverage) requires every valid single transition to be exercised at least once; this is the most common and recommended baseline. All transitions coverage requires exercising every transition in a full state transition table, including the invalid (undefined) ones, which is the strongest of these three.\n\nState transition testing is the right choice for workflows and lifecycles: order status, media players, authentication sessions, document approval, and embedded device modes. It catches defects where the system allows an illegal transition (for example shipping an unpaid order) or where a valid transition does not produce the correct action. A state transition table is especially good at exposing forgotten invalid transitions that a diagram alone hides.",
+    "key_terms": "state transition testing, state, event, transition, guard condition, action, state transition diagram, state transition table, 0-switch coverage, all states coverage",
+    "real_world_example": "An e-commerce order moves through New -> Paid -> Shipped -> Delivered, with Cancel possible only from New or Paid. The tester draws a state transition diagram, then builds a state transition table covering every order-status/event pair. The table immediately reveals that the requirements never said what should happen if a Cancel event arrives while the order is Shipped. Testing this invalid transition uncovers a bug: the system wrongly refunds and cancels an already-shipped order, a defect the happy-path diagram would never have surfaced.",
+    "step_by_step": "1. Identify all the states the test object can be in.\n2. Identify the events that can occur and any guard conditions.\n3. Draw the state transition diagram, mapping each event to the resulting transition and any action.\n4. Build the state transition table with every state-event combination, marking valid transitions and leaving invalid ones identifiable.\n5. Choose a coverage criterion: all states, all valid transitions (0-switch), or all transitions.\n6. Derive test cases as sequences of events that traverse the required transitions, with expected resulting states and actions.\n7. Calculate coverage against the chosen criterion (for example valid transitions exercised / total valid transitions x 100%).",
+    "common_mistakes": "Confusing all states coverage with all transitions coverage; visiting every state does not exercise every transition.\nForgetting invalid transitions, which only the state transition table makes visible.\nOmitting guard conditions, so a transition that should be blocked is treated as always allowed.\nTreating each transition as an isolated test instead of a sequence of events from an initial state.\nAssuming 0-switch coverage exercises sequences of multiple transitions; it covers single transitions only.",
+    "practical_use_case": "State transition testing is essential for any feature with a lifecycle or session: order/payment workflows, login/lockout flows, subscription states, and device modes. On the exam you are often given a diagram or table and asked which transitions are valid, to count the test cases needed for all-states versus all-transitions coverage, or to identify an invalid transition that should be tested.",
+    "summary": "State transition testing models a system as states, events, transitions, guards, and actions, captured in a diagram or table. Coverage criteria range from all-states (weak), through all-valid-transitions or 0-switch (the recommended baseline), to all-transitions (strongest, including invalid ones). The state transition table is the key tool for exposing forgotten invalid transitions.",
+    "example": "A media player has states Stopped, Playing, Paused. Events: play, pause, stop.\n\n```\nState transition table (S/E -> next state; '-' = invalid/no transition):\n| Current \\ Event | play    | pause   | stop    |\n|-----------------|---------|---------|---------|\n| Stopped         | Playing | -       | -       |\n| Playing         | -       | Paused  | Stopped |\n| Paused          | Playing | -       | Stopped |\n\nValid transitions (0-switch), 6 total:\n  T1 Stopped --play--> Playing\n  T2 Playing --pause--> Paused\n  T3 Playing --stop--> Stopped\n  T4 Paused --play--> Playing\n  T5 Paused --stop--> Stopped\n\nTest case for all-valid-transition coverage (one event sequence):\n  Start Stopped -> play (Playing) -> pause (Paused) -> play (Playing)\n  -> stop (Stopped) ... plus a path covering Playing--stop and Paused--stop.\n```\n\nCoverage: all-states needs only to visit Stopped, Playing, Paused. 0-switch coverage requires exercising all 5 valid transitions. All-transitions coverage would additionally test the invalid cells (e.g., pause while Stopped) and confirm they are rejected.",
+    "interactive": "A turnstile has two states: Locked and Unlocked. Events: coin (inserts payment) and push. Coin unlocks it; push while Unlocked locks it and lets one person through; push while Locked does nothing; coin while Unlocked does nothing. Build the state transition table, list the valid transitions, and give a test sequence achieving all-valid-transition (0-switch) coverage.",
+    "expected_answer": "Table: Locked + coin -> Unlocked; Locked + push -> Locked (no change); Unlocked + push -> Locked (person passes); Unlocked + coin -> Unlocked (no change). Valid state-changing transitions are Locked--coin-->Unlocked and Unlocked--push-->Locked. A test sequence starting Locked: coin (Unlocked) -> push (Locked) exercises both state-changing transitions. For all-transitions coverage you would also test Locked+push and Unlocked+coin to confirm no state change occurs. A strong answer notes the difference between all-states coverage (visit Locked and Unlocked) and all-transitions coverage (include the self/invalid transitions).",
+    "homework": "Model a real lifecycle from an app you know (order status, subscription, document approval, or login/lockout). Produce both a state transition diagram and a complete state transition table including invalid transitions, then write test cases for 0-switch (all valid transitions) coverage and identify at least two invalid transitions worth testing.",
+    "expected_result": "A submission with a clear state transition diagram, a complete state transition table covering every state-event combination (valid and invalid clearly marked), a set of test cases as event sequences achieving 100% valid-transition coverage with expected resulting states and actions, and at least two identified invalid transitions with the expected (rejecting) behavior. Coverage is stated against the chosen criterion.",
+    "quiz": [
+      {
+        "question": "Which elements make up a state transition model?",
+        "answers": [
+          "Partitions, boundaries, and representatives",
+          "States, events, transitions, and (optionally) guards and actions",
+          "Conditions, actions, and rules",
+          "Statements and branches"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "What does all valid transitions (0-switch) coverage require?",
+        "answers": [
+          "Visiting every state at least once",
+          "Exercising every valid single transition at least once",
+          "Exercising every pair of consecutive transitions",
+          "Testing only invalid transitions"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Why is a state transition table valuable compared with a diagram alone?",
+        "answers": [
+          "It runs the tests automatically",
+          "It makes every state-event combination explicit, exposing invalid/undefined transitions",
+          "It guarantees branch coverage of the code",
+          "It removes the need to define states"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Which coverage criterion is the strongest of the following three?",
+        "answers": [
+          "All states coverage",
+          "All valid transitions (0-switch) coverage",
+          "All transitions coverage (including invalid ones)",
+          "They are all equally strong"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "Achieving all states coverage guarantees that:",
+        "answers": [
+          "Every valid transition is exercised",
+          "Every invalid transition is rejected",
+          "Every state is visited at least once, but not that every transition is exercised",
+          "The system has no defects"
+        ],
+        "correct_index": 2
+      }
+    ]
+  },
+  {
+    "section": "istqb",
+    "title": "Statement and Branch coverage",
+    "short_description": "White-box (structure-based) techniques that measure and drive testing against the executable statements and the decision outcomes (branches) of the code.",
+    "learning_goals": "(K2) Explain statement coverage and branch coverage and how each is measured.\n(K2) Explain why 100% branch coverage guarantees 100% statement coverage but not vice versa.\n(K2) Explain the value of white-box coverage and its limitations (it cannot find missing functionality).\n(K3) Derive the number of test cases needed to reach a target statement or branch coverage for given code.",
+    "theory": "Statement testing and branch testing are the two white-box (structure-based) techniques in the CTFL v4.0 syllabus. They measure how thoroughly the test cases exercise the internal structure of the code, not the specification. Coverage here is objective and tool-measurable because it is counted against the actual code.\n\nStatement coverage exercises the executable statements (lines) of the code. Statement coverage is the percentage of executable statements that have been executed by the test cases, divided by the total number of executable statements. Achieving 100% statement coverage means every executable line ran at least once. It is a relatively weak criterion: code with an if-without-else can reach 100% statement coverage while never testing the path where the condition is false.\n\nBranch coverage exercises the branches, the outcomes of decision points (every if, while, for, case). Branch coverage is the percentage of branches that have been exercised, divided by the total number of branches. A single if statement has two branches: the true outcome and the false outcome (even when there is no explicit else, the 'fall-through' is a branch). Achieving 100% branch coverage means every decision has been taken in every direction at least once.\n\nA key syllabus relationship to memorize: 100% branch coverage guarantees 100% statement coverage, because exercising every branch necessarily executes every statement, but the reverse is not true, 100% statement coverage does not guarantee 100% branch coverage. Branch coverage is therefore the stronger of the two.\n\nWhite-box coverage tells you what code has run but not whether the code is correct or complete. Its fundamental limitation is that it can only test code that exists: it cannot reveal missing functionality (a requirement never implemented produces no statement or branch to cover). For this reason white-box techniques complement, rather than replace, black-box and experience-based techniques. Statement and branch coverage are widely used in unit testing, in coverage-gated CI pipelines, and in safety-critical standards that mandate minimum structural coverage levels.",
+    "key_terms": "statement coverage, branch coverage, white-box test technique, structure-based testing, coverage item, branch, decision outcome, executable statement",
+    "real_world_example": "A team enforces a CI gate requiring 90% branch coverage on a billing module. A function computes a late fee with an if (daysLate > 0) but no else; the existing unit tests only pass overdue invoices, so daysLate > 0 is always true. Statement coverage reads 100% (every line ran), but branch coverage is only 50% because the false outcome (not overdue) was never taken. Adding a test with daysLate = 0 exercises the missing branch, lifting branch coverage and exposing a defect where a zero-day invoice still added a fee.",
+    "step_by_step": "1. Obtain the code or control-flow of the test object (white-box techniques require code access).\n2. Count the executable statements and identify every decision point and its branches (true/false, each case).\n3. Run the existing tests and measure statement and branch coverage with a coverage tool.\n4. Find unexecuted statements and untaken branches; these are the uncovered coverage items.\n5. Design additional test cases whose inputs force execution of each uncovered statement or branch.\n6. Re-measure until the target coverage is reached.\n7. Remember branch coverage subsumes statement coverage, so target branch coverage for stronger assurance.",
+    "common_mistakes": "Believing 100% statement coverage implies 100% branch coverage; it does not.\nForgetting that an if without an else still has two branches (the false fall-through counts).\nThinking white-box coverage can detect missing requirements or functionality.\nConfusing branches with paths; full path coverage is far stronger and usually infeasible, and is not the same as branch coverage.\nAttempting statement or branch coverage as a black-box activity without access to the code.",
+    "practical_use_case": "Statement and branch coverage are the everyday metrics of unit testing and CI quality gates, and are mandated by safety standards (automotive, aviation, medical) at defined levels. On the exam you must compute the minimum number of tests for a given coverage target on a small code snippet, and reason about the subsumption relationship (branch implies statement, not the reverse).",
+    "summary": "Statement coverage measures executed lines; branch coverage measures decision outcomes taken. Branch coverage is stronger and guarantees statement coverage, while the reverse does not hold. Both are white-box techniques measured against the code and cannot detect missing functionality, so they complement black-box and experience-based testing.",
+    "example": "Consider this pseudocode:\n\n```\nfunction grade(score):\n  1: result = \"FAIL\"\n  2: if score >= 50:\n  3:     result = \"PASS\"\n  4: if score >= 90:\n  5:     result = \"DISTINCTION\"\n  6: return result\n```\n\nStatements: lines 1-6. Decisions: two if statements -> 4 branches (each if has a true and a false outcome).\n\n```\nTest design:\n| Test | score | Path through ifs       | Statements hit | Branches taken          |\n|------|-------|------------------------|----------------|-------------------------|\n| C1   | 95    | both true              | 1,2,3,4,5,6    | if1=T, if2=T            |\n| C2   | 40    | both false             | 1,2,4,6        | if1=F, if2=F            |\n```\n\n- Statement coverage: C1 alone executes lines 1,2,3,4,5,6 = all 6 statements -> 100% statement coverage with ONE test.\n- Branch coverage: C1 covers if1=T and if2=T only (2 of 4 branches = 50%). Adding C2 covers if1=F and if2=F -> all 4 branches = 100% branch coverage with TWO tests.\n\nThis demonstrates that 100% statement coverage (1 test) does not imply 100% branch coverage (needs 2 tests), but the 2 tests achieving 100% branch coverage also achieve 100% statement coverage.",
+    "interactive": "Given the snippet: line1 'x = 0'; line2 'if a > 10:'; line3 '    x = a'; line4 'print(x)'. State (a) how many executable statements and how many branches exist, (b) the minimum number of test cases for 100% statement coverage, and (c) the minimum for 100% branch coverage. Provide example inputs.",
+    "expected_answer": "(a) Four executable statements (lines 1-4) and one decision (the if) giving 2 branches (true and false). (b) 100% statement coverage needs one test where a > 10 (e.g., a = 20), executing lines 1,2,3,4. (c) 100% branch coverage needs two tests: a = 20 takes the true branch, and a = 5 takes the false branch (executing lines 1,2,4). A strong answer states that the single statement-coverage test does not exercise the false branch, so branch coverage is the stronger criterion, and that branch coverage of 100% here also yields 100% statement coverage.",
+    "homework": "Take a small real function (10-20 lines) from any codebase or write one with at least two decision points. Number its executable statements and branches, design the minimum test set for 100% statement coverage and separately for 100% branch coverage, and report both coverage percentages for each test set, demonstrating the subsumption relationship.",
+    "expected_result": "A submission listing the executable statements and all branches of the function, a minimal test set for 100% statement coverage and a (usually larger) minimal test set for 100% branch coverage, with inputs and the path each test takes. It correctly shows that the branch-coverage test set also achieves 100% statement coverage while the statement-coverage set may leave branches uncovered, and notes that neither can detect missing functionality.",
+    "quiz": [
+      {
+        "question": "Which statement about the relationship between statement and branch coverage is correct?",
+        "answers": [
+          "100% statement coverage guarantees 100% branch coverage",
+          "100% branch coverage guarantees 100% statement coverage",
+          "They are always equal",
+          "Neither implies the other under any circumstances"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "How many branches does a single 'if' statement without an 'else' have?",
+        "answers": [
+          "0",
+          "1",
+          "2",
+          "It depends on the number of statements inside it"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "What is a fundamental limitation of statement and branch coverage?",
+        "answers": [
+          "They cannot be measured by tools",
+          "They require the specification but not the code",
+          "They cannot detect missing functionality that was never implemented",
+          "They guarantee the code is defect-free at 100%"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "Statement coverage is measured as:",
+        "answers": [
+          "Number of branches taken divided by total branches",
+          "Number of executable statements executed divided by total executable statements, as a percentage",
+          "Number of test cases divided by number of requirements",
+          "Number of defects divided by lines of code"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Statement and branch coverage are examples of which category of technique?",
+        "answers": [
+          "Black-box (specification-based)",
+          "Experience-based",
+          "White-box (structure-based)",
+          "Collaboration-based"
+        ],
+        "correct_index": 2
+      }
+    ]
+  },
+  {
+    "section": "istqb",
+    "title": "Experience-based test techniques",
+    "short_description": "Techniques that leverage the tester's knowledge, intuition, and experience to design and execute tests, comprising error guessing, exploratory testing, and checklist-based testing.",
+    "learning_goals": "(K2) Explain the three experience-based techniques: error guessing, exploratory testing, and checklist-based testing.\n(K2) Distinguish experience-based techniques from black-box and white-box techniques.\n(K2) Explain the role of fault attacks and test charters in experience-based testing.\n(K2) Explain the strengths and limitations of experience-based techniques, including coverage measurement difficulties.",
+    "theory": "Experience-based test techniques use the knowledge and experience of testers, including their familiarity with similar applications, likely defects, and the way users actually behave, to design and run tests. The syllabus defines three: error guessing, exploratory testing, and checklist-based testing. Their common characteristic is that test cases are derived from the tester's skill rather than purely from a formal model or the code, so they reach areas the structured techniques may miss.\n\nError guessing is a technique in which the tester anticipates where defects are likely to occur, based on experience, knowledge of how the application has failed before, and the developer's likely mistakes. A structured form of error guessing is the fault attack (or attack): a methodical list of ways to force errors, such as empty inputs, zero, very large values, division by zero, special characters, and interrupted operations. Knowledge of typical defects and failures makes error guessing more effective.\n\nExploratory testing is an approach in which the tester simultaneously designs, executes, and evaluates tests while learning about the test object, dynamically adapting the next test based on the results of the previous one. It is most useful when specifications are sparse, time is short, or the tester is highly skilled. It is often structured using session-based test management, where work is organized into time-boxed sessions guided by a test charter that states the scope and goals of the session, and the results are captured for review.\n\nChecklist-based testing is a technique in which testers design, implement, and execute tests to cover the conditions recorded in a checklist. Checklists are built from experience, knowledge of what matters to users, and an understanding of common failures (for example a usability checklist or a security checklist). They provide guidance and consistency without prescribing exact step-by-step cases, leaving room for variation.\n\nThe strengths of experience-based techniques are that they find defects the specification never described, adapt quickly, and require little formal documentation. Their limitations are that coverage is hard to measure objectively, results depend heavily on the individual tester's experience, and reproducibility can be weaker. For this reason they complement, not replace, black-box and white-box techniques.",
+    "key_terms": "experience-based test technique, error guessing, fault attack, exploratory testing, test charter, session-based test management, checklist-based testing, defect-based testing",
+    "real_world_example": "A startup releases a file-upload feature two days before launch with almost no written specification. A senior tester runs a time-boxed exploratory session guided by a charter ('explore upload limits and error handling, 90 minutes') and simultaneously applies error guessing fault attacks: uploading a 0-byte file, a file with a double extension, a 5 GB file, and a file whose upload is cancelled midway. Within the session they find three crashes that no requirement mentioned. They also run a reusable security checklist to ensure consistent coverage of common upload risks across releases.",
+    "step_by_step": "1. Confirm experience-based testing is appropriate (sparse specs, time pressure, high risk, or as a complement to structured tests).\n2. For error guessing, list likely failure points using experience and past defects, and prepare fault attacks (empty, zero, huge, special characters, interruptions).\n3. For exploratory testing, write a test charter defining scope and goals, and time-box a session.\n4. During the session, design-execute-evaluate continuously, letting each result steer the next test, and record findings (session-based test management).\n5. For checklist-based testing, select or build a checklist of conditions from experience and known failure areas, then test each item.\n6. Capture defects and notes so the work is reviewable despite the informal style.\n7. Combine with black-box and white-box techniques to cover what experience-based testing cannot measure.",
+    "common_mistakes": "Equating exploratory testing with unstructured, undocumented 'random clicking'; real exploratory testing uses charters and session-based management.\nTreating experience-based techniques as a replacement for, rather than a complement to, structured techniques.\nAssuming coverage is easy to measure; for these techniques objective coverage is hard to quantify.\nConfusing the three techniques: error guessing anticipates specific defects, exploratory learns-and-adapts, checklist-based follows recorded conditions.\nRelying on them alone for safety-critical software that requires measurable structural coverage.",
+    "practical_use_case": "On the job these techniques dominate when documentation is thin, deadlines are tight, or after structured tests pass and you want to probe for the unexpected. The exam asks you to identify which of the three is being described in a scenario, to recognize fault attacks and test charters, and to know that experience-based techniques complement structured ones and have hard-to-measure coverage.",
+    "summary": "Experience-based techniques, error guessing (including fault attacks), exploratory testing (guided by charters and session-based management), and checklist-based testing, draw on the tester's knowledge to find defects structured techniques miss. They are adaptable and need little documentation but have coverage that is hard to measure and depend on tester skill, so they complement rather than replace black-box and white-box techniques.",
+    "example": "Scenario: testing a currency-conversion field with no detailed spec, under deadline.\n\n```\nTechnique applied and what it produces:\n| Technique           | Concrete activity                                  | Example finding                 |\n|---------------------|----------------------------------------------------|---------------------------------|\n| Error guessing      | Fault attacks: 0, negative, 1e308, \"12,34\", emoji  | Crash on scientific notation    |\n| Exploratory testing | Charter: 'probe conversion limits, 60 min session' | Rounding wrong on 3rd decimal   |\n| Checklist-based     | Run input-validation checklist item by item        | Missing max-length enforcement  |\n```\n\nError guessing targets specific suspected defects; exploratory testing learns and adapts within a time-boxed charter; checklist-based testing systematically walks recorded conditions. Together they cover gaps a specification-only approach would leave, though none of them yields a precise coverage percentage like statement or partition coverage does.",
+    "interactive": "You must test a new 'reset password' email flow in 45 minutes with only a one-line user story. Describe how you would apply all three experience-based techniques: give a test charter for the exploratory session, three error-guessing fault attacks, and three checklist items.",
+    "expected_answer": "Test charter (exploratory): 'Explore the reset-password flow end to end, focusing on link expiry and reuse, 45-minute session,' designing-executing-evaluating and recording findings as you learn. Error-guessing fault attacks: request a reset for a non-existent email, reuse an already-used reset link, and use an expired or tampered token in the URL. Checklist items: the reset link expires after the stated time; the old password no longer works after reset; the user is notified by email that the password changed. A strong answer notes these techniques are complementary, the exploratory session adapts based on results, coverage is not precisely measurable, and they should be combined with black-box checks on the new-password rules.",
+    "homework": "Pick a feature you can actually use. Plan and run a 60-minute experience-based test effort: write a test charter, prepare a fault-attack list for error guessing, and build or reuse a checklist of at least eight conditions. Execute, log every defect or observation, and write a short reflection on what experience-based testing found that a spec-driven approach might have missed.",
+    "expected_result": "A submission containing a clear test charter with scope and time-box, a fault-attack list demonstrating error guessing, a checklist of at least eight relevant conditions, a session log of findings, and a reflection correctly identifying each of the three techniques used and acknowledging that coverage is hard to measure and depends on tester experience, with the conclusion that these techniques complement structured ones.",
+    "quiz": [
+      {
+        "question": "Which three techniques does the syllabus classify as experience-based?",
+        "answers": [
+          "Equivalence partitioning, boundary value analysis, decision tables",
+          "Error guessing, exploratory testing, checklist-based testing",
+          "Statement testing, branch testing, path testing",
+          "State transition, decision table, pairwise testing"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "What best describes exploratory testing?",
+        "answers": [
+          "Following a fully scripted set of pre-written test cases exactly",
+          "Simultaneously designing, executing, and evaluating tests while learning and adapting, often guided by a charter",
+          "Measuring branch coverage of the code",
+          "Building a decision table of all condition combinations"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "A structured set of methodical ways to force errors (empty input, zero, huge values, special characters) is called a:",
+        "answers": [
+          "Test charter",
+          "Decision table",
+          "Fault attack",
+          "State transition table"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "What is a recognized limitation of experience-based techniques?",
+        "answers": [
+          "They cannot find any defects",
+          "Coverage is difficult to measure objectively and results depend on tester experience",
+          "They require access to the source code",
+          "They can only be applied after black-box testing reaches 100% coverage"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Checklist-based testing primarily relies on:",
+        "answers": [
+          "The control-flow structure of the code",
+          "A recorded list of conditions derived from experience and knowledge of common failures",
+          "Exhaustively testing every input combination",
+          "The 2^n rules of a decision table"
+        ],
+        "correct_index": 1
+      }
+    ]
+  },
+  {
+    "section": "istqb",
+    "title": "Collaboration-based test approaches",
+    "short_description": "Approaches that build quality in collaboratively, using collaborative user story writing with acceptance criteria, and acceptance test-driven development (ATDD), so testing perspectives shape software before it is built.",
+    "learning_goals": "(K2) Explain how collaborative user story writing and the INVEST and 3 C's models improve quality.\n(K2) Explain the purpose and forms of acceptance criteria for user stories.\n(K3) Apply acceptance test-driven development (ATDD) to derive acceptance tests collaboratively from a user story.\n(K2) Explain how a tester's perspective contributes to defect prevention during requirements work.",
+    "theory": "Collaboration-based test approaches emphasize preventing defects rather than only detecting them, by bringing testers into requirements and design work alongside business representatives and developers. The CTFL v4.0 syllabus covers three related ideas: collaborative user story writing, acceptance criteria, and acceptance test-driven development (ATDD).\n\nA user story is a feature description written from the perspective of a user or buyer, typically in the form 'As a [role], I want [goal], so that [benefit]'. Collaborative user story writing brings together the three perspectives, often called the 3 C's: the Card (the written story), the Conversation (the discussion that explains it), and the Confirmation (the acceptance criteria that confirm when it is done). Good user stories follow the INVEST model: Independent, Negotiable, Valuable, Estimable, Small, and Testable. The tester's role is especially to ensure stories are Testable and to ask the questions that reveal hidden assumptions and edge cases during the Conversation.\n\nAcceptance criteria are the conditions that a user story must meet to be accepted by stakeholders; they define the scope of the story and serve as the basis for acceptance tests. Two common formats are scenario-oriented criteria, written as Given/When/Then (the behavior-driven, BDD-style format), and rule-oriented criteria, written as a verifiable list of statements. Acceptance criteria make a story Testable and prevent ambiguity from reaching development.\n\nAcceptance test-driven development (ATDD) is a collaborative approach in which acceptance tests are created during requirements analysis, before the feature is implemented. The team works from a user story and its acceptance criteria to jointly write concrete acceptance tests, including positive paths, negative paths, and edge cases. These tests are then used to guide development (the developer implements until the acceptance tests pass) and become part of the regression suite. ATDD is a test-first approach at the acceptance level, distinct from but related to TDD at the unit level.\n\nThe value of collaboration-based approaches is defect prevention: ambiguities, missing rules, and untestable requirements are caught in conversation, when they are cheapest to fix, rather than after coding. The tester contributes a questioning, risk-aware perspective that improves the test basis itself.",
+    "key_terms": "collaborative user story writing, user story, acceptance criteria, acceptance test-driven development (ATDD), 3 C's, INVEST, Given/When/Then, defect prevention",
+    "real_world_example": "During backlog refinement for a story 'As a shopper, I want to apply a coupon, so that I save money', a tester joins the Conversation and asks what happens with an expired coupon, a coupon below the minimum order, and two coupons at once. These questions turn a vague Card into clear acceptance criteria. Using ATDD, the three amigos (business, developer, tester) jointly write Given/When/Then acceptance tests, including negative cases, before any code exists. The developer codes until those tests pass, and an entire class of coupon-edge defects never reaches QA because the ambiguity was resolved up front.",
+    "step_by_step": "1. Write the user story collaboratively from a user's perspective using 'As a..., I want..., so that...'.\n2. Hold the Conversation among business, developer, and tester (the three amigos); the tester probes for edge cases and ambiguity.\n3. Check the story against INVEST, paying special attention to Testable.\n4. Define acceptance criteria as Given/When/Then scenarios or as a rule-oriented list.\n5. Using ATDD, jointly derive acceptance tests covering positive, negative, and edge cases before implementation.\n6. Developers implement the feature until the acceptance tests pass; add the tests to the regression suite.\n7. Use the acceptance tests as living confirmation that the story is done and as protection against regressions.",
+    "common_mistakes": "Writing acceptance tests only after development, defeating ATDD's defect-prevention purpose.\nConfusing the 3 C's (Card, Conversation, Confirmation) with the INVEST attributes.\nForgetting negative and edge-case acceptance tests and writing only the happy path.\nTreating user stories as complete without testable acceptance criteria (violating the 'T' in INVEST).\nThinking ATDD is the same as unit-level TDD; ATDD works at the acceptance level from user stories and acceptance criteria.",
+    "practical_use_case": "On the job these approaches define how testers add value in Agile refinement and three-amigos sessions, shifting testing left into requirements. On the exam you must recognize the 3 C's, the INVEST attributes, the Given/When/Then format of acceptance criteria, and the ATDD workflow (acceptance tests written before implementation, covering positive, negative, and edge cases).",
+    "summary": "Collaboration-based approaches prevent defects by involving testers in writing user stories (the 3 C's, INVEST) and their acceptance criteria, and by using ATDD to create acceptance tests, covering positive, negative, and edge cases, before code is written. The tester's questioning perspective improves the test basis itself, catching ambiguity when it is cheapest to fix.",
+    "example": "User story (Card): 'As a registered shopper, I want to redeem a discount coupon at checkout, so that I pay less.'\n\nConversation surfaces rules; the team writes acceptance criteria, then ATDD acceptance tests.\n\n```\nAcceptance criteria (rule-oriented):\n  - A valid, unexpired coupon reduces the total by its stated amount.\n  - An expired coupon is rejected with a clear message.\n  - A coupon below the minimum order value is rejected.\n  - Only one coupon may be applied per order.\n\nATDD acceptance tests (Given/When/Then), written BEFORE coding:\n  AT1 (positive): Given a 10% coupon and a 100 order,\n                  When the shopper applies it, Then the total becomes 90.\n  AT2 (negative): Given an expired coupon,\n                  When the shopper applies it, Then it is rejected with 'coupon expired'.\n  AT3 (edge):     Given an order of 20 and a coupon requiring min 25,\n                  When applied, Then it is rejected with 'minimum order not met'.\n  AT4 (negative): Given one coupon already applied,\n                  When a second is applied, Then it is rejected with 'one coupon per order'.\n```\n\nDevelopers implement until AT1-AT4 pass; the tests join the regression suite. Defects are prevented because the rules were agreed before code existed.",
+    "interactive": "Take the user story 'As an account holder, I want to transfer money to a saved payee, so that I can pay bills.' Apply collaboration-based testing: list three questions a tester should ask in the Conversation, write four rule-oriented acceptance criteria, and convert two of them into Given/When/Then ATDD acceptance tests (one positive, one negative), written before any code.",
+    "expected_answer": "Tester questions (Conversation): What happens if the transfer amount exceeds the balance? Is there a minimum or maximum transfer limit? What if the payee account is closed or invalid? Acceptance criteria (rule-oriented): a transfer up to the available balance succeeds and updates both balances; a transfer above the balance is rejected with an insufficient-funds message; amounts must be positive; the payee must be active. ATDD acceptance tests: AT1 positive, Given a balance of 500 and a valid payee, When I transfer 200, Then the balance becomes 300 and the payee is credited 200. AT2 negative, Given a balance of 100, When I transfer 150, Then it is rejected with 'insufficient funds' and balances are unchanged. A strong answer notes the tests are written before implementation, cover positive and negative cases, support defect prevention, and that the tester ensured the story is Testable per INVEST.",
+    "homework": "Choose a feature and write it as a user story. Run a (real or simulated) three-amigos Conversation, documenting the questions raised. Evaluate the story against all six INVEST attributes, write at least five acceptance criteria (mixing rule-oriented and Given/When/Then), and produce ATDD acceptance tests covering positive, negative, and edge cases, all written as if before implementation.",
+    "expected_result": "A submission with a properly formatted user story, documented Conversation questions, an INVEST evaluation addressing each attribute (especially Testable), at least five acceptance criteria in both formats, and ATDD acceptance tests in Given/When/Then form covering positive, negative, and edge cases written before implementation. The submission explains how this prevents defects and how the tests become part of the regression suite.",
+    "quiz": [
+      {
+        "question": "What do the 3 C's of a user story stand for?",
+        "answers": [
+          "Code, Compile, Commit",
+          "Card, Conversation, Confirmation",
+          "Condition, Cause, Consequence",
+          "Create, Check, Close"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "In ATDD, when are the acceptance tests written?",
+        "answers": [
+          "After the feature is fully implemented and released",
+          "Only during the regression-testing phase",
+          "During requirements analysis, before the feature is implemented",
+          "Only if defects are found in production"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "Which attribute of the INVEST model does a tester most directly help ensure?",
+        "answers": [
+          "Independent",
+          "Estimable",
+          "Testable",
+          "Small"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "Acceptance criteria written as 'Given... When... Then...' are which kind?",
+        "answers": [
+          "Rule-oriented criteria",
+          "Scenario-oriented (behavior-driven) criteria",
+          "Statement coverage criteria",
+          "Boundary value criteria"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "What is the primary benefit of collaboration-based test approaches?",
+        "answers": [
+          "They guarantee 100% branch coverage",
+          "They prevent defects by resolving ambiguity in requirements before coding",
+          "They eliminate the need for any test execution",
+          "They replace black-box and white-box techniques entirely"
+        ],
+        "correct_index": 1
+      }
+    ]
+  }
+]

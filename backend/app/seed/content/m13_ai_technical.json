@@ -1,0 +1,474 @@
+[
+  {
+    "title": "AI for API testing",
+    "short_description": "How to use AI assistants to design, generate, and debug API tests against REST endpoints faster and more thoroughly.",
+    "learning_goals": "Generate request/response test cases (positive, negative, boundary) for a REST endpoint from a spec or a sample cURL.\nUse AI to convert an OpenAPI/Swagger spec into a runnable test skeleton (Postman, REST Assured, or pytest + requests).\nValidate status codes, JSON schema, and headers with AI-suggested assertions.\nSpot missing edge cases (auth, rate limits, pagination) the AI surfaces that you might otherwise skip.",
+    "theory": "API testing checks the contract between a client and a server at the HTTP layer, below the UI. You send a request (method, URL, headers, body) and assert on the response: the status code (200 OK, 201 Created, 400 Bad Request, 401 Unauthorized, 404 Not Found, 422 Unprocessable Entity, 500 Internal Server Error), the response body shape, and headers like Content-Type: application/json. Because there is no rendering involved, API tests run in milliseconds and are far more stable than UI tests, which makes them ideal candidates for AI-assisted generation.\n\nAn AI assistant is strong here because the inputs are highly structured. If you paste an OpenAPI/Swagger definition or even a single cURL command, the model can infer the parameter types, required fields, and likely error conditions, then write a matrix of cases. It is good at the tedious combinatorics a human skips: what happens with a missing required field, a negative quantity, a string where an integer is expected, an expired token, or page=0 on a paginated list.\n\nThe critical skill is verification, not trust. AI hallucinates endpoints, invents query parameters, and guesses field names. You must check every generated request against the real contract and run it. Treat AI output as a fast first draft of a test suite, then prune cases that do not apply and add domain rules the model cannot know (for example, that an order total must equal the sum of line items).\n\nA reliable workflow is to give the AI the contract, the auth scheme, and one real example response, then ask for tests grouped by category: happy path, validation errors, auth/authorization, and boundary values. Ask it to assert JSON schema (using tools like JSON Schema or Pydantic) rather than just hard-coding every field, so the tests survive minor additive changes to the response.",
+    "key_terms": "REST, HTTP status code, OpenAPI/Swagger, JSON schema validation, cURL, request/response assertion, authentication token, idempotency",
+    "real_world_example": "A team ships a new POST /api/v1/orders endpoint. The Swagger doc lists customerId (required), items[] (required, each with sku and quantity), and an optional coupon. The QA pastes the Swagger snippet into an AI assistant and asks for a pytest suite. The AI returns ~15 cases: valid order returns 201 with an order id; missing customerId returns 400; quantity: 0 and quantity: -1 return 422; an unknown sku returns 404; calling without a bearer token returns 401. Running them, the QA finds quantity: -1 actually returns 201 and creates a negative-quantity order, a real bug the AI's boundary case exposed.",
+    "step_by_step": "1. Collect the contract: the OpenAPI/Swagger spec, or a working cURL, plus the base URL and auth scheme.\n2. Prompt the AI: paste the spec and ask for tests grouped into happy path, validation, auth, and boundary categories in your target framework (e.g. pytest + requests).\n3. Ask explicitly for boundary values (0, 1, max length, empty arrays, null) and for one negative auth case.\n4. Review each generated request against the real spec; delete invented fields and fix wrong field names.\n5. Add a JSON schema assertion for the success response instead of asserting every field literally.\n6. Run the suite against a real or mock server; investigate every failure to decide if it is a test bug or a product bug.\n7. Feed real failure output back to the AI to refine assertions or add cases it missed.",
+    "common_mistakes": "Trusting AI-generated endpoint paths or field names without checking them against the actual spec (the model invents plausible-looking ones).\nAccepting only happy-path tests and never asking for negative, auth, and boundary cases.\nHard-coding a full expected response body so the test breaks on any harmless additive change instead of validating a schema.\nForgetting to include the auth header, so every test returns 401 and you assume the suite passes.\nNot actually running the generated tests, so hallucinated assertions go undetected.",
+    "practical_use_case": "Daily, a QA uses AI to bootstrap test coverage for a freshly built or changed endpoint in minutes, to generate the boundary and error matrix during smoke testing of a release, and to translate a Swagger spec the dev just merged into a runnable Postman collection or pytest file before manual exploration.",
+    "summary": "API testing validates the HTTP contract (status codes, body, headers) and is a great fit for AI because the inputs are structured. Use AI to generate a categorized matrix of positive, negative, auth, and boundary cases from a spec or cURL, but always verify field names against the real contract and run every test. AI accelerates coverage; your judgment confirms correctness.",
+    "example": "```python\nimport requests\nimport pytest\n\nBASE = \"https://api.example.com/v1\"\nTOKEN = \"test-bearer-token\"\nHEADERS = {\"Authorization\": f\"Bearer {TOKEN}\", \"Content-Type\": \"application/json\"}\n\ndef test_create_order_happy_path():\n    payload = {\"customerId\": \"c-123\", \"items\": [{\"sku\": \"SKU-1\", \"quantity\": 2}]}\n    r = requests.post(f\"{BASE}/orders\", json=payload, headers=HEADERS)\n    assert r.status_code == 201\n    body = r.json()\n    assert \"id\" in body\n    assert body[\"status\"] == \"created\"\n\ndef test_missing_customer_id_returns_400():\n    payload = {\"items\": [{\"sku\": \"SKU-1\", \"quantity\": 2}]}\n    r = requests.post(f\"{BASE}/orders\", json=payload, headers=HEADERS)\n    assert r.status_code == 400\n\n@pytest.mark.parametrize(\"qty\", [0, -1])\ndef test_invalid_quantity_returns_422(qty):\n    payload = {\"customerId\": \"c-123\", \"items\": [{\"sku\": \"SKU-1\", \"quantity\": qty}]}\n    r = requests.post(f\"{BASE}/orders\", json=payload, headers=HEADERS)\n    assert r.status_code == 422\n\ndef test_no_auth_returns_401():\n    payload = {\"customerId\": \"c-123\", \"items\": [{\"sku\": \"SKU-1\", \"quantity\": 1}]}\n    r = requests.post(f\"{BASE}/orders\", json=payload)  # no auth header\n    assert r.status_code == 401\n```",
+    "interactive": "You are given this cURL: curl -X GET 'https://api.shop.com/v1/products?page=1&limit=20' -H 'Authorization: Bearer XYZ'. Write a prompt to an AI assistant that asks for a complete test matrix for this GET endpoint, and list at least 5 distinct test cases you would expect back (including boundary and auth cases).",
+    "expected_answer": "A strong prompt gives context and asks for categories: 'Here is a cURL for a paginated products list. Write pytest + requests tests covering happy path, pagination boundaries, validation errors, and auth. Include boundary values for page and limit.' Expected cases: (1) valid page=1&limit=20 returns 200 with a JSON array and pagination metadata; (2) page=0 or page=-1 returns 400/422; (3) limit above the allowed max (e.g. limit=1000) returns 400 or is capped; (4) request without the Authorization header returns 401; (5) a very large page beyond the dataset returns 200 with an empty list, not a 500; optionally limit=abc (non-integer) returns 400. The learner should note they must verify the real param names and the actual max limit against the spec.",
+    "homework": "Pick a public REST API (e.g. https://restful-api.dev or https://reqres.in) or your project's API. Use an AI assistant to generate a test suite (Postman collection or pytest file) for one create/read endpoint. Run it, record which AI-generated cases passed, which failed, and which were hallucinated/invalid. Fix the invalid ones and add at least two cases the AI missed.",
+    "expected_result": "A runnable test file or Postman collection with at least 8 cases across happy path, validation, auth, and boundary categories; a short table listing each case and its actual result; an explicit note of any hallucinated endpoint/field the AI produced and how you corrected it; and at least two human-added cases with a one-line rationale each.",
+    "quiz": [
+      {
+        "question": "Why is API testing especially well-suited to AI-assisted test generation compared to UI testing?",
+        "answers": [
+          "Because APIs never change, so tests never need maintenance",
+          "Because the inputs (specs, status codes, JSON shapes) are highly structured and the AI can infer cases from them",
+          "Because AI can run the tests without any server",
+          "Because API responses are always plain text"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "An AI generates a test asserting status_code == 200 for creating a new resource via POST. What is the most likely correct expectation?",
+        "answers": [
+          "200 OK is always correct for any successful request",
+          "It should be 204 No Content for any POST",
+          "A successful creation typically returns 201 Created, so 200 may be wrong",
+          "Status codes do not matter for POST requests"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "What is the safest way to handle AI-generated assertions on a large success response body?",
+        "answers": [
+          "Assert a JSON schema rather than hard-coding every field value",
+          "Assert nothing so the test always passes",
+          "Compare the entire response byte-for-byte to a saved copy",
+          "Only check that the response is not empty"
+        ],
+        "correct_index": 0
+      },
+      {
+        "question": "What is the single most important step after an AI generates an API test suite?",
+        "answers": [
+          "Commit it immediately without review",
+          "Delete all negative test cases",
+          "Verify field/endpoint names against the real contract and run every test",
+          "Send it straight to production"
+        ],
+        "correct_index": 2
+      }
+    ]
+  },
+  {
+    "title": "AI for SQL query help",
+    "short_description": "Using AI to write, explain, optimize, and verify SQL queries that QA engineers need for test data setup and result validation.",
+    "learning_goals": "Translate a plain-English validation requirement into a correct SQL SELECT with the right JOINs and filters.\nUse AI to explain an unfamiliar query line by line before you trust it.\nGenerate test data setup/teardown scripts (INSERT/DELETE) safely scoped to your test rows.\nReview AI SQL for correctness traps: NULL handling, JOIN type, GROUP BY, and accidental full-table updates.",
+    "theory": "QA engineers use SQL constantly to verify what the application actually stored, to set up preconditions, and to clean up after tests. A typical task is 'confirm the order I placed in the UI is in the database with status SHIPPED and the correct total'. That maps to a SELECT with a WHERE clause and often a JOIN across orders and order_items. AI is excellent at producing these queries from a natural-language description of the schema and the goal.\n\nThe most valuable AI use for QA is the reverse direction too: explanation. When a developer hands you a 40-line query, you can paste it and ask the AI to explain each JOIN, what the LEFT JOIN versus INNER JOIN changes, and which rows could be lost or duplicated. This builds your understanding instead of replacing it.\n\nSQL has correctness traps the AI can fall into, so you must review. NULL comparisons need IS NULL, not = NULL. An INNER JOIN silently drops rows with no match, which can hide a bug; a LEFT JOIN keeps them. Aggregations with GROUP BY must include every non-aggregated column. The most dangerous trap is a write without a WHERE clause: an UPDATE orders SET status='X' with no WHERE rewrites the entire table. Never run an AI-generated UPDATE or DELETE on shared data without first running the matching SELECT to see exactly which rows it touches.\n\nA safe pattern for test data: always scope inserts and deletes to a recognizable marker, such as emails ending in @test.local or an explicit test run id, so cleanup can never wipe real data. Ask the AI to wrap writes in a transaction (BEGIN ... ROLLBACK) so you can preview the effect before COMMIT. Run AI queries against a non-production or staging database first.",
+    "key_terms": "SELECT, INNER JOIN vs LEFT JOIN, WHERE clause, NULL / IS NULL, GROUP BY / aggregation, transaction (BEGIN/COMMIT/ROLLBACK), index, test data setup/teardown",
+    "real_world_example": "A QA needs to confirm that a bulk-import feature created exactly 500 customers and that none have a duplicate email. They describe the customers table to an AI and get back two queries: a COUNT(*) filtered to the import batch id, and a GROUP BY email HAVING COUNT(*) > 1 to find duplicates. The duplicate query returns 3 rows, exposing that the import does not enforce uniqueness, a real defect. Because they ran a SELECT first and scoped it to the batch id, there was zero risk to existing data.",
+    "step_by_step": "1. Give the AI the relevant table/column names and the exact question in plain English ('find orders from the last 24h with total mismatching the sum of items').\n2. Ask it to also explain the JOINs and any assumptions it made about the schema.\n3. Read the WHERE clause and JOIN types yourself; confirm they match your intent.\n4. For any read query, run it on staging and sanity-check the row count and a few values.\n5. For any write (INSERT/UPDATE/DELETE), first run the SELECT version to see affected rows, then wrap the write in BEGIN ... ROLLBACK to preview before COMMIT.\n6. Scope test data to a marker (test email domain, batch id) so teardown is safe.\n7. If the result looks wrong, paste it back with the actual output and ask the AI to diagnose.",
+    "common_mistakes": "Running an AI-generated UPDATE or DELETE without a WHERE clause, rewriting or deleting the whole table.\nAccepting an INNER JOIN where a LEFT JOIN was needed, silently hiding rows with no match and masking a bug.\nUsing = NULL instead of IS NULL, so the filter matches nothing and the query looks falsely clean.\nRunning AI SQL directly on production instead of staging.\nTrusting the AI's guessed column names instead of checking the real schema, producing a query that errors or returns wrong data.",
+    "practical_use_case": "Verifying that UI actions persisted correctly (status, totals, timestamps), seeding and cleaning test data before/after automated runs, hunting duplicates or orphaned records during data-integrity testing, and quickly understanding a complex query a developer wrote so you can review its logic in a code review.",
+    "summary": "AI turns plain-English validation needs into SQL and explains unfamiliar queries, both huge time-savers for QA. The non-negotiable habits are: review JOIN types and NULL handling, never run a write without first previewing the affected rows, and scope test data to safe markers on a non-production database. AI drafts the query; you guarantee it is safe and correct.",
+    "example": "```sql\n-- Goal: find orders from the last 24h whose stored total\n-- does not equal the sum of their line items (data-integrity check).\nSELECT o.id,\n       o.total            AS stored_total,\n       SUM(oi.price * oi.quantity) AS computed_total\nFROM orders o\nINNER JOIN order_items oi ON oi.order_id = o.id\nWHERE o.created_at >= NOW() - INTERVAL '24 hours'\nGROUP BY o.id, o.total\nHAVING o.total <> SUM(oi.price * oi.quantity);\n\n-- Safe teardown of test rows, scoped to a marker, previewed in a transaction:\nBEGIN;\nDELETE FROM customers WHERE email LIKE '%@test.local';\n-- inspect the row count reported, then either:\n-- COMMIT;   (apply)\nROLLBACK;    -- (undo while verifying)\n```",
+    "interactive": "You have tables users(id, email, created_at) and logins(id, user_id, logged_in_at). Write a prompt asking an AI for a query that finds users who registered but have never logged in. Then state which JOIN type the correct answer must use and why.",
+    "expected_answer": "A good prompt: 'Given users(id,email,created_at) and logins(id,user_id,logged_in_at), write SQL to find users who have never logged in, and explain the JOIN.' The correct query uses a LEFT JOIN from users to logins and filters WHERE l.id IS NULL (or NOT EXISTS): SELECT u.id, u.email FROM users u LEFT JOIN logins l ON l.user_id = u.id WHERE l.id IS NULL. A LEFT JOIN is required because an INNER JOIN would drop exactly the users we want (those with no matching login row). The learner should note they must verify column names and check the result count on staging.",
+    "homework": "Using a sample database (SQLite, the Sakila/Chinook sample DB, or your project's staging DB), pick two QA validation questions (e.g. 'orders with no items', 'customers with duplicate emails'). Use an AI to generate the queries, then independently verify each result is correct. Document one case where you had to correct the AI's JOIN type or NULL handling.",
+    "expected_result": "Two working SELECT queries with their actual output, a one-paragraph explanation of each JOIN/filter in your own words, evidence you verified the results (counts or spot-checks), and a documented instance where you fixed an AI mistake (wrong JOIN, = NULL, missing GROUP BY column, or an unscoped write) with an explanation of the fix.",
+    "quiz": [
+      {
+        "question": "Why must you run the SELECT version before executing an AI-generated DELETE on shared data?",
+        "answers": [
+          "SELECT makes the DELETE run faster",
+          "To preview exactly which rows will be affected and avoid wiping unintended data",
+          "DELETE cannot run without a preceding SELECT",
+          "It converts the DELETE into an UPDATE automatically"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "You want all users including those with no matching orders. Which JOIN is correct?",
+        "answers": [
+          "INNER JOIN, because it is the default",
+          "CROSS JOIN, to combine every row",
+          "LEFT JOIN from users to orders, keeping users without matches",
+          "RIGHT JOIN from users to orders"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "An AI writes WHERE deleted_at = NULL to find non-deleted rows. What is wrong?",
+        "answers": [
+          "Nothing, this is correct SQL",
+          "It should use IS NULL; = NULL matches no rows in standard SQL",
+          "It should use == NULL",
+          "NULL cannot appear in a WHERE clause at all"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "What is the safest practice for AI-generated SQL that writes test data?",
+        "answers": [
+          "Scope writes to a marker (e.g. @test.local) and run on a non-production DB inside a transaction",
+          "Run it directly on production to test realistic conditions",
+          "Always omit the WHERE clause for speed",
+          "Disable transactions so changes are immediate"
+        ],
+        "correct_index": 0
+      }
+    ]
+  },
+  {
+    "title": "AI for XPath and CSS selectors",
+    "short_description": "Using AI to write, simplify, and harden XPath and CSS selectors so UI automation finds elements reliably.",
+    "learning_goals": "Generate a robust CSS or XPath selector from a snippet of HTML the AI is given.\nChoose between CSS and XPath appropriately and prefer stable attributes over auto-generated classes.\nUse AI to convert a brittle absolute XPath into a short, resilient relative one.\nRecognize and fix selectors that break on dynamic ids, indexes, or layout changes.",
+    "theory": "Selectors are how automation tools (Selenium, Playwright, Cypress) locate elements on a page. CSS selectors are concise and fast (e.g. button.primary, input[name='email'], #login-form > button). XPath is more powerful: it can traverse upward to a parent, match by visible text (//button[text()='Submit']), and express axes that CSS cannot. Knowing both, and when each wins, is core to stable automation.\n\nAI is genuinely useful here because writing a correct selector from raw HTML is fiddly and error-prone. Paste the element's HTML and its surrounding context, and the AI will produce candidate CSS and XPath, usually with options ranked by robustness. It is also good at the reverse: given a long auto-recorded XPath like /html/body/div[2]/div[3]/form/div[1]/input, it can rewrite it into something resilient such as input[data-testid='username'].\n\nThe robustness rules the AI should follow, and that you must enforce, are: prefer a dedicated test attribute (data-testid, data-qa) if it exists; otherwise prefer a stable semantic attribute (id that is not auto-generated, name, aria-label, role); avoid framework-generated class hashes (like css-1a2b3c) and avoid positional indexes (div[3], :nth-child(4)) because they break the moment the layout shifts. A selector that depends on text is acceptable for buttons and links but fragile for localized apps where the text changes per language.\n\nThe key limitation: the AI only sees the HTML you paste. It cannot know which ids are dynamically generated on each page load, which classes change between deploys, or whether two elements share the same selector. So you must validate every AI selector in the real browser (DevTools console with document.querySelectorAll or $x()) and confirm it matches exactly one intended element, even after a page refresh.",
+    "key_terms": "CSS selector, XPath (absolute vs relative), data-testid, nth-child / index, attribute selector, axes (parent/following-sibling), specificity, dynamic locator",
+    "real_world_example": "An automation suite keeps failing on a 'Add to cart' button. The recorded locator is an absolute XPath that broke when a marketing banner was added above the product grid, shifting every index. The QA copies the button's HTML <button class=\"css-9f3k1a\" data-testid=\"add-to-cart\" aria-label=\"Add to cart\">Add</button> into an AI and asks for a stable selector. The AI returns [data-testid='add-to-cart'], a one-attribute CSS selector immune to layout changes. The QA verifies in DevTools that document.querySelectorAll(\"[data-testid='add-to-cart']\") returns exactly one node, then replaces the brittle XPath.",
+    "step_by_step": "1. Open DevTools, right-click the target element, and copy its outer HTML plus a little surrounding context.\n2. Paste the HTML into the AI and ask for a robust CSS selector and an XPath, prioritizing data-testid/id/name over classes and indexes.\n3. Ask the AI to explain why each candidate is stable or fragile.\n4. Test the chosen selector in the browser console: document.querySelectorAll('SELECTOR') for CSS, or $x('XPATH') for XPath.\n5. Confirm it returns exactly one element and is the right one.\n6. Refresh the page (and if possible re-deploy/re-render) and re-test to ensure it is not tied to a dynamic id.\n7. Drop it into your test, run the test, and adjust if it fails.",
+    "common_mistakes": "Accepting an auto-generated absolute XPath (/html/body/div[2]/...) the AI mirrored from your paste; it breaks on any layout change.\nUsing framework-generated class hashes (css-1a2b3c) that change every build.\nRelying on a positional index like :nth-child(3) or div[4] for content that reorders.\nNot verifying that the selector matches exactly one element, so the test interacts with the wrong node.\nForgetting that the AI never saw the live page, so it cannot know an id is dynamically generated per load.",
+    "practical_use_case": "Writing locators for new automated tests, repairing flaky tests where the selector broke after a UI change, advising developers to add data-testid attributes to make elements testable, and quickly understanding or simplifying selectors inherited in legacy test code.",
+    "summary": "Selectors locate elements for automation; CSS is concise, XPath is more powerful (text, parent traversal). AI quickly produces and simplifies selectors from pasted HTML, favoring stable attributes over fragile classes and indexes. Because the AI only sees static HTML, you must verify every selector in the live browser and confirm it matches exactly one element, even after a refresh.",
+    "example": "```html\n<!-- HTML you paste to the AI -->\n<div class=\"css-9f3k1a row\">\n  <button class=\"css-77bd1e btn\" data-testid=\"add-to-cart\"\n          aria-label=\"Add to cart\">Add</button>\n</div>\n```\n\n```text\nFragile (avoid): /html/body/div[2]/div[3]/div[1]/button\nFragile (avoid): div.css-9f3k1a > button.css-77bd1e\n\nRobust CSS:   [data-testid=\"add-to-cart\"]\nRobust CSS:   button[aria-label=\"Add to cart\"]\nRobust XPath: //button[@data-testid='add-to-cart']\nText XPath (ok for buttons): //button[normalize-space()='Add']\n```\n\n```js\n// Verify in DevTools console (must return exactly 1):\ndocument.querySelectorAll(\"[data-testid='add-to-cart']\").length;  // 1\n$x(\"//button[@data-testid='add-to-cart']\").length;               // 1\n```",
+    "interactive": "Given <input id=\"email_8f2a\" name=\"email\" class=\"form-control css-1ab2\" placeholder=\"Email\">, where id is regenerated on each page load, write the most robust CSS selector and explain why you rejected the id and the class.",
+    "expected_answer": "The most robust selector is input[name='email'] (or [placeholder='Email'] as a backup). Reject id='email_8f2a' because it is dynamically generated per load and will not match on the next render. Reject the class css-1ab2 because it is a framework-generated hash that changes between builds; form-control is too generic and could match many inputs. The name attribute is semantic and stable. A strong answer also notes you must verify in the console that document.querySelectorAll(\"input[name='email']\") returns exactly one element, and ideally recommend the team add a data-testid for even more stability.",
+    "homework": "Pick any public web page (e.g. a login form or a product page). For three different elements, copy their HTML, ask an AI for robust CSS and XPath selectors, and verify each in the browser console. For at least one element, deliberately compare a brittle index-based selector against a stable attribute-based one and document which survives a page interaction or reflow.",
+    "expected_result": "A document listing three elements, the AI-suggested CSS and XPath for each, console output proving each matches exactly one element, and a short comparison showing a brittle (index/class-hash) selector versus a stable (data-testid/name/aria-label) selector with an explanation of why the stable one is preferred.",
+    "quiz": [
+      {
+        "question": "Which selector is the most resilient to UI layout changes?",
+        "answers": [
+          "/html/body/div[2]/div[3]/button",
+          "[data-testid='submit-btn']",
+          "div:nth-child(4) > button",
+          "button.css-1a2b3c"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "What is a capability XPath has that standard CSS selectors lack?",
+        "answers": [
+          "Selecting by element id",
+          "Selecting by class name",
+          "Matching by visible text and traversing to a parent element",
+          "Running faster than CSS in every browser"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "An element's id is email_8f2a on this load and email_3c9d on the next. What does this mean for your selector?",
+        "answers": [
+          "Use the id; it is always the most stable attribute",
+          "Avoid the id because it is dynamically generated; prefer a stable attribute like name",
+          "Add the id to an XPath index for stability",
+          "Dynamic ids are fine as long as they contain letters"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Why must you verify an AI-generated selector in the live browser?",
+        "answers": [
+          "The AI only saw static HTML and cannot know about dynamic ids or duplicate matches",
+          "Browsers reformat all selectors automatically",
+          "Verification converts CSS to XPath",
+          "It is not necessary if the AI is confident"
+        ],
+        "correct_index": 0
+      }
+    ]
+  },
+  {
+    "title": "AI for automation scripts",
+    "short_description": "Using AI to scaffold, extend, and refactor general test-automation scripts and supporting utilities across any framework.",
+    "learning_goals": "Use AI to scaffold a runnable automation script (setup, action, assertion, teardown) from a described scenario.\nApply the Page Object Model and DRY principles when refactoring AI-generated code.\nAdd explicit waits, error handling, and meaningful assertions that AI often omits.\nReview AI scripts for hard-coded data, flaky patterns, and missing cleanup before committing.",
+    "theory": "An automation script encodes a test scenario as code: it sets up preconditions, performs actions, asserts expected outcomes, and cleans up. Good scripts are readable, deterministic, and maintainable. AI assistants accelerate the boring scaffolding, the boilerplate of imports, fixtures, configuration, and the basic structure, so you spend your time on test design and edge cases instead of typing setup.\n\nThe biggest leverage is at the structure level. Ask the AI to organize tests using the Page Object Model (POM), where each page or component has a class exposing methods like login(user, pass) and selectors live in one place. This keeps locators out of test bodies so a UI change is fixed once. AI is good at generating these patterns when you ask explicitly; left to itself it often inlines everything into one long function, which is hard to maintain.\n\nAI-generated automation has predictable weaknesses you must correct. It tends to use fixed sleeps (sleep(5)) instead of explicit waits for a condition, which makes tests both slow and flaky. It hard-codes test data and credentials directly in the script instead of using fixtures or environment variables. It frequently writes weak assertions ('element exists') instead of verifying the actual expected state ('the success banner reads Order #123 placed'). And it often omits teardown, leaving test data behind.\n\nThe productive workflow treats AI as a pair-programmer for the first draft. Describe the scenario precisely, including the framework, the page structure, and the exact assertion you care about. Then read the output critically: replace sleeps with waits, extract repeated code, parameterize data, strengthen assertions, and add cleanup. Run it, and feed real errors back to the AI to iterate. The goal is a script you fully understand and could maintain yourself, not a black box.",
+    "key_terms": "Page Object Model (POM), explicit wait vs sleep, fixture / setup-teardown, assertion, DRY (Don't Repeat Yourself), flakiness, test data parameterization, CI integration",
+    "real_world_example": "A QA needs an end-to-end checkout test. They ask the AI for a script in their framework describing the steps: log in, add an item, check out, assert the confirmation. The AI returns a working but monolithic function with sleep(3) between steps, the password in plain text, and an assertion that only checks the page title. The QA refactors it into a LoginPage and CheckoutPage (POM), swaps every sleep for an explicit wait on the confirmation element, moves the password to an environment variable, and changes the assertion to verify the confirmation text contains the real order number. The test goes from flaky and 18 seconds to stable and 6 seconds.",
+    "step_by_step": "1. Describe the scenario precisely: framework, the pages/components involved, the data, and the exact final assertion.\n2. Ask the AI to structure it with the Page Object Model and to use explicit waits, not sleeps.\n3. Review the output: confirm selectors live in page objects, not test bodies.\n4. Replace any fixed sleeps with waits on a specific condition (element visible, network idle).\n5. Move credentials and test data out of the script into fixtures or environment variables.\n6. Strengthen assertions to check real expected state, not just presence.\n7. Add setup/teardown so the test is independent and leaves no residue.\n8. Run it, then paste real failures back to the AI to refine.",
+    "common_mistakes": "Keeping AI's sleep(N) calls, which make tests slow and flaky instead of using explicit waits.\nLeaving hard-coded credentials and test data in the script instead of fixtures/env vars.\nAccepting weak assertions ('element is present') that pass even when the feature is broken.\nLetting the AI inline all selectors into the test body, so a UI change requires editing many tests.\nCommitting an AI script you do not fully understand, then being unable to maintain it.",
+    "practical_use_case": "Scaffolding new test scripts quickly, refactoring legacy automation toward the Page Object Model, generating helper utilities (test data factories, API setup calls used as preconditions for UI tests), and converting a manual test case the team wrote into a first-draft automated script.",
+    "summary": "AI shines at scaffolding automation boilerplate and structure, especially the Page Object Model when you ask for it. Its predictable weaknesses, fixed sleeps, hard-coded data, weak assertions, and missing teardown, are exactly what you must fix. Use AI for the first draft, then refactor for stability, maintainability, and assertions you trust, ending with a script you fully understand.",
+    "example": "```python\n# Refactored from an AI draft: Page Object Model + explicit wait + strong assertion\nfrom selenium.webdriver.support.ui import WebDriverWait\nfrom selenium.webdriver.support import expected_conditions as EC\nfrom selenium.webdriver.common.by import By\nimport os\n\nclass LoginPage:\n    USERNAME = (By.NAME, \"username\")\n    PASSWORD = (By.NAME, \"password\")\n    SUBMIT   = (By.CSS_SELECTOR, \"[data-testid='login-submit']\")\n\n    def __init__(self, driver):\n        self.driver = driver\n\n    def login(self, user, pwd):\n        self.driver.find_element(*self.USERNAME).send_keys(user)\n        self.driver.find_element(*self.PASSWORD).send_keys(pwd)\n        self.driver.find_element(*self.SUBMIT).click()\n\ndef test_login_success(driver):\n    driver.get(\"https://app.example.com/login\")\n    LoginPage(driver).login(os.environ[\"TEST_USER\"], os.environ[\"TEST_PASS\"])\n    # explicit wait + real assertion, not a fixed sleep\n    banner = WebDriverWait(driver, 10).until(\n        EC.visibility_of_element_located((By.CSS_SELECTOR, \"[data-testid='welcome']\"))\n    )\n    assert \"Welcome\" in banner.text\n```",
+    "interactive": "You ask an AI for a 'add item to cart and verify' test and it returns a single function with time.sleep(5) before the assertion and the assertion assert driver.title != ''. List the three concrete changes you would make and why.",
+    "expected_answer": "Three changes: (1) Replace time.sleep(5) with an explicit wait on a specific condition, e.g. wait until the cart-count element is visible or shows the expected number; this removes flakiness and speeds the test. (2) Replace the weak assertion assert driver.title != '' with a real check of the outcome, e.g. assert the cart badge text equals '1' or the added product name appears in the cart; the title check passes even when the add-to-cart failed. (3) Extract the selectors and actions into a page object (e.g. ProductPage.add_to_cart()) so locators are not inlined and the test is maintainable. A strong answer also mentions moving any hard-coded data out and adding teardown.",
+    "homework": "Take a manual test case for a small flow (login, search, or add-to-cart) and ask an AI to generate an automated script for it. Then refactor the result: introduce at least one page object, replace every sleep with an explicit wait, parameterize the data, and strengthen the final assertion. Keep both the original AI output and your refactored version.",
+    "expected_result": "Two files or sections: the raw AI script and your refactored version. The refactor must show a page object, explicit waits replacing all sleeps, data moved to fixtures/env vars, a strengthened assertion, and teardown. Include a short list (3-5 bullets) of exactly what you changed and why each change improves stability or maintainability.",
+    "quiz": [
+      {
+        "question": "Why should you replace AI-generated time.sleep(5) calls with explicit waits?",
+        "answers": [
+          "Explicit waits make the code longer, which is preferred",
+          "Sleeps are illegal in most frameworks",
+          "Explicit waits poll for a real condition, making tests faster and less flaky",
+          "There is no practical difference"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "What is the main benefit of the Page Object Model when refactoring AI-generated tests?",
+        "answers": [
+          "It makes tests run on more browsers automatically",
+          "Selectors and actions live in one place, so a UI change is fixed once",
+          "It removes the need for assertions",
+          "It encrypts test credentials"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "An AI test asserts assert element is not None after a save action. What is the weakness?",
+        "answers": [
+          "It is too strict and will always fail",
+          "It only checks the element exists, not that the save actually produced the correct result",
+          "None comparisons are invalid in test code",
+          "Nothing; presence checks are the strongest assertions"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Which is the safest way to handle credentials in an AI-generated script before committing?",
+        "answers": [
+          "Move them to environment variables or fixtures, not hard-coded in the file",
+          "Leave them inline so the test is self-contained",
+          "Encode them in base64 in the script",
+          "Put them in a comment instead of a variable"
+        ],
+        "correct_index": 0
+      }
+    ]
+  },
+  {
+    "title": "AI for Playwright tests",
+    "short_description": "Using AI to write, stabilize, and maintain Playwright tests that leverage auto-waiting, web-first assertions, and resilient locators.",
+    "learning_goals": "Generate Playwright tests that use modern locators (getByRole, getByTestId) and web-first assertions (expect ... toBeVisible).\nLeverage Playwright's auto-waiting instead of manual sleeps the AI might add.\nUse AI alongside Playwright's codegen and trace viewer to debug failures.\nReview AI Playwright code for anti-patterns like page.waitForTimeout and brittle CSS selectors.",
+    "theory": "Playwright is a modern browser-automation framework from Microsoft that controls Chromium, Firefox, and WebKit through a single API. Its defining feature is auto-waiting: when you call locator.click() or expect(locator).toBeVisible(), Playwright automatically retries until the element is actionable or the assertion passes, up to a timeout. This eliminates most of the manual waiting that makes other frameworks flaky, so a major part of writing good Playwright is letting the framework wait for you.\n\nPlaywright's recommended locators are user-facing and resilient: getByRole('button', { name: 'Submit' }), getByLabel('Email'), getByText, and getByTestId('add-to-cart'). These mirror how a user or assistive technology perceives the page, so they survive markup changes better than raw CSS or XPath. Web-first assertions like expect(locator).toHaveText('Done') are retrying assertions, fundamentally different from a one-shot assert.\n\nAI is highly effective with Playwright because the API is consistent and well-documented. You can describe a flow and get a clean async test. But AI frequently imports habits from older frameworks: it adds page.waitForTimeout(3000) (Playwright's equivalent of a hard sleep, an anti-pattern), uses fragile page.locator('div.css-1a2b > button'), or writes assertions as if (await locator.isVisible()) instead of the retrying expect. You must steer it toward getBy* locators, web-first assertions, and trusting auto-wait.\n\nPlaywright also ships powerful tooling that pairs well with AI. codegen records your actions into a starting script you can then hand to the AI to refactor. The trace viewer captures a step-by-step timeline, DOM snapshots, and network logs of a failed run; you can paste the failing step and error into an AI to diagnose root cause. Used together, AI plus Playwright's own tools make writing and fixing tests fast while keeping them stable.",
+    "key_terms": "auto-waiting, locator (getByRole/getByTestId), web-first assertion (expect ... toBeVisible), page.waitForTimeout (anti-pattern), trace viewer, codegen, fixtures, async/await",
+    "real_world_example": "A QA writes a login test with AI. The AI returns code using await page.waitForTimeout(2000) after clicking login and an assertion expect(await page.title()).toBe('Dashboard'). On a slow CI runner the fixed timeout sometimes fires before the redirect, and the test flakes ~10% of runs. The QA removes waitForTimeout entirely and replaces the assertion with await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible(), which auto-retries until the heading appears. Flakiness drops to zero, and the average run time falls because it no longer waits the full 2 seconds when the page loads quickly.",
+    "step_by_step": "1. Optionally run npx playwright codegen <url> to record a rough script of the flow.\n2. Hand that script (or a plain description) to the AI and ask for a Playwright test using getByRole/getByTestId locators and web-first expect assertions, with no waitForTimeout.\n3. Review locators: replace any raw CSS hashes with getBy* or getByTestId.\n4. Confirm assertions use await expect(locator).toBeVisible()/toHaveText(...), letting auto-wait handle timing.\n5. Run the test with npx playwright test --trace on.\n6. On failure, open the trace viewer, then paste the failing step and error into the AI for a root-cause diagnosis.\n7. Iterate until green and stable across repeated runs.",
+    "common_mistakes": "Keeping AI's page.waitForTimeout(N) calls, defeating Playwright's auto-waiting and reintroducing flakiness.\nUsing one-shot assertions like expect(await locator.isVisible()).toBe(true) instead of the retrying await expect(locator).toBeVisible().\nLetting the AI use brittle CSS (div.css-1a2b3c) instead of getByRole/getByTestId.\nForgetting await on async calls, so the test passes or fails non-deterministically.\nNot using the trace viewer for failures, so you debug blind instead of feeding concrete evidence to the AI.",
+    "practical_use_case": "Authoring new end-to-end and component tests, converting recorded codegen scripts into clean maintainable tests, stabilizing flaky tests by removing timeouts and fixing locators, and debugging CI failures with the trace viewer plus AI root-cause analysis.",
+    "summary": "Playwright's auto-waiting, getBy* locators, and web-first assertions are what make tests stable; AI is fast at producing Playwright code but tends to add waitForTimeout and one-shot assertions you must remove. Steer the AI toward getByRole/getByTestId and await expect(...).toBeVisible(), and pair it with codegen and the trace viewer. The result is fast, resilient end-to-end tests.",
+    "example": "```javascript\nimport { test, expect } from '@playwright/test';\n\ntest('user can log in and see dashboard', async ({ page }) => {\n  await page.goto('https://app.example.com/login');\n\n  // user-facing, resilient locators\n  await page.getByLabel('Email').fill(process.env.TEST_USER);\n  await page.getByLabel('Password').fill(process.env.TEST_PASS);\n  await page.getByRole('button', { name: 'Sign in' }).click();\n\n  // web-first, auto-retrying assertion - no waitForTimeout needed\n  await expect(\n    page.getByRole('heading', { name: 'Dashboard' })\n  ).toBeVisible();\n\n  await expect(page.getByTestId('user-greeting')).toContainText('Welcome');\n});\n```",
+    "interactive": "An AI gives you: await page.click('.btn-3'); await page.waitForTimeout(3000); expect(await page.locator('.msg').textContent()).toBe('Saved'); Rewrite these three lines to follow Playwright best practices and explain each change.",
+    "expected_answer": "Rewritten: await page.getByRole('button', { name: 'Save' }).click(); await expect(page.getByText('Saved')).toBeVisible(); (or toHaveText('Saved') on a stable locator). Changes: (1) replace the brittle .btn-3 CSS class with a user-facing getByRole locator so it survives markup changes; (2) delete waitForTimeout(3000), Playwright auto-waits, so the fixed sleep is unnecessary and flaky; (3) replace the one-shot textContent comparison with a retrying web-first assertion await expect(...).toBeVisible()/toHaveText('Saved'), which polls until the message appears instead of reading it once. A strong answer notes adding a getByTestId would be even more stable.",
+    "homework": "Set up Playwright (npm init playwright@latest) on any demo site (e.g. https://demo.playwright.dev/todomvc). Use codegen to record a short flow, then have an AI refactor it into a clean test using getBy* locators and web-first assertions with no waitForTimeout. Run it 10 times to confirm it is stable, and capture a trace for one run.",
+    "expected_result": "A passing Playwright test file using getByRole/getByLabel/getByTestId locators and await expect(...) assertions, with zero waitForTimeout calls. Evidence the test passed 10 consecutive runs, the original codegen output for comparison, and one saved trace (or a description of what the trace viewer showed for a step).",
+    "quiz": [
+      {
+        "question": "What is Playwright's auto-waiting?",
+        "answers": [
+          "A fixed 5-second pause before every action",
+          "Automatic retrying of actions/assertions until the element is actionable or the assertion passes, up to a timeout",
+          "A setting that disables all waits",
+          "A tool that records the screen"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Which assertion correctly uses Playwright's retrying web-first style?",
+        "answers": [
+          "expect(await locator.isVisible()).toBe(true)",
+          "assert(locator != null)",
+          "await expect(locator).toBeVisible()",
+          "if (await locator.textContent() === 'Done') pass()"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "Why is page.waitForTimeout(3000) considered an anti-pattern in Playwright?",
+        "answers": [
+          "It is too short to be useful",
+          "It bypasses auto-waiting, slowing tests and reintroducing flakiness",
+          "It only works in Firefox",
+          "It crashes the trace viewer"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Which Playwright tool best helps you debug a failed CI run before asking AI for root cause?",
+        "answers": [
+          "The trace viewer, which captures steps, DOM snapshots, and network logs",
+          "waitForTimeout with a larger value",
+          "The CSS specificity calculator",
+          "The package.json file"
+        ],
+        "correct_index": 0
+      }
+    ]
+  },
+  {
+    "title": "AI for Selenium tests",
+    "short_description": "Using AI to write and stabilize Selenium WebDriver tests, with correct explicit waits, the W3C protocol, and the Page Object Model.",
+    "learning_goals": "Generate Selenium WebDriver tests with proper By locators and WebDriverWait explicit waits.\nUnderstand how Selenium drives a browser via the W3C WebDriver protocol and a browser-specific driver.\nRefactor AI Selenium code away from Thread.sleep / implicit waits toward explicit conditions.\nApply the Page Object Model and handle common exceptions (StaleElementReferenceException, NoSuchElementException).",
+    "theory": "Selenium WebDriver is the long-standing, language-agnostic standard for browser automation. It does not control the browser directly; it sends commands over the W3C WebDriver protocol to a browser-specific driver process (chromedriver, geckodriver), which then drives the real browser. Understanding this layering explains many failures, for example a session error usually means a driver/browser version mismatch, not a bug in your test.\n\nUnlike Playwright, Selenium does not auto-wait for most actions, so timing is the single biggest source of flakiness. The correct tool is the explicit wait: WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.ID, 'submit'))) polls until a specific condition is met or times out. Implicit waits (a global timeout for finding elements) interact badly with explicit waits and should generally not be mixed with them. The anti-pattern AI loves is Thread.sleep / time.sleep, a blind fixed pause that is both slow and unreliable.\n\nAI is good at producing Selenium scaffolding because the API is stable and widely documented, so there is abundant training data. Ask it for tests and it will give you working By locators and a basic structure. But it routinely emits time.sleep, mixes implicit and explicit waits, inlines locators into test bodies, and ignores Selenium-specific exceptions. The most common runtime error, StaleElementReferenceException, happens when the DOM re-renders and a previously found element reference is no longer valid; the fix is to re-find the element (often inside the wait), which AI does not always do.\n\nThe effective workflow is the same discipline as other automation: have the AI draft the test, then convert every sleep into an explicit wait on the right ExpectedCondition, organize locators into page objects, and add handling for stale-element and not-found cases. Keep the driver and browser versions aligned (Selenium Manager now handles much of this automatically). The payoff is cross-browser, cross-language tests that run reliably in CI.",
+    "key_terms": "WebDriver, W3C WebDriver protocol, By locator, WebDriverWait / ExpectedConditions, explicit vs implicit wait, Thread.sleep (anti-pattern), StaleElementReferenceException, Page Object Model",
+    "real_world_example": "A QA inherits a Selenium suite that fails intermittently in CI. The AI-written tests use time.sleep(2) after each click and occasionally throw StaleElementReferenceException on a results table that re-renders after filtering. The QA asks an AI to refactor: replace each sleep with WebDriverWait(...).until(EC.visibility_of_element_located(...)), and for the table, re-locate the row inside the wait rather than reusing a stale reference. They also pin chromedriver via Selenium Manager. The suite goes from ~15% flaky to consistently green and runs 30% faster because it no longer waits fixed durations.",
+    "step_by_step": "1. Describe the scenario and your language (Python/Java) and ask the AI for a Selenium WebDriver test using By locators and WebDriverWait.\n2. Explicitly instruct: no Thread.sleep / time.sleep, use explicit waits on ExpectedConditions.\n3. Review locators and move them into page object classes.\n4. Replace any fixed sleeps with the right condition (element_to_be_clickable, visibility_of_element_located, text_to_be_present_in_element).\n5. Add handling for StaleElementReferenceException by re-finding the element, and for NoSuchElementException where appropriate.\n6. Ensure driver and browser versions are compatible (Selenium Manager usually resolves this).\n7. Run the test repeatedly; feed any exception traceback back to the AI for a targeted fix.",
+    "common_mistakes": "Leaving AI's time.sleep/Thread.sleep instead of explicit waits, causing slow and flaky tests.\nMixing implicit and explicit waits, which produces unpredictable wait times.\nReusing an element reference after the DOM re-renders, triggering StaleElementReferenceException.\nInlining locators in every test instead of using page objects, so one UI change breaks many tests.\nIgnoring driver/browser version mismatches that cause session-creation failures unrelated to the test logic.",
+    "practical_use_case": "Maintaining established cross-browser, multi-language Selenium suites, writing tests where the project's stack is committed to Selenium, stabilizing flaky legacy tests by fixing waits and stale-element handling, and onboarding to a codebase by having AI explain unfamiliar WebDriver code.",
+    "summary": "Selenium drives browsers via a driver over the W3C protocol and does not auto-wait, so explicit waits are essential and Thread.sleep is the prime anti-pattern AI introduces. Use AI to draft tests, then convert sleeps to WebDriverWait conditions, organize locators into page objects, and handle StaleElementReferenceException by re-finding elements. The result is reliable cross-browser automation.",
+    "example": "```python\nfrom selenium import webdriver\nfrom selenium.webdriver.common.by import By\nfrom selenium.webdriver.support.ui import WebDriverWait\nfrom selenium.webdriver.support import expected_conditions as EC\n\ndriver = webdriver.Chrome()  # Selenium Manager resolves the driver\nwait = WebDriverWait(driver, 10)\n\ntry:\n    driver.get(\"https://app.example.com/login\")\n    wait.until(EC.visibility_of_element_located((By.NAME, \"username\"))).send_keys(\"qa_user\")\n    driver.find_element(By.NAME, \"password\").send_keys(\"secret\")\n\n    # explicit wait on a real condition, not time.sleep\n    wait.until(EC.element_to_be_clickable(\n        (By.CSS_SELECTOR, \"[data-testid='login-submit']\"))).click()\n\n    heading = wait.until(EC.visibility_of_element_located(\n        (By.CSS_SELECTOR, \"[data-testid='dashboard-heading']\")))\n    assert \"Dashboard\" in heading.text\nfinally:\n    driver.quit()\n```",
+    "interactive": "An AI gives you Selenium code: driver.find_element(By.ID, 'go').click(); time.sleep(4); assert driver.find_element(By.ID, 'result').text == 'OK'. Rewrite it to use an explicit wait and explain why this is more reliable than the sleep.",
+    "expected_answer": "Rewritten: wait = WebDriverWait(driver, 10); wait.until(EC.element_to_be_clickable((By.ID, 'go'))).click(); result = wait.until(EC.text_to_be_present_in_element((By.ID, 'result'), 'OK')). Explanation: time.sleep(4) blindly pauses for a fixed time, too long when the page is fast (wasting seconds) and too short when CI is slow (causing a flaky failure). The explicit wait polls until the exact condition (button clickable, then result text equals 'OK') is true, returning as soon as it is met and only failing if the condition never occurs within the timeout. A strong answer also notes re-finding the element avoids stale references.",
+    "homework": "Set up Selenium WebDriver in Python or Java against a demo site (e.g. https://the-internet.herokuapp.com or a sauce demo). Have an AI generate a test for a login or dynamic-loading page, then refactor it: remove all sleeps in favor of explicit waits, add a page object, and handle at least one Selenium exception. Run it several times to confirm stability.",
+    "expected_result": "A passing Selenium test with zero Thread.sleep/time.sleep, explicit WebDriverWait conditions, at least one page object class, and handling for a Selenium-specific exception (e.g. StaleElementReferenceException). Include the original AI draft, your refactored version, and a note on how many runs passed consecutively.",
+    "quiz": [
+      {
+        "question": "What does Selenium WebDriver communicate with to control the browser?",
+        "answers": [
+          "The OS accessibility API directly",
+          "A browser-specific driver process over the W3C WebDriver protocol",
+          "The browser's DevTools console only",
+          "A cloud rendering service"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Why are explicit waits preferred over time.sleep in Selenium?",
+        "answers": [
+          "Explicit waits always pause for exactly 10 seconds",
+          "time.sleep is not supported in Python",
+          "Explicit waits poll for a specific condition and return as soon as it is met",
+          "There is no difference in reliability"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "A test throws StaleElementReferenceException after a table re-renders. What is the typical fix?",
+        "answers": [
+          "Re-find the element after the DOM changes instead of reusing the old reference",
+          "Add a longer Thread.sleep before clicking",
+          "Switch from Chrome to Firefox",
+          "Catch and ignore the exception silently"
+        ],
+        "correct_index": 0
+      },
+      {
+        "question": "What problem can mixing implicit and explicit waits cause?",
+        "answers": [
+          "It speeds tests up dramatically with no downside",
+          "Unpredictable, compounded wait times and harder-to-diagnose flakiness",
+          "It disables the WebDriver protocol",
+          "It forces tests to run headless"
+        ],
+        "correct_index": 1
+      }
+    ]
+  },
+  {
+    "title": "AI for debugging failed tests",
+    "short_description": "A systematic approach to using AI to diagnose why automated tests fail and to distinguish real product bugs from test or environment problems.",
+    "learning_goals": "Feed AI the right evidence (stack trace, logs, the failing assertion, screenshot/trace) to get an accurate diagnosis.\nClassify a failure as a product bug, a test bug, a flaky/timing issue, or an environment problem.\nUse AI to form and check hypotheses methodically rather than guessing.\nValidate the AI's proposed fix and avoid the trap of just loosening the assertion.",
+    "theory": "When an automated test fails, the failure is a symptom, not a diagnosis. The skill is root-cause analysis: figuring out whether the application is genuinely broken (a product bug worth reporting), the test itself is wrong (a test bug), the test is non-deterministic (flakiness, usually timing or test-order dependence), or the environment is at fault (wrong data, down service, version mismatch). AI is a powerful diagnostic partner, but only if you give it the actual evidence instead of just 'my test failed'.\n\nThe quality of an AI diagnosis is directly proportional to the quality of the input. The high-value evidence is: the full stack trace and exception type, the exact assertion that failed with expected versus actual values, the relevant application and test logs, and any artifacts (a screenshot, a Playwright trace, an HTTP response). With those, AI can pinpoint things like 'AssertionError: expected 200 but got 401' meaning a missing auth token, or 'ElementClickInterceptedException' meaning an overlay covered the button.\n\nA disciplined method beats trial and error. Reproduce the failure locally and confirm it is consistent or intermittent. If intermittent, suspect timing or test isolation. Read the error and ask the AI to list the most likely causes ranked, then check each against the evidence. Form one hypothesis, make the smallest change to test it, and observe. This hypothesis-driven loop, which AI can structure for you, is far more reliable than randomly changing waits and selectors until it passes.\n\nThe biggest danger is a false fix. When a test fails because the product is broken, the wrong move is to weaken the assertion or add a sleep until it goes green, which hides a real bug. Always ask: does this fix address the root cause, or just silence the symptom? If the AI suggests increasing a timeout, ask whether the timing is legitimately variable or whether something is actually slow/broken. A passing test that no longer verifies anything is worse than a failing one.",
+    "key_terms": "stack trace, root-cause analysis, flaky test, test isolation / order dependence, assertion (expected vs actual), reproduction, false fix, environment vs product bug",
+    "real_world_example": "A nightly suite reports 4 failures. The QA pastes each stack trace into an AI. Three share 'TimeoutException waiting for [data-testid=results]' on a search page; the AI suggests either the search API is slow or a recent UI change renamed the testid. Checking the app, the QA finds the dev renamed it to search-results, a test bug, fixed by updating the locator. The fourth failure is 'AssertionError: expected total 120.00 but got 100.00' on checkout; the AI flags this as a likely product bug because the discount was applied twice. The QA reproduces it manually, confirms the double-discount, and files a real defect. AI helped triage 4 failures into 1 product bug and 3 test maintenance items in minutes.",
+    "step_by_step": "1. Capture the full evidence: stack trace, exception type, failed assertion (expected vs actual), logs, and any screenshot/trace.\n2. Reproduce locally; note whether it fails every time or intermittently.\n3. Paste the evidence into the AI and ask for a ranked list of likely root causes.\n4. Classify: product bug, test bug, flaky/timing, or environment.\n5. Pick the top hypothesis and make the smallest change to confirm or rule it out.\n6. Re-run; if intermittent, run multiple times to confirm the fix actually stabilized it.\n7. Before accepting an AI fix, verify it addresses the root cause and does not merely weaken the assertion or hide a real bug.",
+    "common_mistakes": "Giving the AI only 'the test failed' without the stack trace, logs, or expected-vs-actual, so the diagnosis is a guess.\nApplying a false fix (loosening the assertion or adding a sleep) that turns a real product bug into a silently passing test.\nAssuming every failure is a test bug, so genuine product defects never get reported.\nNot reproducing the failure, so you cannot tell if it is consistent or flaky.\nChanging several things at once, so when it passes you do not know which change fixed it.",
+    "practical_use_case": "Triaging CI/nightly failures every morning, deciding which failures to file as bugs versus fix as test maintenance, diagnosing flaky tests that block a release, and getting a fast second opinion on an obscure exception type you have not seen before.",
+    "summary": "A failed test is a symptom; the job is root-cause analysis to classify it as a product bug, test bug, flaky timing, or environment issue. AI diagnoses accurately only when fed real evidence, stack trace, expected vs actual, logs, traces, and a hypothesis-driven loop. The cardinal rule is to fix the root cause, never to silence a real bug by weakening the assertion.",
+    "example": "```text\nFailure pasted to AI:\n  FAILED test_checkout.py::test_total\n  AssertionError: expected 120.00 but got 100.00\n  ...\n  Logs: applied coupon SAVE20 (-20.00); applied coupon SAVE20 (-20.00)\n\nAI diagnosis (ranked):\n  1. PRODUCT BUG - the SAVE20 coupon is applied twice (-40 instead of -20).\n     Evidence: log shows two deductions. -> reproduce manually, file defect.\n  2. Test bug - expected value 120.00 is stale if discount rules changed.\n     Check: confirm 120.00 is the correct expected total per current spec.\n\nWrong fix (do NOT do this):\n  assert total == 100.00   # just matching the buggy actual value -> hides the bug\n\nRight action:\n  Reproduce in the UI, confirm double-discount, file bug with steps,\n  keep the assertion at the correct expected 120.00 so the test stays red\n  until the product is fixed.\n```",
+    "interactive": "A test fails intermittently (~1 in 5 runs) with 'TimeoutException: waiting for element .spinner to disappear'. Describe what evidence you would gather and the questions you would ask an AI to determine whether this is flakiness, a product bug, or an environment issue.",
+    "expected_answer": "Evidence to gather: how often it fails (confirm ~20%), the full stack trace, the network/API timing for whatever the spinner is waiting on, application logs around the failure, and a trace/screenshot at the moment of timeout. Questions to ask the AI: 'Given an intermittent timeout on a loading spinner, what are the ranked likely causes?' Possible causes the AI should surface: (1) flaky timing, the wait is too short for a legitimately variable backend response (fix: wait on the real completion condition with an adequate timeout, not a fixed one); (2) product/perf bug, an API is intermittently slow or hangs (fix: file a performance/defect report, do not just raise the timeout); (3) environment, a slow CI runner or a throttled dependency. The strong answer stresses reproducing and confirming the frequency before deciding, and not blindly increasing the timeout if the backend is actually broken.",
+    "homework": "Take three recent failing tests from your project (or intentionally break three tests in a sample suite). For each, gather the evidence, use an AI to diagnose, classify the failure (product bug / test bug / flaky / environment), apply a proper fix, and explicitly note when an AI-suggested 'fix' would have been a false fix that hid a real problem.",
+    "expected_result": "A triage report for three failures: each with the evidence used, the AI's ranked hypotheses, your final classification, the fix applied, and proof it worked (re-run results). At least one entry must show how you avoided or rejected a false fix (e.g. declining to loosen an assertion that was correctly catching a product bug).",
+    "quiz": [
+      {
+        "question": "What is the single biggest factor in getting an accurate AI diagnosis of a failed test?",
+        "answers": [
+          "Telling the AI the test name only",
+          "Providing real evidence: stack trace, expected vs actual, logs, and traces",
+          "Asking the AI to rewrite the whole test",
+          "Running the test on a faster machine"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "A test fails because the product computes a wrong total. Which response is a 'false fix'?",
+        "answers": [
+          "Reproducing the issue and filing a product bug",
+          "Keeping the assertion red until the product is fixed",
+          "Changing the expected value to match the buggy actual output",
+          "Adding logging to investigate the cause"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "A test fails only about 1 in 5 runs. What does this most strongly suggest you investigate first?",
+        "answers": [
+          "A syntax error in the test",
+          "Timing/flakiness or test-isolation problems",
+          "A permanently broken product feature",
+          "A missing import statement"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Why is a hypothesis-driven debugging loop better than randomly changing waits and selectors?",
+        "answers": [
+          "It guarantees the test passes on the first try",
+          "It removes the need for any evidence",
+          "It isolates the actual cause by testing one change at a time against the evidence",
+          "It is required by the WebDriver protocol"
+        ],
+        "correct_index": 2
+      }
+    ]
+  },
+  {
+    "title": "AI for code review",
+    "short_description": "Using AI to review test code and application changes for bugs, missing coverage, and quality, while keeping human judgment as the final authority.",
+    "learning_goals": "Use AI to review a diff/PR for logic bugs, missing edge cases, and risky changes a QA should care about.\nWrite effective review prompts that give the AI the diff, context, and what to focus on.\nIdentify missing test coverage and weak assertions in both test code and the code under test.\nCombine AI suggestions with human judgment, rejecting false positives and adding domain context the AI lacks.",
+    "theory": "Code review is the practice of examining a code change before it merges to catch defects, improve quality, and share knowledge. QA engineers increasingly participate in review, especially of test code and of changes with testing implications. AI assistants can act as a tireless first-pass reviewer: they read a diff quickly, flag likely bugs, point out unhandled edge cases, and suggest missing tests, surfacing issues a busy human might skim past.\n\nFor a QA reviewer, the highest-value AI prompts focus on testability and coverage, not just style. Ask: what edge cases does this change miss? What inputs would break this function (null, empty, negative, very large, boundary values like 0 and max)? Are the new tests asserting the real outcome or just that nothing threw? Does this change need a test that does not exist yet? AI is well-suited to systematically enumerating these because it does not get bored or assume 'that case can't happen'.\n\nAI review has real limitations you must manage. It produces false positives, confidently flagging non-issues, and false negatives, missing subtle bugs that depend on business rules it cannot know. It has no context about your system's history, performance constraints, or which 'impossible' states actually occur in production. It can also be misled by a misleading variable name. So AI is an assistant, not the approver: a human, you, decides what is real, adds domain context, and owns the sign-off.\n\nThe effective pattern is to give the AI the diff plus relevant context (the related code, the ticket, the testing concern) and a specific focus, then triage its output. Keep the genuine findings, dismiss the false positives with a quick check, and add the things only a human with product knowledge would catch, such as 'this change affects the refund flow, which is not covered by any test'. Used this way, AI raises the floor of every review and frees you to spend attention on the judgment calls that matter.",
+    "key_terms": "pull request / diff, edge case, test coverage, false positive / false negative, code smell, regression risk, review prompt / context, human-in-the-loop sign-off",
+    "real_world_example": "A developer opens a PR changing a discount calculation. The QA pastes the diff into an AI with the prompt 'review for edge cases and missing test coverage; this affects pricing'. The AI flags that the new code divides by the number of items without guarding against an empty cart (a potential division-by-zero / 500 error) and notes there is no test for a cart with zero items or for a 100% discount producing a 0.00 total. The QA confirms the empty-cart path is real, asks the dev to guard it, and adds two test cases. The AI also flags a 'possible null' on a field the QA knows is always populated by an upstream validator, a false positive the QA dismisses with a one-line note.",
+    "step_by_step": "1. Gather the diff (git diff or the PR), the surrounding code it touches, and the ticket/acceptance criteria.\n2. Prompt the AI with that context and a specific focus: 'review for logic bugs, edge cases, and missing test coverage'.\n3. Ask explicitly: which inputs (null, empty, 0, negative, max) could break this? What tests are missing?\n4. Triage each finding: verify it against the real code; mark as genuine, false positive, or needs-investigation.\n5. Dismiss false positives with a brief reason; never accept a flag you have not checked.\n6. Add human-only findings: domain rules, untested critical flows, regression risks the AI cannot know.\n7. Write the review comments and, as the human, own the approve/request-changes decision.",
+    "common_mistakes": "Treating every AI flag as a real bug and forwarding false positives to the developer, eroding trust.\nAssuming the AI caught everything, so subtle business-rule bugs (false negatives) slip through.\nFocusing the AI on style nits instead of the QA-relevant questions: edge cases, coverage, and regression risk.\nGiving the AI the diff with no surrounding context, so it misjudges changes it cannot fully see.\nLetting the AI 'approve' the change, instead of keeping a human as the accountable sign-off.",
+    "practical_use_case": "Reviewing teammates' test PRs for weak assertions and missing cases, doing a first-pass review of application changes to identify untested risk before writing tests, sanity-checking your own automation before opening a PR, and quickly understanding a large unfamiliar diff so your human review is more focused.",
+    "summary": "AI is an excellent first-pass code reviewer that enumerates edge cases, flags likely bugs, and spots missing tests faster than a human skim. Its weaknesses, false positives, false negatives, and zero domain context, mean it is an assistant, not an approver. Give it the diff with context and a QA-focused prompt, triage its findings, add what only you know, and keep the human sign-off.",
+    "example": "```diff\n# Diff under review\n def average_price(items):\n-    total = sum(i.price for i in items)\n-    return total / len(items)\n+    total = sum(i.price for i in items)\n+    return round(total / len(items), 2)\n```\n\n```text\nReview prompt:\n\"Review this diff for logic bugs, edge cases, and missing test coverage.\n Context: items can be an empty list when the cart is cleared.\"\n\nAI findings (after QA triage):\n  [GENUINE] Division by zero when items is empty -> raises ZeroDivisionError\n            -> 500 error. Add a guard: if not items: return 0.00\n  [GENUINE] No test covers items == [] (empty) or a single-item list.\n  [GENUINE] No test for rounding boundary, e.g. prices 0.005 -> 0.01.\n  [FALSE POSITIVE] \"price may be None\" - dismissed: price is non-null per the\n            Item schema (NOT NULL constraint). Noted, no change needed.\n\nHuman-added finding:\n  This function feeds the invoice PDF; the empty-cart path is also exercised\n  by the 'remove last item' flow, which has no regression test. Add one.\n```",
+    "interactive": "You are given a one-line function change: return user.orders[0].status. Write a review prompt for an AI focused on QA concerns, and predict the top two issues a good AI reviewer should raise.",
+    "expected_answer": "A good prompt: 'Review this change for edge cases, runtime errors, and missing test coverage. Context: a user may have zero orders.' Top issues the AI should raise: (1) IndexError / crash when user.orders is empty, accessing [0] on an empty list, with a suggestion to guard for the no-orders case and a test covering it; (2) missing test coverage, there is likely no test for a user with zero orders or with exactly one order (boundary), and possibly none asserting the actual status value. A strong answer also notes the human should add domain context, e.g. whether a user with no orders is a real production state, and own the final decision rather than letting the AI approve.",
+    "homework": "Find or create a small pull request (a function plus its tests) that has at least one edge-case bug and one missing test. Run it through an AI code review with a QA-focused prompt. Document every finding, classify each as genuine or false positive with a one-line justification, and add at least one finding only a human with domain knowledge would catch.",
+    "expected_result": "A review write-up containing the diff, your AI review prompt, the AI's findings each labeled genuine or false-positive with a justification, at least one human-added finding the AI missed, and a final approve/request-changes decision made by you with reasoning. The submission should demonstrate triage, not blind acceptance of AI output.",
+    "quiz": [
+      {
+        "question": "What is the most appropriate role for AI in code review?",
+        "answers": [
+          "The final approver who merges the PR",
+          "A first-pass reviewer whose findings a human triages and signs off on",
+          "A tool that only checks code formatting",
+          "A replacement for writing any tests"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Which prompt focus is most valuable for a QA reviewing a diff with AI?",
+        "answers": [
+          "Rename all the variables to be shorter",
+          "Edge cases, missing test coverage, and regression risk",
+          "Only check indentation and spacing",
+          "Translate the comments to another language"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "The AI flags 'this value may be null' on a field your schema enforces as NOT NULL. What is this?",
+        "answers": [
+          "A confirmed product bug to file immediately",
+          "A false positive you can dismiss with a brief justification after verifying",
+          "A reason to reject the entire PR",
+          "Proof the AI is always right"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Why can't AI fully replace a human reviewer for QA-relevant review?",
+        "answers": [
+          "AI cannot read diffs at all",
+          "AI lacks domain context and produces false positives and false negatives, so a human must judge and own sign-off",
+          "AI refuses to look at test code",
+          "Human review is faster than AI in every case"
+        ],
+        "correct_index": 1
+      }
+    ]
+  }
+]

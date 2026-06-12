@@ -1,0 +1,415 @@
+[
+  {
+    "title": "AI for requirements analysis",
+    "short_description": "How to use AI assistants (ChatGPT, Claude, Copilot) to analyze requirements, expose ambiguities, gaps, and contradictions, and turn vague specs into testable statements.",
+    "learning_goals": "Write prompts that make an AI list ambiguities, missing rules, and contradictions in a requirement before any test is written.\nUse AI to convert vague acceptance criteria into clear, testable statements (Given/When/Then or explicit rules).\nGenerate a list of clarifying questions for the BA/PO from a user story.\nCritically validate AI output and catch hallucinated requirements that were never in the source text.",
+    "theory": "Requirements analysis is the QA activity of reading a specification (user story, acceptance criteria, business rule, API contract) and judging whether it is complete, unambiguous, consistent, and testable. A weak requirement like \"the system should respond quickly\" cannot be tested: 'quickly' has no number. Most expensive bugs are born here, not in code. The cheapest place to fix a defect is in the requirement, before a single line is written.\n\nAI language models are strong at this because the work is text reasoning, not execution. You paste a user story and ask the model to act as a critical QA reviewer. A good model will flag that 'quickly' has no threshold (is it 200 ms, 2 s, 5 s?), that a password rule says 'minimum 8 characters' but never states the maximum or allowed character set, and that two sentences contradict each other (one says guests can checkout, another says login is required).\n\nThe core technique is role + task + format. You tell the AI its role ('senior QA analyst'), the task ('find ambiguities, gaps, contradictions, and untestable statements'), and the output format ('a table with: issue, category, why it is a problem, suggested clarifying question'). Structured output is what makes the result usable in a real ticket.\n\nAI is also excellent at converting prose into testable form. Feed it 'Users should be able to reset their password' and ask for explicit, atomic, testable rules: valid email triggers a reset link, link expires after a set time (e.g. 24 hours), an unknown email shows a neutral message to avoid account enumeration, link is single-use. The model surfaces the edge cases (expired link, reused link, rate limiting) a junior tester would miss.\n\nThe danger is hallucination. An AI may invent a requirement that sounds plausible ('the reset link expires after 15 minutes') when the source said nothing about expiry. You must treat every AI-generated rule as a question for the Product Owner, not a fact. The correct framing is: AI produces a list of things to confirm, the human confirms them with the business. Never ship requirements the AI invented as if they were approved.\n\nUse this on every new story during refinement/grooming. It takes two minutes and routinely catches three to five real ambiguities a team would otherwise discover during testing or, worse, in production.",
+    "key_terms": "ambiguity, testability, acceptance criteria, INVEST, Given/When/Then, edge case, hallucination, requirements gap, account enumeration, clarifying question",
+    "real_world_example": "During sprint refinement you receive the story: 'As a user I want to upload a profile photo so others can recognize me.' The acceptance criteria only say 'user can upload an image.' You paste it into Claude with the prompt 'Act as a senior QA. List every ambiguity, missing rule, and edge case in this story as a table, plus clarifying questions for the PO.' The AI returns: allowed formats not specified (JPG/PNG/WEBP/HEIC?), no max file size (1 MB? 10 MB?), no max dimensions, behavior on corrupt/zero-byte file undefined, what happens to the old photo, whether animated GIFs are allowed, and whether there is virus/content moderation. You bring these 7 questions to the PO and the team agrees on a 5 MB limit, JPG/PNG only, and a clear error message. Three potential production bugs are prevented before coding starts.",
+    "step_by_step": "1. Copy the raw requirement or user story (including any acceptance criteria) exactly as written.\n2. Give the AI a role and a precise task: 'Act as a senior QA analyst. Review this requirement for ambiguities, gaps, contradictions, and untestable statements.'\n3. Demand a structured format: a table with columns Issue, Category (ambiguity/gap/contradiction/untestable), Why it's a problem, Clarifying question.\n4. Ask a second prompt: 'Rewrite the acceptance criteria as atomic, testable Given/When/Then scenarios, including negative and edge cases.'\n5. Review every output line. Mark each as: real issue, already answered elsewhere, or AI hallucination.\n6. Move the confirmed clarifying questions into the ticket and ask the BA/PO.\n7. Once answered, ask the AI to update the testable criteria with the real numbers and rules.\n8. Save the final testable criteria as the basis for your test cases.",
+    "common_mistakes": "Accepting AI-invented rules (like a specific timeout value) as approved requirements instead of treating them as questions for the PO.\nPasting a one-line story with no context and expecting deep analysis; the AI needs the acceptance criteria and any business rules to be useful.\nAsking 'is this requirement good?' (yes/no) instead of asking for a structured list of specific problems.\nNot specifying an output format, so you get a wall of prose that is hard to turn into tickets.\nSkipping the human review step and copying AI ambiguities directly to developers as if they were defects.",
+    "practical_use_case": "Used during backlog refinement, sprint grooming, and the '3 amigos' sessions (BA, dev, QA). A manual QA runs each new user story through an AI ambiguity check before estimation, producing a list of clarifying questions that improves the story's Definition of Ready and prevents rework mid-sprint.",
+    "summary": "AI turns requirements analysis from a slow, easy-to-skip task into a two-minute habit that reliably surfaces ambiguities, gaps, and untestable wording. Always use role + task + structured-format prompts, and always treat AI-suggested rules as questions for the Product Owner rather than facts, because models hallucinate plausible requirements.",
+    "example": "Prompt:\n```\nAct as a senior QA analyst. Review the requirement below for ambiguities,\ngaps, contradictions, and untestable statements. Return a Markdown table\nwith columns: Issue | Category | Why it's a problem | Clarifying question.\nDo NOT invent rules; if something is unspecified, list it as a gap.\n\nRequirement:\n\"As a registered user I want to log in with my email and password.\nThe system should lock the account after several failed attempts.\"\n```\n\nAI output (example):\n\n| Issue | Category | Why it's a problem | Clarifying question |\n|-------|----------|--------------------|---------------------|\n| 'several failed attempts' has no number | Ambiguity | Not testable; could be 3 or 10 | After how many failed attempts does the account lock? |\n| Lock duration unspecified | Gap | Tester can't verify unlock | Is the lock temporary (e.g. 15 min) or permanent until support? |\n| No rule for correct password after lock | Gap | Behavior undefined | If credentials are correct but account is locked, what message shows? |\n| Email case-sensitivity unspecified | Ambiguity | User@x.com vs user@x.com | Are emails treated case-insensitively? |\n| No rate limiting / CAPTCHA mentioned | Gap | Brute-force risk | Is there rate limiting or CAPTCHA before lockout? |",
+    "interactive": "Take this requirement and write a single prompt that asks an AI to produce a structured ambiguity table and a set of clarifying questions: 'As a customer I want to apply a discount code at checkout so I can save money. The discount should be applied to the order.' Then list at least four ambiguities you expect the AI to find.",
+    "expected_answer": "A strong prompt assigns a QA-reviewer role, asks specifically for ambiguities/gaps/contradictions/untestable items in a table, forbids inventing rules, and requests clarifying questions. Expected ambiguities include: whether multiple/stacked codes are allowed; behavior for an expired or invalid code; whether the discount is percentage or fixed amount; whether it applies before or after tax/shipping; minimum order value to qualify; what happens if the discount exceeds the order total; case sensitivity of the code; and whether the code is single-use per customer. The learner should also note that any specific numbers the AI offers (e.g. 'codes expire in 30 days') are assumptions to confirm with the PO, not requirements.",
+    "homework": "Pick a real user story from a past project or invent a realistic one with 2-3 acceptance criteria. Run it through an AI twice: first to produce an ambiguity/gap/contradiction table, then to rewrite the acceptance criteria as testable Given/When/Then scenarios including negative cases. Submit the original story, both AI outputs, and a short note marking which AI-suggested items were real issues versus hallucinations you had to reject.",
+    "expected_result": "A submission containing the original story, a structured ambiguity table with at least five distinct, relevant issues and matching clarifying questions, a set of testable Given/When/Then scenarios that include at least two negative/edge cases, and a clear human-review note identifying at least one item the learner rejected as an AI assumption. The testable criteria should contain no vague words like 'quickly' or 'several' without a concrete value or a flagged question.",
+    "quiz": [
+      {
+        "question": "What is the single biggest risk when using AI to analyze requirements?",
+        "answers": [
+          "The AI is too slow to be useful in refinement",
+          "The AI may hallucinate plausible-sounding rules that were never in the source, which must not be treated as approved requirements",
+          "The AI cannot read user stories written in plain English",
+          "The AI always refuses to analyze incomplete requirements"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Why is the requirement 'the system should respond quickly' considered untestable?",
+        "answers": [
+          "Because performance can never be measured",
+          "Because 'quickly' has no concrete numeric threshold, so there is no pass/fail criterion",
+          "Because only developers are allowed to define performance",
+          "Because AI cannot evaluate non-functional requirements"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Which prompt structure produces the most usable requirements analysis?",
+        "answers": [
+          "A yes/no question: 'Is this a good requirement?'",
+          "A single word: 'analyze'",
+          "Role + task + structured output format (e.g. a table of issues, categories, and clarifying questions)",
+          "Asking the AI to write the production code first"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "After an AI lists ambiguities and suggested rules for a story, what is the correct next step?",
+        "answers": [
+          "Send the AI's suggested rules to developers as confirmed requirements",
+          "Bring the clarifying questions to the BA/Product Owner to confirm the real rules before testing",
+          "Delete the story because it is ambiguous",
+          "Write test cases directly from the AI's invented values"
+        ],
+        "correct_index": 1
+      }
+    ]
+  },
+  {
+    "title": "AI for generating test cases",
+    "short_description": "How to use AI to draft, expand, and refine detailed manual test cases (steps, data, expected results) from requirements while keeping a human in control of coverage and correctness.",
+    "learning_goals": "Generate well-structured test cases (preconditions, steps, test data, expected result) from a user story using AI.\nDrive AI to produce both positive and negative cases, plus boundary and edge scenarios, instead of only happy paths.\nReview, deduplicate, and prioritize AI-generated cases so the suite stays maintainable.\nFeed real constraints (test data, environment, roles) into the prompt so cases are executable, not generic.",
+    "theory": "A test case is a precise, repeatable instruction set proving a feature behaves as required. A complete case has an ID, a title, preconditions, ordered steps, test data, and an expected result. The expected result is the heart of it: 'Login succeeds' is weak; 'User is redirected to /dashboard and sees their name in the header' is verifiable.\n\nAI shines at the mechanical, time-consuming part: expanding one requirement into many structured cases. Given clear acceptance criteria, a model can produce 15-20 cases covering the happy path, alternative flows, validation errors, and boundaries in seconds. This is leverage on the most tedious part of manual QA. But the model only knows what you tell it, so the prompt must carry the business rules, the field constraints, and the format you want.\n\nThe technique is to give the AI the testable requirement (ideally already cleaned up per the previous lesson), specify the format explicitly (a table or Gherkin), and explicitly demand categories of coverage: positive, negative, boundary, and edge. If you do not ask for negatives and boundaries, models default to happy paths. For a 'quantity' field accepting 1-99, you should get cases for 1 (min), 99 (max), 0 (below min), 100 (above max), and a non-numeric input like 'abc' — classic boundary value and equivalence partitioning, which you can name in the prompt.\n\nReview is mandatory and non-trivial. AI over-generates: it produces near-duplicate cases, invents expected results that contradict the requirement, and occasionally writes steps for a UI that does not exist. Your job shifts from authoring to editing: delete duplicates, fix wrong expected results, add missing data, and prioritize (P1 smoke vs P3 rare edge). A 40-case AI dump is not better than a curated 18-case suite; coverage with maintainability is the goal.\n\nGood prompts also include the environment and constraints: the test user roles (admin vs guest), available test data (a seeded account, a known product SKU), and the platform (web vs iOS). Without these, you get generic cases that say 'enter valid data' instead of 'enter email qa.user@test.com / Passw0rd!'. The more real context you provide, the more executable the output, and the less rework you do.",
+    "key_terms": "test case, precondition, expected result, positive/negative testing, boundary value, equivalence partitioning, test data, traceability, deduplication, priority (P1/P2/P3)",
+    "real_world_example": "You are testing an e-commerce coupon field that accepts codes 4-12 characters, alphanumeric, case-insensitive, one per order. You paste these rules into ChatGPT and ask for a test case table covering positive, negative, and boundary cases with concrete data. It returns cases such as: valid 8-char code applies discount; 4-char code (min boundary) works; 12-char code (max boundary) works; 3-char code rejected (below min); 13-char code rejected (above max); code with a symbol '#' rejected; lowercase version of a valid code still applies (case-insensitive); applying a second code replaces or rejects the first; expired code shows a specific error. You review, delete one duplicate, correct one expected result the AI got backwards, mark the smoke-test cases as P1, and import 14 polished cases into TestRail in 10 minutes instead of an hour.",
+    "step_by_step": "1. Start from clean, testable acceptance criteria (use the requirements-analysis lesson if needed).\n2. Provide context in the prompt: feature, field rules, user roles, available test data, platform, and the tool/format (table or Gherkin).\n3. Explicitly request coverage categories: 'Include positive, negative, boundary, and edge cases. Apply equivalence partitioning and boundary value analysis.'\n4. Specify the columns: ID, Title, Preconditions, Steps, Test Data, Expected Result, Priority.\n5. Generate the first batch, then ask a follow-up: 'What scenarios did you miss? Add error handling, security, and concurrency cases.'\n6. Review every case: delete duplicates, fix expected results that contradict the rules, fill in missing concrete data.\n7. Assign priorities (P1 smoke, P2 core, P3 edge) and remove low-value cases to keep the suite maintainable.\n8. Import the curated set into your test management tool (TestRail, Zephyr, Xray) and link them to the requirement for traceability.",
+    "common_mistakes": "Accepting the AI's cases without checking expected results; models frequently assert an outcome that contradicts the stated rule.\nForgetting to ask for negative and boundary cases, so you get only happy-path coverage.\nNot providing concrete test data, leaving vague steps like 'enter valid input' that are not repeatable.\nKeeping every generated case, producing a bloated suite full of near-duplicates that is painful to maintain.\nLetting the AI invent UI elements or steps that don't match the actual application.",
+    "practical_use_case": "Day-to-day, a manual QA uses AI to draft the first version of test cases for each new feature in a sprint, then spends their time reviewing and refining instead of typing from scratch. This is also used to quickly backfill missing test coverage for legacy features and to expand a thin set of cases before a regression cycle.",
+    "summary": "AI removes the tedium of authoring test cases by expanding clean requirements into structured, multi-category coverage in seconds. The QA's value moves to providing real context in the prompt and rigorously reviewing output: explicitly demand positive, negative, boundary, and edge cases, verify every expected result against the rules, and curate down to a maintainable, prioritized suite.",
+    "example": "Requirement: Username field accepts 3-15 characters, letters/digits/underscore only, must be unique, case-insensitive.\n\nAI-generated case (one of a set):\n\n```\nID: TC-USR-007\nTitle: Reject username exceeding maximum length (boundary, above max)\nPriority: P2\nPreconditions: User is on the registration page; no account exists yet.\nSteps:\n  1. Enter a 16-character username: \"abcdefghij_12345\"\n  2. Fill email: new.user@test.com\n  3. Fill password: Passw0rd!\n  4. Click \"Create account\"\nTest Data: username = abcdefghij_12345 (16 chars)\nExpected Result:\n  - Account is NOT created.\n  - Inline error under the username field reads:\n    \"Username must be 3-15 characters.\"\n  - The form stays on the registration page; no redirect occurs.\n```\n\nCompanion boundary cases in the same set: 3 chars (min, accepted), 15 chars (max, accepted), 2 chars (below min, rejected), username with a space (invalid char, rejected), and an existing username in different case (uniqueness, case-insensitive, rejected).",
+    "interactive": "Write a prompt that asks an AI to generate manual test cases for an age field on a sign-up form that accepts whole numbers 18-120. Specify the output format and the coverage categories you want. Then list the boundary values you would expect to appear in the generated cases.",
+    "expected_answer": "A strong prompt states the role and feature, gives the exact rules (integer, 18 to 120 inclusive), requests a table with ID/Title/Preconditions/Steps/Test Data/Expected Result/Priority, and explicitly asks for positive, negative, and boundary cases using boundary value analysis and equivalence partitioning. Expected boundary values: 17 (below min, rejected), 18 (min, accepted), 120 (max, accepted), 121 (above max, rejected), plus edge/negative cases like 0, a negative number, a decimal (e.g. 18.5), a non-numeric string ('abc'), and an empty field. The learner should note that expected results must be checked against the rule and that the AGE rule's inclusivity (18 and 120 valid) must be confirmed.",
+    "homework": "Choose a form with at least three constrained fields (for example a registration form with email, password, and date of birth). Use AI to generate a full set of manual test cases in a table, then perform a real review: delete duplicates, correct any wrong expected results, add concrete test data, and assign priorities. Submit the raw AI output and your final curated suite side by side, with a short note on what you changed and why.",
+    "expected_result": "A submission with the raw AI output and a curated final suite of roughly 12-20 cases. The final suite must include positive, negative, and boundary cases for each field, concrete test data (no 'valid input' placeholders), specific verifiable expected results, and assigned priorities. The accompanying note should identify at least two concrete edits (a deleted duplicate, a corrected expected result, or added data) demonstrating real human review rather than a copy-paste of AI output.",
+    "quiz": [
+      {
+        "question": "If you do not explicitly ask for them, what kind of cases will an AI most likely under-produce?",
+        "answers": [
+          "Happy-path positive cases",
+          "Negative, boundary, and edge cases",
+          "Cases with an ID and title",
+          "Cases written in English"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "For a quantity field that accepts 1 to 99, which set best reflects boundary value analysis?",
+        "answers": [
+          "Only 50",
+          "1, 2, 50, 98",
+          "0, 1, 99, 100",
+          "Any three random numbers between 1 and 99"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "Why must you review AI-generated expected results carefully?",
+        "answers": [
+          "Because AI cannot write English expected results",
+          "Because models sometimes assert an outcome that contradicts the actual requirement",
+          "Because expected results are optional in a test case",
+          "Because the test management tool rewrites them anyway"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "What most improves the executability of AI-generated test cases?",
+        "answers": [
+          "Asking for as many cases as possible regardless of quality",
+          "Providing concrete context: field rules, user roles, real test data, and platform",
+          "Removing all preconditions to keep cases short",
+          "Letting the AI invent its own test data formats"
+        ],
+        "correct_index": 1
+      }
+    ]
+  },
+  {
+    "title": "AI for generating checklists",
+    "short_description": "How to use AI to build fast, reusable QA checklists for smoke, regression, cross-browser, accessibility, and release readiness, and when a checklist beats full test cases.",
+    "learning_goals": "Generate focused QA checklists (smoke, regression, accessibility, release) from a feature description using AI.\nUnderstand when a lightweight checklist is the right tool versus detailed test cases.\nTailor AI-generated checklists to a specific product, platform, and risk area.\nMaintain and reuse checklists across releases instead of regenerating from scratch each time.",
+    "theory": "A checklist is a lightweight list of items to verify, without the full step-by-step structure of a test case. It answers 'what must I not forget to check?' rather than 'exactly how do I reproduce this?'. Checklists are fast to create, fast to run, and ideal for experienced testers who know how to exercise each item. A smoke checklist might be ten lines ('login works', 'home page loads', 'search returns results', 'checkout completes'); a full test case for each would be overkill for a five-minute sanity pass.\n\nChecklists and test cases serve different needs. Use detailed test cases when steps are complex, when juniors run them, when you need traceability and evidence, or for regulated domains. Use checklists for smoke/sanity passes, exploratory session charters, cross-browser sweeps, accessibility quick-checks, and release readiness — situations where speed and breadth matter more than reproducible step detail.\n\nAI is excellent at generating checklists because it has broad knowledge of standard quality dimensions. Ask for an accessibility checklist and a good model produces items grounded in WCAG: keyboard-only navigation works, focus is visible, images have alt text, color contrast meets at least 4.5:1 for normal text, form fields have labels, and the page is usable at 200% zoom. Ask for a cross-browser checklist and it covers Chrome/Firefox/Safari/Edge, mobile Safari and Chrome, layout, and known quirks. The model gives you a strong baseline you would otherwise assemble from memory or a wiki.\n\nThe key is to specialize the checklist to your context. A generic 'web app smoke checklist' is a starting point; you must add your product's critical paths (the specific flows that earn money or cause incidents) and remove irrelevant items. Tell the AI the product type, platform, and the area of risk: 'Generate a release-readiness checklist for a B2B SaaS billing module on web, focusing on payments, invoices, and tax.'\n\nChecklists are reusable assets. Generate once, refine with the team, store it, and run it every release — updating it when the product changes or when a missed bug reveals a gap. A living checklist that grows after each escaped defect is one of the highest-leverage, lowest-cost quality practices a manual QA team can own, and AI makes the initial draft nearly free.",
+    "key_terms": "checklist, smoke test, sanity test, regression, exploratory testing, session charter, WCAG, cross-browser, release readiness, critical path",
+    "real_world_example": "Your team is about to ship a redesigned checkout. You have two hours, not two days. You ask Claude: 'Generate a pre-release smoke checklist for an e-commerce checkout on web and mobile web, covering cart, payment, validation, and confirmation. Keep it to checkable one-line items grouped by area.' It returns grouped items: cart updates quantity and total; remove item works; guest checkout works; logged-in checkout works; invalid card shows a clear error; valid card completes order; order confirmation email is sent; back button after payment does not double-charge; mobile layout has no overlapping buttons. You add two product-specific items (your loyalty-points redemption and your specific 'split shipping' option), drop one irrelevant item, and run the 12-point list across Chrome and mobile Safari in 30 minutes, catching a double-charge-on-back-button bug before release.",
+    "step_by_step": "1. Decide the checklist type and scope: smoke, regression, accessibility, cross-browser, or release readiness.\n2. Prompt with context: product type, platform(s), the feature/area, and the risk focus.\n3. Ask for one-line, checkable items grouped by area, not full test-case steps.\n4. Review the draft and add your product's critical paths (the money/incident flows the AI cannot know).\n5. Remove items irrelevant to your product or platform to keep the list fast to run.\n6. For accessibility or compliance checklists, verify items map to a real standard (e.g. WCAG 2.1 AA) and add concrete thresholds (contrast 4.5:1).\n7. Save the checklist as a reusable team asset in your wiki or test tool.\n8. After each release, update it: add an item for any bug that escaped, retire items for removed features.",
+    "common_mistakes": "Using a generic AI checklist as-is without adding the product's real critical paths, so the most important flows go unchecked.\nGenerating a checklist when the situation actually needs detailed, reproducible test cases (complex steps, junior executor, audit trail).\nMaking checklists so long they stop being fast; a 90-item 'smoke' list defeats the purpose.\nTreating accessibility checklist items as vague ('check contrast') instead of attaching the real threshold (4.5:1 for normal text).\nRegenerating from scratch every release instead of maintaining one living, improving checklist.",
+    "practical_use_case": "A manual QA runs an AI-generated smoke checklist on every deployment to staging and a release-readiness checklist before each production release. Checklists also drive time-boxed exploratory sessions, quick cross-browser sweeps after a CSS change, and accessibility spot-checks during design review.",
+    "summary": "Checklists are the fast, broad complement to detailed test cases, ideal for smoke, regression, accessibility, cross-browser, and release passes. AI drafts strong, standards-aware checklists in seconds, but the QA must specialize them with the product's real critical paths, keep them short enough to stay fast, and maintain them as living assets that grow after every escaped bug.",
+    "example": "AI-generated accessibility quick-check (WCAG 2.1 AA oriented):\n\n```\nAccessibility smoke checklist - [Page name]\nKeyboard & focus:\n  [ ] All interactive elements reachable with Tab only\n  [ ] Focus indicator is clearly visible on every focusable element\n  [ ] No keyboard trap (you can Tab out of every component)\n  [ ] Logical tab order matches visual order\nContent & media:\n  [ ] All meaningful images have descriptive alt text\n  [ ] Decorative images use empty alt (alt=\"\")\n  [ ] Videos have captions\nColor & text:\n  [ ] Normal text contrast >= 4.5:1; large text >= 3:1\n  [ ] Information is not conveyed by color alone\n  [ ] Page usable and readable at 200% zoom\nForms:\n  [ ] Every input has an associated, visible label\n  [ ] Error messages are announced and tied to their field\n  [ ] Required fields are programmatically marked, not just by color\nStructure:\n  [ ] One <h1> per page; headings nest in order (h1 > h2 > h3)\n  [ ] Page has a meaningful <title>\n  [ ] Language is set (lang attribute on <html>)\n```",
+    "interactive": "Ask an AI to generate a smoke checklist for the login and registration area of a mobile banking app, then improve it: add at least three product-specific critical items an AI could not know, and remove anything irrelevant. Write the final checklist.",
+    "expected_answer": "A strong answer includes a context-rich prompt (mobile banking, iOS/Android, login + registration, security focus) and a refined checklist with one-line checkable items: successful login, wrong password shows clear error, account lockout after N attempts, biometric login works and falls back to PIN, registration validation, session timeout, and logout clears the session. Product-specific additions a model could not know might include: device-binding/new-device verification flow, the bank's specific OTP delivery channel, and a 'jailbroken/rooted device blocked' check. The learner should keep the list short (roughly 12-18 items) and grouped, demonstrating they specialized a generic draft rather than pasting it verbatim.",
+    "homework": "Pick a real or sample product and produce two AI-generated checklists for it: a smoke checklist and one specialized checklist (accessibility, cross-browser, or release readiness). For each, document the prompt you used, the raw AI draft, and your refined final version with product-specific items added and irrelevant items removed. Add a one-paragraph note on when you would use a checklist versus full test cases for this product.",
+    "expected_result": "A submission containing two refined checklists, each grouped, concise (fast to run), and clearly specialized beyond the generic AI draft with at least two product-specific items added. The accessibility/compliance checklist (if chosen) should reference real WCAG-style criteria with concrete thresholds. The note should correctly explain that checklists suit fast, broad, expert-run passes while detailed test cases suit complex steps, junior executors, and audit/traceability needs.",
+    "quiz": [
+      {
+        "question": "When is a checklist the better choice over detailed test cases?",
+        "answers": [
+          "For a regulated audit requiring reproducible step-by-step evidence",
+          "For a fast, broad smoke or sanity pass run by an experienced tester",
+          "When a junior tester needs exact reproduction steps",
+          "When you need full traceability for every requirement"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "What must a QA always do with a generic AI-generated checklist before using it?",
+        "answers": [
+          "Nothing; generic checklists are complete as generated",
+          "Add the product's real critical paths and remove irrelevant items",
+          "Convert every item into a full test case",
+          "Delete all grouping so it is one flat list"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Which contrast ratio is the WCAG 2.1 AA minimum for normal-size text?",
+        "answers": [
+          "2:1",
+          "3:1",
+          "4.5:1",
+          "7:1"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "What is the best practice for checklists across releases?",
+        "answers": [
+          "Regenerate a brand-new checklist from the AI every release",
+          "Maintain one living checklist and add an item whenever a bug escapes",
+          "Never change the checklist once created",
+          "Make the checklist longer every release regardless of relevance"
+        ],
+        "correct_index": 1
+      }
+    ]
+  },
+  {
+    "title": "AI for generating bug reports",
+    "short_description": "How to use AI to turn rough observations into clear, complete, reproducible bug reports with title, steps, expected vs actual, severity, and environment, while keeping facts accurate.",
+    "learning_goals": "Transform a rough note about a defect into a structured, professional bug report using AI.\nEnsure AI-assisted reports include all essential fields: title, steps to reproduce, expected vs actual, environment, severity, and evidence.\nUse AI to write clear, neutral, blameless titles and descriptions that developers can act on.\nGuard against AI inventing reproduction steps or technical details that were never observed.",
+    "theory": "A bug report is a communication tool: its job is to let a developer reproduce and fix a defect with minimal back-and-forth. A good report has a precise title, exact steps to reproduce, the expected result, the actual result, the environment (browser/OS/app version/build), severity and priority, and evidence (screenshot, video, logs, network response). The most common reason bugs get bounced back as 'cannot reproduce' is missing or vague steps and environment.\n\nWriting reports well is a skill many testers find tedious, and that is exactly where AI helps. You give the model your raw observation — 'checkout button does nothing on Safari sometimes when cart has 1 item' — and ask it to structure a complete report. It produces a clean title, numbered reproduction steps, an expected/actual split, and prompts you for the missing environment and severity. It turns five messy words into a report a developer can act on.\n\nThe craft is in the title and the expected-vs-actual clarity. A weak title is 'button broken'. A strong one states component, action, and outcome: 'Checkout button unresponsive on Safari 17 when cart has exactly 1 item'. AI is good at this pattern: component + condition + observed behavior. It is also good at separating expected ('clicking Checkout navigates to /payment') from actual ('clicking Checkout does nothing; no navigation, no error') so there is no ambiguity about what is wrong.\n\nSeverity and priority must reflect reality, and AI can only suggest them. Severity is the technical impact (crash vs cosmetic); priority is the business urgency (fix now vs later). A model can propose 'High severity because checkout is blocked' but you confirm it against your team's scale, because the AI does not know your release plan or how many users hit Safari.\n\nThe critical safeguard is accuracy. An AI will happily invent plausible reproduction steps, a fake HTTP status, or a console error you never saw, because it pattern-matches what 'usually' happens. Never let invented details into a bug report — a wrong reproduction step wastes developer hours and erodes trust. Provide the real facts (the actual steps you took, the real error text, the real status code), have AI structure and clarify them, and review every line so the report contains only what was truly observed.",
+    "key_terms": "steps to reproduce, expected vs actual result, severity, priority, environment, regression, reproducibility, evidence/attachment, blameless reporting, build/version",
+    "real_world_example": "While testing, you notice that uploading a 6 MB PNG avatar fails silently. Your rough note: 'avatar upload fails for big png, no message, network tab shows 413.' You paste it into ChatGPT: 'Turn this into a full bug report with title, steps to reproduce, expected/actual, environment placeholders, and a suggested severity. Use only the facts I gave; mark anything missing as TODO.' The AI returns a clean title ('Avatar upload fails silently with HTTP 413 for images over ~5 MB'), numbered steps, an expected ('upload succeeds or a clear size-limit error appears') vs actual ('request returns 413 Payload Too Large; UI shows no message'), an environment block with TODO placeholders, and suggested 'Medium' severity. You fill in the real browser/OS/build, attach the network screenshot, confirm severity, and file it. The developer reproduces it on the first try.",
+    "step_by_step": "1. Capture the real facts first: what you did, what you expected, what actually happened, and any error text, status code, or log.\n2. Gather evidence: screenshot, screen recording, console/network output, and the exact environment (browser+version, OS, app build).\n3. Prompt the AI: 'Structure this into a bug report with Title, Steps to Reproduce, Expected, Actual, Environment, Severity. Use ONLY the facts I provide; mark anything unknown as TODO. Do not invent steps or errors.'\n4. Check the generated title: it should name the component, the condition, and the observed behavior.\n5. Verify expected vs actual are specific and clearly separated.\n6. Confirm or correct the suggested severity/priority against your team's scale and release context.\n7. Replace every TODO with real environment data and attach the evidence.\n8. Re-read the whole report and delete any detail you did not actually observe before filing it in Jira/Azure DevOps/GitHub.",
+    "common_mistakes": "Letting the AI invent reproduction steps, a console error, or an HTTP status that was never observed, leading to wasted developer time.\nFiling a report with vague steps ('it broke') so the developer marks it 'cannot reproduce'.\nWriting an unactionable title like 'bug in checkout' instead of component + condition + behavior.\nConfusing severity (technical impact) with priority (business urgency), or accepting the AI's guess without confirming.\nForgetting the environment and build/version, which makes regressions impossible to track.",
+    "practical_use_case": "Throughout daily testing, a manual QA uses AI to convert quick defect notes into polished, complete bug reports before filing them, reducing report-writing time and the 'cannot reproduce' bounce rate. It is also used to clean up and standardize old, low-quality reports and to rewrite a confusing report into clear language for a developer.",
+    "summary": "A bug report's value is measured by how easily a developer can reproduce and fix the defect, which depends on a precise title, exact steps, clear expected-vs-actual, environment, and severity. AI quickly structures rough notes into complete, professional reports, but the QA must supply the real facts and ruthlessly strip out any reproduction step, error, or status code the AI invented.",
+    "example": "Raw note: \"search returns 500 when query has emoji, e.g. searching 🚀, on prod web chrome\"\n\nAI-structured bug report:\n\n```\nTitle: Search returns HTTP 500 when the query contains an emoji character\n\nSeverity: High      Priority: High\nEnvironment: Web - Chrome 124 / Windows 11 / build 2024.06.12-prod\n\nSteps to Reproduce:\n  1. Go to https://app.example.com and log in as any user.\n  2. Click the search box in the top navigation.\n  3. Type a single emoji as the query, e.g. \"🚀\".\n  4. Press Enter to submit the search.\n\nExpected Result:\n  Search executes and returns either matching results or a\n  \"no results found\" state. No server error.\n\nActual Result:\n  The request to GET /api/search?q=🚀 returns HTTP 500\n  Internal Server Error. The UI shows a blank white screen\n  with no error message.\n\nEvidence: network-tab-500.png, error-screen.png attached.\nNotes: Reproduced 3/3 times. Plain-text queries work normally.\n```\nEvery line here reflects something actually observed; no invented steps or fabricated error text.",
+    "interactive": "Here is a rough note: 'logout link on profile page doesn't log you out on firefox, still logged in after clicking, mobile.' Write a prompt that asks an AI to turn it into a complete bug report using only these facts, and then list which fields you, the human, must still fill in before filing.",
+    "expected_answer": "A strong prompt instructs the AI to produce Title, Steps to Reproduce, Expected, Actual, Environment, and Severity using only the given facts, to mark unknowns as TODO, and to not invent steps or errors. The resulting title should be specific, e.g. 'Logout link on profile page does not end the session in Firefox (mobile)'. Fields the human must still supply: exact Firefox and OS versions and app build, the precise device, severity/priority confirmation against the team scale, evidence (screenshot/recording showing the still-logged-in state), reproduction reliability (e.g. 3/3), and confirmation of the exact steps actually taken. The learner should note that the AI must not fabricate a session token, cookie name, or error message that was not observed.",
+    "homework": "Find or recall three real defects (or create three realistic ones) and write only rough one-line notes for them. Then use AI to turn each note into a full, structured bug report, providing the real environment and evidence yourself and instructing the AI not to invent details. Submit the three rough notes and the three finished reports, plus a short note on any detail you caught the AI fabricating and removed.",
+    "expected_result": "A submission of three complete bug reports, each with a specific component+condition+behavior title, numbered reproducible steps, clearly separated expected vs actual results, real environment and build info, a justified severity and priority, and at least one form of evidence. The note should demonstrate the human-review safeguard by identifying at least one fabricated or assumed detail the learner removed, or explicitly confirming each report contains only observed facts.",
+    "quiz": [
+      {
+        "question": "What is the most dangerous failure mode when using AI to write a bug report?",
+        "answers": [
+          "The AI writes the title in title case",
+          "The AI invents reproduction steps, errors, or status codes that were never observed",
+          "The AI groups the fields under headings",
+          "The AI suggests a severity level"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "What distinguishes severity from priority?",
+        "answers": [
+          "They are the same thing with different names",
+          "Severity is the technical impact of the defect; priority is the business urgency to fix it",
+          "Severity is set by developers; priority is set by users",
+          "Priority is always higher than severity"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Which title is the most actionable for a developer?",
+        "answers": [
+          "Checkout broken",
+          "Bug found today",
+          "Checkout button unresponsive on Safari 17 when cart has exactly 1 item",
+          "Please fix ASAP"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "Why is the environment field (browser/OS/build) essential in a bug report?",
+        "answers": [
+          "It is only needed for mobile apps",
+          "It makes the report longer to look more professional",
+          "It lets developers reproduce the issue and lets the team track regressions across builds",
+          "It is optional and rarely matters"
+        ],
+        "correct_index": 2
+      }
+    ]
+  },
+  {
+    "title": "AI for test design techniques",
+    "short_description": "How to use AI to apply formal test design techniques (equivalence partitioning, boundary value analysis, decision tables, state transition, pairwise) to derive a strong, non-redundant set of tests.",
+    "learning_goals": "Use AI to apply equivalence partitioning and boundary value analysis to a given field or input.\nGenerate decision tables and state-transition tests with AI to cover rule combinations and flows.\nApply pairwise (all-pairs) testing via AI to shrink an explosion of combinations to a manageable set.\nValidate that AI used the technique correctly rather than just listing random cases.",
+    "theory": "Test design techniques are systematic methods for selecting the most valuable tests from an impossibly large input space. Exhaustive testing is impossible (a single text field has near-infinite inputs), so these techniques give defensible coverage with the fewest cases. The core techniques every manual QA should know are equivalence partitioning, boundary value analysis, decision tables, state transition testing, and pairwise (all-pairs) testing.\n\nEquivalence partitioning (EP) groups inputs that the system should treat the same, then tests one representative per group. For an age field valid at 18-65, the partitions are: below 18 (invalid), 18-65 (valid), above 65 (invalid). You test one value from each, not every number. Boundary value analysis (BVA) adds tests right at the edges, where bugs cluster: 17/18 and 65/66, because off-by-one errors (using > instead of >=) live exactly there. AI can take a rule and output the partitions and boundaries explicitly, which is faster and more disciplined than doing it in your head.\n\nDecision tables handle combinations of conditions that produce different outcomes. If a discount depends on customer type (new/returning) and order size (under/over $100), a decision table lays out all four combinations and the expected discount for each, so no rule combination is missed. AI is strong at generating these tables from prose business rules and at flagging combinations the rules left undefined.\n\nState transition testing covers systems with states and allowed transitions: an order moves Created to Paid to Shipped to Delivered, and you test both valid transitions and invalid ones (can you ship an unpaid order?). AI can build the state-transition table and propose tests for illegal transitions, which testers often forget. Pairwise testing tackles combinatorial explosion: 4 browsers x 3 OSes x 3 payment methods x 2 user types is 72 combinations, but most defects involve interactions of just two factors, so an all-pairs algorithm covers every pair in roughly 9-12 cases. AI can generate a pairwise set, turning an unmanageable matrix into a runnable suite.\n\nThe essential discipline is verifying the AI applied the technique correctly. A model may say 'boundary value analysis' but skip the just-outside value, or produce a 'decision table' that misses a combination, or give a pairwise set that doesn't actually cover all pairs. You must check: are both sides of each boundary present? Does the decision table include every condition combination? Does the pairwise set cover every value pair at least once? AI accelerates the technique, but you remain the auditor of its correctness.",
+    "key_terms": "equivalence partitioning, boundary value analysis, decision table, state transition testing, pairwise/all-pairs testing, combinatorial explosion, off-by-one, valid/invalid partition, condition/action, coverage",
+    "real_world_example": "You must test a shipping-cost rule: orders under $50 pay $9.99 shipping; $50-$199.99 pay $4.99; $200 and over ship free; members always ship free regardless of total. You ask Claude to produce a decision table plus boundary values. It outputs a table with conditions (member yes/no x order total band) and the resulting shipping cost, and BVA cases at $49.99/$50.00 and $199.99/$200.00. The table immediately reveals an ambiguity: the rule never says what a member with an order exactly at $0.00 (e.g. a fully discounted order) should see, and it confirms the boundaries you must test. You catch an off-by-one risk where the developer might code total > 50 instead of >= 50, which would wrongly charge $9.99 on a $50 order. You take the table to refinement and to your test cases.",
+    "step_by_step": "1. Identify the input or logic type: a single constrained field (EP/BVA), combined rules (decision table), a stateful flow (state transition), or many independent parameters (pairwise).\n2. Give the AI the exact rules and name the technique: 'Apply equivalence partitioning and boundary value analysis to this rule.'\n3. For EP/BVA, require explicit output: list the partitions (valid and invalid) and the boundary values on both sides of each edge.\n4. For decision tables, require a complete table covering every combination of conditions, with the expected action per row, and ask it to flag undefined combinations.\n5. For state transitions, ask for a state-transition table and tests for both valid and invalid transitions.\n6. For pairwise, give the parameters and their values and ask for an all-pairs set, then ask it to confirm every pair is covered.\n7. Audit the output: check both boundary sides exist, every combination is present, and pairwise coverage is genuine.\n8. Convert the verified design into concrete test cases with data and expected results.",
+    "common_mistakes": "Trusting that the AI labeled output 'boundary value analysis' actually includes the just-outside value (e.g. 18 but not 17).\nAccepting a decision table that silently omits one or more condition combinations.\nAsking for 'some test cases' instead of naming the technique, so the AI returns unstructured, redundant cases.\nAssuming an AI 'pairwise' set truly covers all pairs without verifying it.\nUsing pairwise where exhaustive testing is actually feasible and required (very few parameters, high risk), or vice versa.",
+    "practical_use_case": "A manual QA uses these techniques during test design for any feature with rules or many parameters: deriving BVA cases for every numeric/length-constrained field, building decision tables for pricing/permission/discount logic, mapping state transitions for order or approval workflows, and applying pairwise to cross-browser/cross-config matrices to keep regression suites runnable.",
+    "summary": "Formal test design techniques select high-value, low-redundancy tests from an impossible input space, and AI applies them fast: partitions and boundaries for fields, decision tables for rule combinations, state-transition tests for flows, and pairwise to tame combinatorial explosion. The QA's job is to name the right technique and rigorously audit that the AI applied it correctly, checking both boundary sides, full combination coverage, and genuine pair coverage.",
+    "example": "Rule: A coupon field gives 10% off for orders 100-499.99, and 20% off for orders 500 and above; no discount below 100; invalid for orders over 10000 (flagged for review).\n\nAI applying EP + BVA (verified):\n\n```\nEquivalence partitions (by order total):\n  P1  < 100            -> no discount        (invalid for discount)\n  P2  100 - 499.99     -> 10% off            (valid)\n  P3  500 - 10000      -> 20% off            (valid)\n  P4  > 10000          -> flagged for review (invalid)\n\nBoundary value cases:\n  99.99   -> no discount        (just below P2 lower edge)\n  100.00  -> 10% off            (P2 lower edge)\n  499.99  -> 10% off            (P2 upper edge)\n  500.00  -> 20% off            (P3 lower edge)\n  10000.00-> 20% off            (P3 upper edge)\n  10000.01-> flagged for review (just above -> P4)\n```\nAudit check: every partition has a representative, and each edge has a value on both sides (e.g. 99.99/100.00 and 10000.00/10000.01), catching the >= vs > off-by-one risk.",
+    "interactive": "A password field requires 8 to 20 characters. Write a prompt asking an AI to apply equivalence partitioning and boundary value analysis, then list exactly which boundary values must appear in a correct answer.",
+    "expected_answer": "A strong prompt names both techniques and asks for explicit partitions and boundary values on both sides of each edge. Correct partitions: fewer than 8 (invalid), 8-20 (valid), more than 20 (invalid). The boundary values that must appear: 7 (just below min, invalid), 8 (min, valid), 20 (max, valid), and 21 (just above max, invalid). A learner should note that simply listing '8 and 20' is incomplete BVA because it omits the just-outside values 7 and 21, which is precisely where off-by-one bugs hide. Bonus: empty input and a very long string as additional negative cases.",
+    "homework": "Choose one feature that needs combinations (for example a discount or access-permission rule with at least two conditions) and one stateful flow (for example an order or subscription lifecycle). Use AI to produce a complete decision table for the first and a state-transition table with invalid-transition tests for the second. Then audit both: confirm every condition combination is present and that illegal transitions are tested. Submit the AI output, your audit notes, and any gaps you found.",
+    "expected_result": "A submission with a complete decision table covering every combination of the stated conditions (no missing rows) and correct expected actions, plus a state-transition table that lists all states, valid transitions, and at least two invalid-transition tests. The audit notes must show the learner actively verified coverage, ideally catching at least one undefined combination or missing illegal-transition test that the AI omitted or the rules left ambiguous.",
+    "quiz": [
+      {
+        "question": "Why does boundary value analysis test values on both sides of an edge (e.g. 17 and 18 for a min of 18)?",
+        "answers": [
+          "To make the test suite longer",
+          "Because off-by-one bugs (e.g. > instead of >=) cluster exactly at the boundary",
+          "Because equivalence partitioning forbids testing the valid range",
+          "Because boundaries are the only values users ever enter"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "What problem does pairwise (all-pairs) testing solve?",
+        "answers": [
+          "It guarantees zero defects",
+          "It replaces the need for any expected results",
+          "It reduces a combinatorial explosion of parameter combinations to a small set that still covers every pair of values",
+          "It tests only the happy path"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "Which technique best fits logic where multiple conditions combine to produce different outcomes (e.g. customer type plus order size determining a discount)?",
+        "answers": [
+          "Boundary value analysis",
+          "Decision table testing",
+          "State transition testing",
+          "Exploratory testing"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "What is the QA's main responsibility when an AI applies a test design technique?",
+        "answers": [
+          "To trust the technique label and skip review",
+          "To audit that the technique was applied correctly: both boundary sides present, all combinations covered, all pairs covered",
+          "To always request exhaustive testing instead",
+          "To remove all invalid partitions from the output"
+        ],
+        "correct_index": 1
+      }
+    ]
+  },
+  {
+    "title": "AI for test documentation",
+    "short_description": "How to use AI to draft and maintain QA documentation, test plans, test strategies, traceability matrices, and READMEs, keeping it accurate, consistent, and current.",
+    "learning_goals": "Use AI to draft a test plan and test strategy from a project brief, following a recognized structure (e.g. IEEE 829 sections).\nGenerate a requirements-to-test traceability matrix with AI and keep it in sync.\nStandardize and improve the clarity, tone, and consistency of existing QA documents.\nKeep AI-assisted documentation accurate by feeding real project facts and reviewing for invented scope.",
+    "theory": "Test documentation is the written backbone of a QA effort: the test plan (scope, approach, resources, schedule, risks), the test strategy (the higher-level, often organization-wide approach), the traceability matrix (which tests cover which requirements), test summary and status reports, and supporting docs like environment setup and test-data guides. Good documentation makes testing repeatable, auditable, and understandable to people who join mid-project. Bad or missing documentation causes duplicated effort, coverage gaps, and onboarding pain.\n\nThe classic reference for structure is IEEE 829. A test plan typically covers: scope and objectives, features to be tested and not tested, test approach, entry and exit criteria, environment, roles and responsibilities, schedule, risks and mitigations, and deliverables. You do not need to memorize every section, but knowing the standard skeleton lets you judge whether an AI-generated plan is complete.\n\nAI is well suited to documentation because it is fundamentally structured writing. Give a model a project brief and the standard sections, and it drafts a coherent test plan in minutes, including a sensible risk section and entry/exit criteria you can refine. It is equally good at the opposite direction: paste a messy, inconsistent document and ask it to standardize tone, fix structure, and enforce consistent terminology across the file.\n\nTraceability is a high-value, tedious task AI accelerates. Given a list of requirements and a list of test cases, a model can build a matrix mapping each requirement to its covering tests and, crucially, flag requirements with no tests (coverage gaps) and tests that map to no requirement (possibly orphaned). This turns an hour of spreadsheet work into a draft you verify, and it surfaces gaps that are easy to miss manually.\n\nTwo cautions dominate. First, AI invents scope: it may add 'performance testing' or 'security testing' to a plan you never intended, or assert a schedule and team size that do not exist. You must feed real project facts and delete anything fabricated. Second, documentation rots: a plan written once and never updated becomes misleading. The sustainable pattern is to keep docs in version control or a wiki and use AI to update them when scope changes, rather than regenerating from scratch. AI lowers the cost of both creating and maintaining documentation, but the QA owns the accuracy.",
+    "key_terms": "test plan, test strategy, IEEE 829, entry/exit criteria, traceability matrix, scope (in/out), risk and mitigation, deliverables, environment, coverage gap",
+    "real_world_example": "A new project kicks off and the lead asks you for a test plan by tomorrow. You gather the real facts (two-week sprints, web + iOS, a team of two QAs, scope is the new onboarding flow, out of scope is the legacy admin panel, a staging environment exists) and prompt ChatGPT: 'Draft a test plan using IEEE 829 sections from these facts. Do not invent scope, schedule, or resources; mark anything I did not provide as TODO.' It returns a structured plan with scope in/out, approach (manual functional + exploratory + cross-browser), entry/exit criteria, a risk section (third-party SMS OTP dependency flagged), roles, and deliverables, with TODOs where you gave no data. You fill the TODOs, remove a 'load testing' line the AI added that is not in scope, and deliver a solid plan in 40 minutes instead of half a day.",
+    "step_by_step": "1. Collect the real project facts: scope in/out, platforms, team and roles, schedule, environments, dependencies, and risks.\n2. Choose the document and structure: test plan (IEEE 829 sections), strategy, traceability matrix, or setup guide.\n3. Prompt with the facts and structure: 'Draft a [document] using these sections and only these facts; mark missing info as TODO; do not invent scope, schedule, or resources.'\n4. Review section by section, fill every TODO with real data, and delete any fabricated scope or numbers.\n5. For a traceability matrix, provide the requirement list and test-case list and ask the AI to map them and flag requirements with no tests and tests with no requirement.\n6. Verify the matrix against reality and resolve flagged coverage gaps and orphan tests.\n7. Standardize language and terminology with a final 'make tone and terms consistent' pass.\n8. Store the document in version control or the wiki and use AI to update it when scope changes, rather than rewriting from zero.",
+    "common_mistakes": "Letting the AI invent scope (adding performance or security testing) or fabricate a schedule and team size that do not exist.\nGenerating a polished plan from no real facts, producing confident but fictional documentation.\nTreating the traceability matrix as final without verifying mappings and resolving flagged coverage gaps.\nWriting documentation once and never updating it, so it silently becomes inaccurate.\nIgnoring entry/exit criteria, which are the parts of a plan that actually control when testing starts and stops.",
+    "practical_use_case": "At project or release kickoff, a manual QA uses AI to draft the test plan and strategy, then maintains them as scope evolves. Throughout the project, AI builds and refreshes the traceability matrix to prove coverage to stakeholders, and standardizes the team's growing library of test docs so terminology and structure stay consistent.",
+    "summary": "Test documentation makes QA repeatable, auditable, and onboardable, and AI drafts plans, strategies, and traceability matrices fast using standard structures like IEEE 829. The QA must feed real project facts, delete invented scope and fabricated schedules, verify traceability mappings and gaps, and treat docs as living artifacts updated in place rather than written once and forgotten.",
+    "example": "Traceability matrix generated by AI from a requirement list and a test-case list:\n\n```\n| Req ID | Requirement                          | Covering Test Cases      | Status      |\n|--------|--------------------------------------|--------------------------|-------------|\n| R-01   | User can register with email         | TC-01, TC-02, TC-05      | Covered     |\n| R-02   | Password must be 8-20 chars          | TC-06, TC-07, TC-08      | Covered     |\n| R-03   | Email verification link expires 24h  | (none)                   | GAP - no test |\n| R-04   | Account locks after 5 failed logins  | TC-12                    | Covered     |\n| R-05   | User can reset password              | TC-14, TC-15             | Covered     |\n| -      | TC-20 (delete account)               | maps to no requirement   | ORPHAN      |\n```\nThe AI flagged R-03 as an uncovered requirement (a real coverage gap to fix) and TC-20 as an orphan test with no matching requirement (investigate whether the requirement is missing or the test is obsolete).",
+    "interactive": "You are given these facts: scope is a new in-app chat feature (web only), out of scope is push notifications, one QA engineer, a one-week test window, staging available, main risk is a third-party WebSocket provider. Write a prompt that asks an AI to draft a test plan from only these facts without inventing anything, and list the IEEE 829 sections you expect in the output.",
+    "expected_answer": "A strong prompt supplies all the facts, names IEEE 829 structure, instructs the AI to mark missing data as TODO, and forbids inventing scope, schedule, or resources. Expected sections: introduction/objectives, scope (in: in-app chat web; out: push notifications), test approach (manual functional, exploratory, possibly cross-browser), entry and exit criteria, test environment (staging), roles and responsibilities (one QA), schedule (one-week window), risks and mitigations (third-party WebSocket provider dependency, e.g. connection drops/reconnection), and deliverables. The learner should note they must verify no extra scope (like load or security testing) was invented and fill any TODOs with real data.",
+    "homework": "Take a real or sample project and produce two artifacts with AI: a test plan using IEEE 829 sections from a set of facts you provide, and a traceability matrix mapping at least six requirements to their test cases. For the plan, instruct the AI not to invent scope and mark unknowns as TODO. For the matrix, ensure at least one requirement and one test are deliberately mismatched so the AI must flag a gap and an orphan. Submit both artifacts and a note on what you corrected.",
+    "expected_result": "A submission with a structured test plan covering the standard sections (including explicit in/out scope and entry/exit criteria) with no fabricated scope or resources, and a traceability matrix that correctly maps requirements to tests and flags at least one coverage gap and one orphan test. The correction note should show real human review: TODOs filled with real data, invented content removed, and the flagged gap/orphan acknowledged with a resolution decision.",
+    "quiz": [
+      {
+        "question": "Which standard provides the classic structure for a test plan?",
+        "answers": [
+          "ISO 9001",
+          "IEEE 829",
+          "WCAG 2.1",
+          "HTTP/1.1"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "What does a traceability matrix primarily reveal?",
+        "answers": [
+          "The exact code lines that contain bugs",
+          "Which requirements are covered by tests, plus coverage gaps and orphan tests",
+          "The performance of the application under load",
+          "The salaries of the QA team"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "What is a common way AI corrupts a test plan if unchecked?",
+        "answers": [
+          "It refuses to write any sections",
+          "It invents scope (e.g. performance/security testing) or a schedule and team that do not exist",
+          "It always omits the title",
+          "It writes the plan in a foreign language"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "What is the sustainable way to keep test documentation accurate over time?",
+        "answers": [
+          "Write it once and never touch it again",
+          "Regenerate it from scratch with AI every single day",
+          "Keep it in version control or a wiki and use AI to update it in place when scope changes",
+          "Delete it after the first release"
+        ],
+        "correct_index": 2
+      }
+    ]
+  },
+  {
+    "title": "AI for test summary reports",
+    "short_description": "How to use AI to turn raw test execution data (pass/fail counts, defects, coverage) into a clear, audience-appropriate test summary report with an honest go/no-go recommendation.",
+    "learning_goals": "Use AI to generate a structured test summary report from raw execution metrics and defect data.\nTailor the report's tone and detail to the audience (executives vs developers vs QA).\nDerive honest metrics, pass rate, open defects by severity, coverage, and a defensible go/no-go recommendation.\nGuard against AI inflating results or inventing metrics not present in the source data.",
+    "theory": "A test summary report communicates the outcome of a testing cycle so stakeholders can make a release decision. It typically includes: scope tested, execution metrics (tests planned/executed/passed/failed/blocked), pass rate, defect summary by severity and status (open/fixed/deferred), coverage notes, known risks and open issues, and a recommendation (go / no-go / go with caveats). It is the document that answers 'are we ready to ship?'.\n\nThe report's quality depends on honest, accurate metrics. A pass rate of '95%' is meaningless if 5% of failures are critical and block checkout. So the report must break defects down by severity: a release with two open Critical bugs is not shippable even at 98% pass. Good reports separate 'passed', 'failed', and 'blocked' (tests that could not run), because blocked tests are hidden risk, not success.\n\nAI is strong here because the task is summarizing and reframing structured data into prose and tables for a specific audience. You feed it the raw numbers and defect list, and it produces a clean report. Crucially, the same data needs different reports for different readers: executives want a one-paragraph status, the headline pass rate, the count of open critical/high defects, and a clear go/no-go; developers want the failing tests and the specific open bugs; the QA lead wants coverage and trend detail. AI can generate all three from one dataset, adjusting tone and depth.\n\nThe go/no-go recommendation is where judgment matters most. AI can draft a recommendation, but it must be grounded in the data and your team's release criteria. The correct logic is rule-based: e.g. no open Critical or High defects in core flows, pass rate above an agreed threshold, all blocked tests explained. You confirm the recommendation against these criteria; you do not outsource the release decision to a model that does not know your risk appetite or the business deadline.\n\nThe central risk is misrepresentation. An AI asked to 'summarize the results' may round 91% up to 'over 90%, excellent', bury a Critical defect, or invent a metric like 'code coverage 80%' that was never measured. This is dangerous: a summary report drives a money/risk decision. The QA must ensure every number traces to the source data, that severities are reported faithfully (no downplaying), and that the recommendation reflects real risk, not optimism. Use AI to write the report clearly and quickly, but own the truth of every figure and the integrity of the recommendation.",
+    "key_terms": "test summary report, pass rate, blocked test, defect severity, open/deferred defect, exit criteria, go/no-go, coverage, residual risk, audience tailoring",
+    "real_world_example": "A two-week regression cycle ends and the release manager needs a summary by 5 PM. You have raw data: 240 tests planned, 232 executed, 210 passed, 18 failed, 8 blocked; defects: 1 Critical (open), 3 High (1 open, 2 fixed), 9 Medium, 14 Low. You paste this into Claude: 'Generate a test summary report for the release manager. Use only these numbers. Include pass rate, defect breakdown by severity and status, blocked-test risk, and a go/no-go recommendation given our exit criterion of zero open Critical/High defects in core flows.' The AI produces a clean report with an 87.5% pass rate (210/240), highlights the 1 open Critical and 1 open High, notes the 8 blocked tests as unverified risk, and recommends 'No-Go: one open Critical and one open High defect violate exit criteria.' You verify every number, confirm the recommendation, and send an honest report rather than a rosy one.",
+    "step_by_step": "1. Collect raw execution data: tests planned, executed, passed, failed, blocked, plus the defect list with severity and status.\n2. State your team's exit/release criteria (e.g. zero open Critical/High in core flows, minimum pass rate).\n3. Identify the audience and prompt accordingly: 'Generate a test summary report for [executives/developers/QA lead] using only these numbers.'\n4. Require specific sections: scope, execution metrics, pass rate, defects by severity and status, blocked-test risk, and a go/no-go recommendation tied to the exit criteria.\n5. Verify every metric against the source data; recompute the pass rate yourself (passed / planned or passed / executed, stated explicitly).\n6. Confirm severities are reported faithfully and no Critical/High defect is downplayed or omitted.\n7. Validate the go/no-go against the stated criteria, not the AI's optimism, and adjust if needed.\n8. Generate audience-specific variants from the same data if multiple stakeholders need different detail.",
+    "common_mistakes": "Letting the AI spin the numbers ('over 90%, excellent') or bury a Critical defect to make the release look ready.\nReporting a single pass rate without breaking defects down by severity, hiding that failures are blocking.\nIgnoring blocked tests or counting them as passes, which masks real, unverified risk.\nAccepting the AI's go/no-go without checking it against the team's actual exit criteria and risk appetite.\nNot stating whether the pass rate is computed over planned or executed tests, producing an ambiguous headline number.",
+    "practical_use_case": "At the end of every test cycle, sprint, or release candidate, a manual QA uses AI to produce the test summary report for the release decision, generating an executive one-pager and a more detailed QA/dev version from the same data. It is also used for periodic status updates during long test phases and for retrospective summaries of a completed project's testing.",
+    "summary": "A test summary report answers 'are we ready to ship?' with honest execution metrics, severity-aware defect breakdowns, blocked-test risk, and a criteria-based go/no-go. AI drafts these reports quickly and tailors them per audience, but the QA must verify every number against the source, report severities faithfully, and ground the recommendation in real exit criteria rather than the model's optimism.",
+    "example": "Raw data in, AI report out (executive variant):\n\n```\nTest Summary Report - Release 3.4 RC2\nCycle: 2026-06-01 to 2026-06-07\n\nScope: Checkout, payments, and account management (web + iOS).\n\nExecution metrics:\n  Planned:   240\n  Executed:  232\n  Passed:    210   Failed: 18   Blocked: 8\n  Pass rate: 87.5% (210/240 planned; 90.5% of executed)\n\nDefects by severity (open / total):\n  Critical: 1 / 1   <-- BLOCKER\n  High:     1 / 3\n  Medium:   4 / 9\n  Low:      6 / 14\n\nKey risks:\n  - Open Critical: checkout fails with saved card on iOS (DEF-145).\n  - 8 blocked tests (payment-gateway sandbox down) = unverified area.\n\nRecommendation: NO-GO.\n  Reason: 1 open Critical + 1 open High in core flows violate the\n  exit criterion (zero open Critical/High in checkout). Re-test after\n  DEF-145 fix and once the sandbox is restored to clear blocked tests.\n```\nEvery figure traces to the source; the recommendation follows the stated exit criteria, not optimism.",
+    "interactive": "Given this raw data, write a prompt for an AI to produce an executive test summary with a go/no-go, then state what the recommendation should be: 200 tests planned, 200 executed, 190 passed, 10 failed, 0 blocked; defects: 0 Critical, 0 High open (2 High fixed), 5 Medium open, 8 Low open. Exit criterion: zero open Critical/High in core flows and pass rate at or above 90%.",
+    "expected_answer": "A strong prompt supplies all numbers, states the exit criteria, names the executive audience, requires sections (metrics, pass rate, defects by severity/status, go/no-go), and instructs the AI to use only the given data without inflating or inventing metrics. The correct recommendation is GO (or go with minor caveats): pass rate is 95% (190/200), which meets the 90% threshold, and there are zero open Critical/High defects in core flows, satisfying the exit criteria; the remaining open Medium/Low defects can be tracked post-release. The learner should explicitly compute 190/200 = 95% and tie the GO to the criteria, not to a vague impression.",
+    "homework": "Create or use a realistic set of test execution results (planned/executed/passed/failed/blocked plus a defect list by severity and status) and a clear exit criterion. Use AI to generate two versions of the summary report from the same data: a one-paragraph executive version with a go/no-go, and a detailed version for the QA/dev team. Verify every number and the recommendation yourself. Submit the raw data, both reports, and a note on any figure or recommendation you had to correct.",
+    "expected_result": "A submission with the raw data and two audience-appropriate reports drawn from identical numbers: an executive version with a clearly justified go/no-go and a detailed version with failing-test and defect specifics. Every metric must trace to the source data, the pass rate must state its basis (planned vs executed), defects must be broken down by severity and status, blocked tests must be treated as risk, and the recommendation must follow the stated exit criteria. The note should demonstrate verification, ideally catching at least one AI miscalculation, omission, or over-optimistic phrasing the learner corrected.",
+    "quiz": [
+      {
+        "question": "Why is a single headline pass rate insufficient for a release decision?",
+        "answers": [
+          "Because pass rates are never accurate",
+          "Because it can hide blocking defects; failures must be broken down by severity (e.g. an open Critical bug)",
+          "Because executives do not read pass rates",
+          "Because pass rate is the same as code coverage"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "How should blocked tests be treated in a summary report?",
+        "answers": [
+          "Counted as passes since they did not fail",
+          "Ignored entirely",
+          "Reported as unverified risk, separate from passed and failed",
+          "Always counted as failures regardless of cause"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "What is the most serious integrity risk when AI writes a summary report?",
+        "answers": [
+          "It uses a table instead of prose",
+          "It inflates results, buries a Critical defect, or invents a metric not in the source data",
+          "It tailors the report to the audience",
+          "It includes a go/no-go recommendation"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "On what should the go/no-go recommendation be based?",
+        "answers": [
+          "The AI's general optimism about the build",
+          "The team's defined exit/release criteria applied to the real metrics and open defects",
+          "Whichever decision pleases the release manager",
+          "The total number of test cases written"
+        ],
+        "correct_index": 1
+      }
+    ]
+  }
+]

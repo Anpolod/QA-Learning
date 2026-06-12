@@ -1,0 +1,474 @@
+[
+  {
+    "title": "Requirements analysis",
+    "short_description": "How a QA reads, questions, and validates requirements before any testing begins.",
+    "learning_goals": "Tell apart functional, non-functional, and business requirements and find each in a real spec.\nApply testability criteria so you can spot a requirement you cannot verify.\nDetect ambiguity, contradictions, and missing cases by asking precise clarifying questions.\nDerive an initial set of test conditions directly from a requirement.",
+    "theory": "Requirements analysis is the work a QA does before writing a single test: reading the specification, understanding what the product is supposed to do, and checking that the description is clear, complete, consistent, and testable. It is the cheapest place to catch defects. A requirement bug found at the analysis stage costs minutes to fix; the same bug found in production can cost hundreds of times more because code, tests, and documentation already depend on it.\n\nRequirements come in several kinds. Functional requirements describe behavior: \"The user can reset a password via an email link valid for 24 hours.\" Non-functional requirements describe quality attributes: performance (\"the search returns results in under 2 seconds for 95% of requests\"), security, usability, and compatibility. Business requirements describe the goal (\"reduce checkout abandonment\"), while business rules constrain logic (\"orders over $500 require manager approval\"). A good QA reads all of them and notices when one contradicts another.\n\nThe single most important property is testability. A requirement is testable when you can define a concrete pass/fail check for it. \"The page must load fast\" is not testable — fast is undefined. \"The page must reach First Contentful Paint within 1.5 seconds on a 4G connection\" is testable. When you see a vague word — fast, user-friendly, secure, properly, etc. — that is your signal to ask for a measurable definition.\n\nYou analyze requirements by hunting for specific defects in the text itself: ambiguity (a sentence with two meanings), incompleteness (what happens on error? what about an empty list?), inconsistency (two requirements that disagree), and untestability. Techniques such as boundary analysis already start here: if a field accepts 1 to 100 characters, you immediately note the interesting values 0, 1, 100, and 101 even before the screen exists.\n\nThe output of analysis is not just a cleaner spec. It is a set of questions for the analyst or product owner, plus a first list of test conditions — the things you will eventually verify. This list becomes the seed for your test scenarios and test cases later in the documentation chain.",
+    "key_terms": "functional requirement, non-functional requirement, business rule, testability, acceptance criteria, ambiguity, traceability, requirement defect",
+    "real_world_example": "You receive a user story: \"As a user, I want to log in so I can access my account.\" The acceptance criteria say only \"User enters credentials and is logged in.\" As QA you flag the gaps before sprint planning: What happens after 5 wrong passwords — lockout, captcha, nothing? Is the email case-sensitive? How long does the session last? Is there a 'remember me' option? What error appears for an unregistered email versus a wrong password (and should those messages differ, given account-enumeration risk)? These questions, raised in refinement, prevent three or four bugs that would otherwise surface during testing.",
+    "step_by_step": "1. Read the full requirement once for overall intent without judging it.\n2. Classify each statement as functional, non-functional, or a business rule.\n3. Underline every vague or subjective word (fast, easy, secure, properly) and demand a measurable definition.\n4. Check testability: for each requirement, write the pass/fail condition in one sentence. If you cannot, it is not yet testable.\n5. Hunt for missing cases: empty input, maximum input, error paths, permissions, concurrency, and what happens when a dependency fails.\n6. Cross-check requirements against each other for contradictions.\n7. Write a numbered list of clarifying questions and send it to the analyst or product owner.\n8. Draft an initial list of test conditions to carry into scenarios and test cases.",
+    "common_mistakes": "Assuming the meaning of a vague requirement instead of asking, then testing the wrong behavior.\nOnly analyzing the happy path and ignoring error, empty, and boundary cases.\nTreating non-functional requirements (performance, security) as out of scope because they are not explicitly written.\nAccepting 'the page should load fast' as testable without a number.\nNot recording clarifications, so the same ambiguity resurfaces and is answered differently next time.",
+    "practical_use_case": "Used in every sprint during backlog refinement and story grooming. QA reviews each user story's acceptance criteria, raises questions before development starts, and turns the clarified requirement into test conditions. It is also used when reviewing a formal specification document at the start of a new project or feature.",
+    "summary": "Requirements analysis is the QA's first and cheapest line of defense: read carefully, classify the requirements, and check that each one is clear, complete, consistent, and testable. Replace every vague word with a measurable definition and turn open questions into clarifications. The result is fewer surprises later and a ready list of test conditions.",
+    "example": "Requirement under review:\n\"R-12: Users can transfer money between their own accounts.\"\n\nQA analysis notes:\n- Type: functional (transfer behavior) + business rule (limits) + non-functional (response time).\n- Missing: minimum/maximum transfer amount? Currency conversion between accounts? What if balance is insufficient — error message and HTTP code (e.g., 422 Unprocessable Entity)? Daily transfer limit? Is the transfer instant or queued?\n- Untestable phrase: none stated, but 'transfer should be quick' (mentioned verbally) -> request: define as 'confirmation shown within 3 seconds for 95% of transfers'.\n- Derived test conditions: transfer with sufficient balance, transfer with insufficient balance, transfer of 0, transfer of exactly the daily limit, transfer of limit + 0.01, transfer to an account the user does not own (should be blocked).\n\nClarifying questions sent to PO:\n1. What are the min and max transfer amounts?\n2. What error and code is returned for insufficient funds?\n3. Is there a per-day transfer cap, and what is it?",
+    "interactive": "Here is an acceptance criterion: \"The discount code field applies a valid coupon to the cart.\" Write at least four clarifying questions a QA should ask, and list the boundary/edge test conditions you would derive.",
+    "expected_answer": "Strong answer raises questions such as: What makes a code 'valid' (format, length, case-sensitivity)? What happens with an expired, already-used, or unknown code, and what message appears? Can multiple codes stack? Is there a minimum cart total for the discount? What is the max discount (percentage cap or fixed amount)? Does the discount apply before or after tax/shipping? Edge/boundary conditions: empty code, code with leading/trailing spaces, lowercase vs uppercase, expired code, code at exactly its expiry moment, cart total just below and just at the minimum threshold, applying a code then emptying the cart.",
+    "homework": "Take a real-looking user story of your choice (or: \"As a registered user I want to upload a profile photo so others can recognize me\") and produce a one-page requirements analysis: classify the requirements, list at least six clarifying questions, flag any untestable wording with a measurable rewrite, and derive at least eight test conditions including boundary and error cases.",
+    "expected_result": "A submission that clearly separates functional vs non-functional aspects (e.g., max file size, allowed formats jpg/png, performance), contains specific clarifying questions (max file size in MB? allowed formats? what happens on a corrupt file or a 20 MB file?), rewrites at least one vague phrase into a measurable one, and lists test conditions covering happy path, empty/no file, oversized file (e.g., 5 MB limit -> test 5 MB and 5 MB + 1 byte), wrong format, and a corrupt file.",
+    "quiz": [
+      {
+        "question": "Which requirement is testable as written?",
+        "answers": [
+          "The application must be fast and responsive.",
+          "Search results must appear within 2 seconds for 95% of queries on a 4G connection.",
+          "The UI should be user-friendly.",
+          "The system must handle load properly."
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "\"Orders over $500 require manager approval\" is an example of a:",
+        "answers": [
+          "Non-functional requirement",
+          "Business rule",
+          "Test case",
+          "Usability requirement"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Why is analyzing requirements early so valuable?",
+        "answers": [
+          "It lets QA skip writing test cases later.",
+          "Defects found in requirements are far cheaper to fix than the same defects found in production.",
+          "It replaces the need for developer code review.",
+          "It guarantees zero bugs will reach production."
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "A field accepts 1 to 100 characters. Which set best represents the boundary values to test?",
+        "answers": [
+          "50 and 75",
+          "Only 1 and 100",
+          "0, 1, 100, and 101",
+          "Any random value between 1 and 100"
+        ],
+        "correct_index": 2
+      }
+    ]
+  },
+  {
+    "title": "Test scenarios",
+    "short_description": "How to write high-level test scenarios that describe what to test before drilling into detailed steps.",
+    "learning_goals": "Explain how a test scenario differs from a test case and a requirement.\nDerive scenarios from requirements so that every feature path is covered.\nWrite scenarios at the right altitude: high-level, one line, outcome-focused.\nUse scenarios to plan coverage and estimate effort before detailed test design.",
+    "theory": "A test scenario is a high-level description of a functionality or user flow that needs to be tested, usually expressed in a single sentence. It answers \"what do we test?\" rather than \"exactly how?\". For example: \"Verify a user can log in with valid credentials\" is a scenario. The detailed steps, data, and expected results belong to the test case that comes later.\n\nScenarios exist because jumping straight to detailed test cases makes it easy to lose the big picture. By listing scenarios first, you map the entire feature: every flow, permission, error path, and integration. A reviewer can scan twenty one-line scenarios in two minutes and spot a missing flow, something impossible with twenty full test cases. Scenarios are also the unit you estimate and prioritize with: \"we have 40 scenarios, 12 are high priority.\"\n\nYou derive scenarios from requirements and user stories. A single requirement usually produces several scenarios: a happy path, alternative paths, negative paths, and edge conditions. For a login feature you might write: log in with valid credentials; log in with a wrong password; log in with an unregistered email; account lockout after repeated failures; log in with empty fields; session persistence with 'remember me'. Each is one line, each is independently testable.\n\nThe key skill is altitude. A scenario should not contain step-by-step instructions or specific data values — that over-specifies and bloats the list. But it must be specific enough that two QAs reading it would test the same thing. \"Test login\" is too vague; \"Verify login is blocked after 5 consecutive failed attempts within 10 minutes\" is the right level. Many teams attach a priority (P1/P2/P3) and a requirement ID to each scenario for traceability.\n\nScenarios are especially useful when time is short. If you cannot write full test cases for everything, a complete scenario list still ensures you have at least thought about every path, and you can execute scenarios directly as a lightweight test. They bridge requirements analysis (which produced test conditions) and detailed test-case design.",
+    "key_terms": "test scenario, test condition, coverage, happy path, negative path, edge case, traceability, priority (P1/P2/P3)",
+    "real_world_example": "A team is adding a 'coupon code' feature with a two-day deadline before release. There is no time to write 30 detailed test cases. The QA instead writes 14 test scenarios covering valid code, expired code, already-used code, unknown code, case sensitivity, minimum-cart threshold, stacking two codes, removing a code, and applying a code to an empty cart. The product owner reviews the list in five minutes, notices 'what about a code on a fully discounted item?' is missing, and it gets added. The QA then executes the scenarios directly as exploratory tests.",
+    "step_by_step": "1. Gather the requirements and user stories for the feature.\n2. For each requirement, identify the main success flow (happy path) and write it as one scenario.\n3. Add alternative flows (different valid ways to reach the goal).\n4. Add negative scenarios (invalid input, wrong permissions, errors, timeouts).\n5. Add edge and boundary scenarios (empty, maximum, zero, concurrent actions).\n6. Keep each scenario to one outcome-focused sentence; remove step-level detail.\n7. Tag each with a requirement ID and a priority (P1/P2/P3).\n8. Review the list with a peer or PO to catch missing flows before writing detailed cases.",
+    "common_mistakes": "Writing scenarios that are actually full test cases with steps and data, defeating their purpose.\nCovering only the happy path and forgetting negative and edge scenarios.\nMaking scenarios so vague ('test the cart') that two testers would test different things.\nNot linking scenarios back to requirements, so coverage gaps go unnoticed.\nDuplicating scenarios that test the same condition with trivially different wording.",
+    "practical_use_case": "Used at the start of test design for any new feature, and during sprint planning to estimate testing effort. Scenario lists are reviewed with product owners and developers to confirm coverage. On tight deadlines, scenarios are executed directly as a lightweight substitute for detailed test cases.",
+    "summary": "Test scenarios are one-line, outcome-focused descriptions of what to test, derived from requirements and covering happy, alternative, negative, and edge paths. They let you plan and review coverage quickly before investing in detailed test cases. The skill is keeping them at the right altitude: specific enough to be unambiguous, high-level enough to scan.",
+    "example": "Feature: User login. Requirement REQ-LOGIN-01.\n\nTest scenarios:\nTS-01 (P1) Verify login succeeds with a valid registered email and correct password.\nTS-02 (P1) Verify login fails with a correct email and wrong password, showing a generic error.\nTS-03 (P2) Verify login fails with an unregistered email, showing the same generic error (no account enumeration).\nTS-04 (P1) Verify the account is temporarily locked after 5 consecutive failed attempts within 10 minutes.\nTS-05 (P2) Verify submitting empty email and/or password shows field-level validation errors.\nTS-06 (P3) Verify 'Remember me' keeps the session active after closing and reopening the browser.\nTS-07 (P2) Verify email is case-insensitive (User@x.com equals user@x.com).\nTS-08 (P3) Verify a logged-out user is redirected to the login page when opening a protected URL.",
+    "interactive": "Write at least six test scenarios for a 'password reset via email link' feature. Cover happy path, negative paths, and at least two edge cases. Keep each scenario to one line and tag a priority.",
+    "expected_answer": "A strong list includes, for example: (P1) Request reset with a registered email sends a reset link; (P2) Request reset with an unregistered email shows the same neutral confirmation (no enumeration); (P1) Reset link sets a new password and allows login with it; (P1) Reset link expires after 24 hours and is rejected afterward; (P2) Reset link can be used only once (second use is rejected); (P2) New password must meet complexity rules; (edge) Requesting reset multiple times invalidates older links; (edge) Submitting an empty or mismatched new-password confirmation shows a validation error. Each line is outcome-focused with no step-by-step detail.",
+    "homework": "Choose a feature you use daily (e.g., adding an item to a shopping cart, or sending a chat message). Produce a complete test scenario list of at least 12 scenarios, grouped into happy path, alternative, negative, and edge/boundary, each tagged with a priority and a requirement reference of your own invention.",
+    "expected_result": "A grouped, one-line-per-item list of 12+ scenarios where the happy path is clearly identified, negative scenarios cover invalid input and error conditions, and edge cases cover empty/maximum/concurrent situations. Each scenario is unambiguous, none contains detailed steps or specific data values, and priorities are assigned with at least a few P1 items.",
+    "quiz": [
+      {
+        "question": "What best distinguishes a test scenario from a test case?",
+        "answers": [
+          "A scenario includes exact steps and data; a case is a one-line summary.",
+          "A scenario is a high-level, one-line description of what to test; a case adds detailed steps, data, and expected results.",
+          "They are the same thing with different names.",
+          "A scenario is written by developers; a case is written by QA."
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Which of these is written at the correct altitude for a test scenario?",
+        "answers": [
+          "Open browser, go to /login, type user@x.com, type Pass123, click Submit, see dashboard.",
+          "Test the login.",
+          "Verify the account is locked after 5 consecutive failed login attempts within 10 minutes.",
+          "Login must be secure and reliable."
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "A single requirement typically produces:",
+        "answers": [
+          "Exactly one scenario.",
+          "Several scenarios covering happy, alternative, negative, and edge paths.",
+          "Only negative scenarios.",
+          "No scenarios until coding is finished."
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Why are scenarios especially useful under a tight deadline?",
+        "answers": [
+          "They can be auto-generated by the build server.",
+          "A complete scenario list ensures every path was considered and can be executed directly as a lightweight test.",
+          "They remove the need to test negative paths.",
+          "They are required by law for software releases."
+        ],
+        "correct_index": 1
+      }
+    ]
+  },
+  {
+    "title": "Test cases",
+    "short_description": "How to write clear, repeatable test cases with steps, data, and expected results that anyone can execute.",
+    "learning_goals": "Write a complete test case with all standard fields: ID, preconditions, steps, test data, and expected result.\nDesign test cases using equivalence partitioning and boundary value analysis to maximize coverage with fewer cases.\nKeep steps atomic and unambiguous so a different tester gets the same result.\nLink test cases to requirements for traceability and reuse them for regression.",
+    "theory": "A test case is a detailed, repeatable instruction set that verifies one specific behavior. Unlike a scenario, it specifies exactly how to test: the preconditions, the precise steps, the input data, and the single expected result. A good test case is deterministic — run it ten times with the same build and you get the same outcome — and executable by someone who has never seen the feature.\n\nThe standard anatomy of a test case is: a unique ID (TC-101), a title, the requirement it covers (for traceability), preconditions (the state the system must be in before you start, e.g., 'user is logged in with an empty cart'), numbered steps, the test data for each relevant step, the expected result, and fields filled at execution time: actual result, status (Pass/Fail/Blocked), and notes. Many teams add priority and the test type (functional, regression, smoke).\n\nWriting good steps is a craft. Each step is one action, phrased imperatively: \"Enter 'abc@x.com' in the Email field\", \"Click Submit\". Avoid combining actions ('enter email and password and click submit') because if it fails you cannot tell which action broke. The expected result must be specific and checkable: not 'it works' but 'the dashboard page loads and displays the user's first name in the top-right corner' or 'the API returns HTTP 201 with the created resource ID'.\n\nWriting one test case per possible input is wasteful, so QAs use test design techniques. Equivalence partitioning groups inputs that should behave the same — for an age field accepting 18 to 65, the partitions are below 18 (invalid), 18 to 65 (valid), and above 65 (invalid); you test one value from each rather than all of them. Boundary value analysis then targets the edges where bugs cluster: 17, 18, 65, 66. Together these techniques cut the number of test cases dramatically while keeping coverage high.\n\nTest cases are durable assets. Once written they are reused every release as regression tests, automated, and used to onboard new testers. This is why clarity and traceability matter: a test case linked to REQ-204 lets you prove that requirement is covered, and lets you find which tests to re-run when REQ-204 changes.",
+    "key_terms": "precondition, test step, expected result, actual result, equivalence partitioning, boundary value analysis, traceability, test data, status (Pass/Fail/Blocked)",
+    "real_world_example": "A QA is assigned to test a registration form's age field, which must accept ages 18 to 99. Instead of writing 82 test cases (one per allowed age) plus dozens of invalid ones, she uses equivalence partitioning and boundary analysis to write just a handful: age 17 (rejected), 18 (accepted, lower boundary), 99 (accepted, upper boundary), 100 (rejected), 0 (rejected), a non-numeric value 'abc' (rejected), and an empty field (validation error). Seven precise test cases give strong coverage of the field's logic, and they become part of the regression suite for every future release.",
+    "step_by_step": "1. Pick one scenario to turn into one or more test cases.\n2. Identify the input variable(s) and apply equivalence partitioning to find the valid and invalid groups.\n3. Add boundary values just inside and just outside each valid range.\n4. For each chosen case, define the precondition (system state before you start).\n5. Write numbered, atomic steps; one action per step in imperative form.\n6. Specify the exact test data used in each step.\n7. Write one specific, checkable expected result.\n8. Add ID, title, priority, and the requirement reference; leave actual result and status blank for execution.",
+    "common_mistakes": "Vague expected results like 'it works' or 'page is correct' that cannot be objectively passed or failed.\nBundling several actions into one step, so a failure cannot be localized.\nMissing or assumed preconditions, so the test cannot be reproduced.\nWriting a separate test case for every input value instead of partitioning, creating bloated unmaintainable suites.\nNot linking cases to requirements, losing traceability and making impact analysis impossible.",
+    "practical_use_case": "Used daily: QAs write test cases from scenarios, store them in tools like TestRail, Zephyr, Xray, or Qase, and execute them during functional, smoke, and regression testing. They are reused every release, handed to new team members, and used as the source material for test automation.",
+    "summary": "A test case is a precise, repeatable recipe that verifies one behavior with defined preconditions, atomic steps, test data, and a single checkable expected result. Equivalence partitioning and boundary value analysis let you cover the important inputs with far fewer cases. Clear, traceable test cases become long-lived regression assets.",
+    "example": "TC-101 — Login with valid credentials\nRequirement: REQ-LOGIN-01\nPriority: P1\nType: Functional / Smoke\nPreconditions: A registered, active user exists with email user@example.com and password Pass!234. User is on the /login page and logged out.\n\nSteps:\n1. Enter \"user@example.com\" in the Email field.\n2. Enter \"Pass!234\" in the Password field.\n3. Click the \"Log in\" button.\n\nTest data: email = user@example.com, password = Pass!234\nExpected result: The user is redirected to /dashboard within 3 seconds, the page shows \"Welcome, John\" in the top-right header, and no error message is displayed.\nActual result: (filled at execution)\nStatus: (Pass / Fail / Blocked)\n\n---\nTC-102 — Login with wrong password\nPreconditions: same as TC-101.\nSteps:\n1. Enter \"user@example.com\" in the Email field.\n2. Enter \"WrongPass1\" in the Password field.\n3. Click \"Log in\".\nExpected result: User stays on /login; a generic error \"Invalid email or password\" is shown; no session is created.",
+    "interactive": "Write one complete, well-formed test case (all standard fields) for this scenario: \"Verify a coupon code that has expired is rejected at checkout.\" Make sure the expected result is specific and checkable.",
+    "expected_answer": "A strong answer includes: an ID and title; requirement reference and priority; preconditions (e.g., a coupon SAVE10 exists with an expiry date in the past; cart contains one item at $50; user is on the checkout page); atomic numbered steps (enter SAVE10 in the coupon field; click Apply); test data (coupon = SAVE10); and a specific expected result such as \"The discount is not applied, the cart total remains $50, and the message 'This coupon has expired' is displayed under the coupon field.\" The actual result and status fields are left blank for execution.",
+    "homework": "Pick a numeric or text input field from any app (e.g., a 'quantity' field that accepts 1 to 10). Using equivalence partitioning and boundary value analysis, design a set of at least six test cases that fully covers its valid and invalid behavior. Each must be complete with preconditions, steps, data, and a specific expected result.",
+    "expected_result": "A set of complete test cases where the partitions (below range, in range, above range, non-numeric, empty) are each represented, boundaries are tested (e.g., 0, 1, 10, 11 for a 1-10 field), every case has clear preconditions and atomic steps, and every expected result is objectively checkable. Cases should be deduplicated (no two testing the same partition) and ideally tagged with a requirement reference and priority.",
+    "quiz": [
+      {
+        "question": "Which expected result is well written?",
+        "answers": [
+          "The page works correctly.",
+          "The form is fine.",
+          "After clicking Submit, the API returns HTTP 201 and the new order ID is shown in a green confirmation banner.",
+          "Everything looks good."
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "A field accepts values 18 to 65. Using boundary value analysis, which values are most important to test?",
+        "answers": [
+          "30, 40, 50",
+          "17, 18, 65, 66",
+          "Only 18 and 65",
+          "1 and 100"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Why should each test step contain only one action?",
+        "answers": [
+          "To make the test case longer.",
+          "So that if a step fails, you know exactly which action caused it.",
+          "Because tools reject multi-action steps.",
+          "It has no real benefit; it is just a style preference."
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "What is the main purpose of a precondition in a test case?",
+        "answers": [
+          "To record the bug found during execution.",
+          "To define the exact system state required before the steps can be executed reproducibly.",
+          "To list the developers responsible for the feature.",
+          "To estimate how long the test will take."
+        ],
+        "correct_index": 1
+      }
+    ]
+  },
+  {
+    "title": "Checklists",
+    "short_description": "When and how to use lightweight checklists instead of full test cases to cover areas quickly.",
+    "learning_goals": "Decide when a checklist is the right tool versus detailed test cases.\nWrite a clear, non-overlapping checklist that covers an area without step-by-step detail.\nOrganize checklists by feature, screen, or test type (smoke, UI, cross-browser).\nUse checklists for fast regression and exploratory coverage while tracking results.",
+    "theory": "A checklist is a list of things to verify, expressed as short check items, without detailed steps or expected results for each line. Where a test case says exactly how to test and what to expect, a checklist item simply names what must be checked: \"Login works\", \"Logout works\", \"Password reset email arrives\", \"Form validates required fields\". The tester relies on their own knowledge to perform each check.\n\nChecklists trade precision for speed and flexibility. They are far faster to write and maintain than full test cases, and they are ideal when the behavior is simple or well known, when you have limited time, when the same experienced testers run them, or when you want broad coverage of an area without documenting every detail. The cost is reproducibility: a new tester may interpret 'login works' differently, and a checklist alone is weak evidence of exactly what was tested.\n\nChecklists shine for specific test types. A smoke-test checklist confirms the build's critical paths work before deeper testing: app loads, user can log in, main page renders, a core transaction completes. A cross-browser checklist lists each thing to verify in Chrome, Firefox, Safari, and Edge. A UI checklist covers alignment, spelling, responsive behavior, broken images, and consistent styling. A regression checklist quickly re-verifies stable areas each release.\n\nGood checklist items are short, independent, and non-overlapping, and ordered logically (often by screen or user flow). You still track results: each item gets a Pass/Fail/Not-tested status and, when something fails, you open a proper bug report and often promote that area to detailed test cases. Grouping items under headings (Authentication, Cart, Checkout) keeps a long checklist navigable.\n\nThe practical skill is choosing the right tool. Use checklists for speed and breadth and for stable, well-understood areas; use detailed test cases for complex logic, regulated or high-risk features, and anything that must be reproducible by anyone. Mature teams use both: a checklist for the smoke pass and detailed cases for the critical payment flow.",
+    "key_terms": "checklist, check item, smoke test, regression, cross-browser testing, coverage, exploratory testing, pass/fail status",
+    "real_world_example": "Before every production release, a QA runs a 15-item smoke checklist in about ten minutes: the site loads over HTTPS, a user can register and log in, the homepage and product pages render, a product can be added to the cart, checkout reaches the payment step, the confirmation email is received, and the admin dashboard opens. One item fails — 'add to cart updates the cart counter' — so the release is held and a detailed bug report is filed. The lightweight checklist caught a blocker fast without the team needing to run the full 300-case regression suite first.",
+    "step_by_step": "1. Decide the checklist's purpose and scope (smoke, UI, cross-browser, feature regression).\n2. List the items to verify as short, independent statements, one check per line.\n3. Group items under logical headings (by screen, feature, or flow).\n4. Order items the way a user would move through the product.\n5. Remove overlap and ensure no critical path is missing.\n6. Add a status column (Pass / Fail / Not tested) and space for notes.\n7. Execute, marking each item; for any failure, open a full bug report.\n8. Review periodically and promote frequently failing or complex areas to detailed test cases.",
+    "common_mistakes": "Using a checklist for complex, high-risk logic that actually needs reproducible detailed test cases.\nWriting items so vague ('check everything works') that they cannot be objectively passed or failed.\nLetting items overlap or duplicate, wasting time and hiding gaps.\nNot recording results, so there is no evidence of what was actually checked.\nNever updating the checklist, so it drifts out of sync with the product.",
+    "practical_use_case": "Used daily for smoke testing each new build, for fast regression of stable areas, for cross-browser and responsive UI passes, and during exploratory sessions to make sure key areas are not forgotten. Teams keep reusable checklists for releases, onboarding, and recurring verification.",
+    "summary": "A checklist is a fast, lightweight list of things to verify without step-by-step detail, ideal for smoke tests, UI passes, cross-browser checks, and regression of stable areas. It trades reproducibility for speed, so items must be clear, independent, and status-tracked. Use checklists for breadth and detailed test cases for complex or high-risk logic.",
+    "example": "Smoke Test Checklist — Web Store (run before each release)\n\nAuthentication\n[ ] Site loads over HTTPS with no certificate warning\n[ ] New user can register with a valid email\n[ ] Registered user can log in\n[ ] User can log out\n[ ] Password reset email is received\n\nCatalog & Cart\n[ ] Homepage renders with no broken images\n[ ] Product page opens and shows price and stock\n[ ] Add to cart increments the cart counter\n[ ] Cart shows correct item count and subtotal\n\nCheckout\n[ ] Checkout page loads and shows the order summary\n[ ] Valid coupon applies a discount\n[ ] Payment step loads (test card)\n[ ] Order confirmation page appears with an order number\n[ ] Confirmation email is received\n\nAdmin\n[ ] Admin can log in and the dashboard loads\n\nStatus key: Pass / Fail / Not tested. Any Fail -> file a bug report and hold the release if critical.",
+    "interactive": "Write a UI checklist of at least eight items for a single 'Sign up' form (fields: name, email, password, confirm password, Submit button). Focus on UI and validation checks, keep each item short and independent, and add a status column.",
+    "expected_answer": "A strong checklist includes items such as: all fields are labeled and aligned; required fields are marked; tabbing moves through fields in logical order; email field rejects an invalid format; password and confirm-password mismatch shows an error; password strength/length rule is enforced; Submit is disabled or shows errors when fields are empty; success message appears after a valid submission; no spelling mistakes in labels; form is readable and usable on a mobile width. Each item is one short line with a Pass/Fail/Not-tested status, and items do not overlap.",
+    "homework": "Build a cross-browser checklist for a feature of your choice (e.g., a contact form or a video player) covering Chrome, Firefox, Safari, and Edge. Include at least ten check items, group them logically, and add columns for each browser's Pass/Fail status. Then write two sentences explaining when you would replace any item with a detailed test case instead.",
+    "expected_result": "A grouped checklist of 10+ short, independent items with a results matrix across the four browsers, covering rendering, core functionality, validation, and responsive behavior. The explanation correctly identifies that complex, high-risk, or non-reproducible-by-others logic (e.g., payment calculation) should move to detailed test cases, while stable, simple, well-understood checks are fine as checklist items.",
+    "quiz": [
+      {
+        "question": "How does a checklist differ from a detailed test case?",
+        "answers": [
+          "A checklist has full steps and expected results; a test case is just a one-liner.",
+          "A checklist names what to verify without step-by-step detail; a test case specifies exact steps, data, and expected results.",
+          "They are identical.",
+          "A checklist can only be used for automation."
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Which situation is the BEST fit for a checklist rather than detailed test cases?",
+        "answers": [
+          "A complex tax-calculation engine in a regulated finance app.",
+          "A quick smoke test of critical paths before a release, run by experienced testers.",
+          "A feature that must be reproducible by any new tester with zero context.",
+          "A safety-critical medical device workflow requiring audit evidence."
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "What is the main trade-off of using checklists?",
+        "answers": [
+          "They are slower to write than test cases.",
+          "They gain speed and flexibility but lose reproducibility and detailed evidence.",
+          "They cannot be reused across releases.",
+          "They can only be used in exploratory testing."
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "When a checklist item fails, the correct next step is usually to:",
+        "answers": [
+          "Delete the item from the checklist.",
+          "Ignore it if the rest pass.",
+          "Open a proper bug report and, if the area is complex, promote it to detailed test cases.",
+          "Mark the whole checklist as passed anyway."
+        ],
+        "correct_index": 2
+      }
+    ]
+  },
+  {
+    "title": "Bug reports",
+    "short_description": "How to write clear, reproducible bug reports that developers can act on without follow-up.",
+    "learning_goals": "Write a complete bug report with all essential fields and a precise title.\nProduce reliable reproduction steps and distinguish actual from expected behavior.\nAssign severity and priority correctly and explain the difference.\nAttach the right evidence (logs, screenshots, environment) to make a bug actionable.",
+    "theory": "A bug report is the document that tells a developer something is broken, how to see it, and what should have happened instead. Its single job is to be actionable: a good report can be reproduced and fixed without anyone coming back to ask questions. Poor reports ('login is broken') waste hours in back-and-forth and often get closed as 'cannot reproduce'.\n\nA complete bug report has a standard structure: a precise title, environment (build/version, OS, browser, device), preconditions, numbered steps to reproduce, expected result, actual result, severity, priority, and attachments (screenshots, screen recording, logs, request/response, console errors). The title is the most-read field — it should follow a pattern like '[Area] short symptom under condition', e.g., 'Checkout: Apply Coupon button does nothing for expired codes (no error shown)'. Avoid titles like 'It doesn't work'.\n\nReproduction steps are the heart of the report. They must be numbered, atomic, and start from a known state, including the exact data used. The reader should be able to follow them blindly and reach the bug every time. Always separate expected from actual: 'Expected: error message \"Coupon expired\" appears and total is unchanged. Actual: nothing happens, no error, total unchanged, and the console logs a 500.' This contrast is what makes the defect unambiguous.\n\nSeverity and priority are different and frequently confused. Severity measures technical impact on the system (Blocker, Critical, Major, Minor, Trivial) — how badly it breaks functionality. Priority measures business urgency to fix (P1/High, P2/Medium, P3/Low) — how soon it should be addressed. A typo in the company name on the homepage is low severity but can be high priority; a crash in a rarely used admin export might be high severity but lower priority. Stating both, with a short justification, helps triage.\n\nEvidence turns a claim into a fact. Attach a screenshot or recording for UI bugs, the relevant log lines or stack trace for backend errors, and the HTTP request/response (including status code, e.g., 500 Internal Server Error) for API bugs. Note the build number so developers know which version you tested. A report with reproducible steps and an HTTP 500 in the logs gets fixed; a vague claim gets bounced.",
+    "key_terms": "steps to reproduce, expected vs actual result, severity, priority, environment, reproducibility, stack trace / log, attachment/evidence",
+    "real_world_example": "A QA finds that applying an expired coupon at checkout silently does nothing. Instead of writing 'coupon broken', she files: title 'Checkout: applying an expired coupon shows no error and silently fails (HTTP 500)'; environment 'Build 4.12.0, Chrome 124, macOS 14, Staging'; steps using the specific coupon code OLD2023; expected 'message \"This coupon has expired\" and total unchanged'; actual 'no message, total unchanged, browser console shows POST /api/coupons returns 500'; severity Major, priority P2; attachments: screen recording, console screenshot, and the API response body. The developer reproduces it in two minutes and ships a fix the same day.",
+    "step_by_step": "1. Reproduce the bug yourself two or three times to confirm it is real and consistent, noting the exact steps and data.\n2. Capture evidence as you go: screenshot/recording, console and server logs, the HTTP request/response.\n3. Write a precise title: [Area] symptom under condition.\n4. Record the environment: build/version, OS, browser/device, test environment.\n5. List numbered, atomic steps to reproduce starting from a known state.\n6. State the expected result and the actual result separately.\n7. Assign severity (technical impact) and priority (business urgency) with a one-line justification.\n8. Attach all evidence and submit; if reproduction is intermittent, say so and give the frequency (e.g., 3 of 10 attempts).",
+    "common_mistakes": "Vague titles like 'doesn't work' that force triagers to open the report to understand it.\nMissing or incomplete reproduction steps, leading to 'cannot reproduce' closures.\nNot separating expected from actual, leaving the defect ambiguous.\nConfusing severity with priority or omitting both.\nNo environment or evidence (build number, logs, screenshots), so developers can't tell where or how it happened.",
+    "practical_use_case": "Used every time a tester finds a defect, throughout the day. Reports are filed in trackers like Jira, Azure DevOps, or Bugzilla, then triaged by priority/severity, assigned to developers, fixed, and verified by QA. Well-written reports directly determine how fast bugs are resolved.",
+    "summary": "A bug report exists to be actionable: a precise title, exact reproduction steps, separated expected and actual results, correct severity and priority, and concrete evidence. Severity is technical impact; priority is business urgency, and they are independent. Reproducible steps plus evidence get bugs fixed fast; vagueness gets them bounced.",
+    "example": "Title: Checkout — Applying an expired coupon silently fails with no error (HTTP 500)\n\nEnvironment: Build 4.12.0 | Chrome 124 | macOS 14.4 | Staging (https://staging.shop.example)\nSeverity: Major (core checkout flow gives no feedback on a valid user action)\nPriority: P2 (workaround exists: user can proceed without coupon)\n\nPreconditions: User is logged in. Cart contains 1 item priced $50. Coupon code OLD2023 exists and expired on 2023-12-31.\n\nSteps to reproduce:\n1. Go to the Cart page and click \"Checkout\".\n2. In the \"Coupon code\" field, enter OLD2023.\n3. Click \"Apply\".\n\nExpected result: The discount is rejected, an inline message \"This coupon has expired\" appears under the field, and the total remains $50.\n\nActual result: No message appears, the total stays $50, the Apply button shows a brief spinner then resets. Browser console shows: POST /api/coupons/apply 500 (Internal Server Error). Server log: NullPointerException in CouponService.validate (line 88).\n\nReproducibility: 10 of 10 attempts.\nAttachments: screen-recording.mp4, console-error.png, api-response-body.txt",
+    "interactive": "Rewrite this poor bug report into a complete, actionable one: \"The search is broken, nothing comes up when I look for stuff. Please fix.\" Invent reasonable specifics (environment, steps, data, expected/actual, severity, priority).",
+    "expected_answer": "A strong rewrite gives a precise title (e.g., 'Search: querying a valid product name returns 0 results (HTTP 500)'), a filled environment (build, browser, OS, environment), preconditions, numbered atomic steps with the exact search term used, separated expected ('relevant products are listed') and actual ('No results found message; console shows GET /api/search returns 500'), a justified severity (Major/Critical) and priority, reproducibility frequency, and a note about attachments (screenshot, console log, request/response). It avoids vague language and is reproducible by a stranger.",
+    "homework": "Find a real defect in any app or website you use (a broken link, a validation that lets through bad input, a layout glitch) and write a full, professional bug report for it including title, environment, steps, expected vs actual, severity, priority with justification, and a description of the evidence you would attach. If you cannot find one, reproduce a plausible defect scenario and document it.",
+    "expected_result": "A report with a pattern-following title, complete environment details, numbered reproducible steps from a known state with concrete data, clearly separated expected and actual results, correctly distinguished severity and priority each with a one-line rationale, reproducibility frequency, and a list of appropriate evidence (screenshots/recording for UI, logs/HTTP status for backend). It should be understandable and reproducible by someone who has never seen the issue.",
+    "quiz": [
+      {
+        "question": "What is the difference between severity and priority?",
+        "answers": [
+          "They mean the same thing.",
+          "Severity is the technical impact on the system; priority is the business urgency to fix it.",
+          "Severity is set by QA; priority is set by the customer only.",
+          "Priority is the technical impact; severity is the urgency."
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Which title is the strongest for a bug report?",
+        "answers": [
+          "It's broken!!!",
+          "Search problem",
+          "Checkout: Apply Coupon button does nothing for expired codes (no error, HTTP 500)",
+          "Please fix this when you can"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "A typo in the company name on the homepage is best described as:",
+        "answers": [
+          "High severity, low priority",
+          "Low severity, but possibly high priority",
+          "High severity, high priority",
+          "Not a bug, so no report needed"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Why must a bug report separate the expected result from the actual result?",
+        "answers": [
+          "To make the report longer.",
+          "It makes the defect unambiguous by showing exactly how behavior deviates from what was intended.",
+          "Because tools require two fields.",
+          "Only the actual result actually matters."
+        ],
+        "correct_index": 1
+      }
+    ]
+  },
+  {
+    "title": "Bug life cycle",
+    "short_description": "The states a defect moves through from discovery to closure, and who owns each transition.",
+    "learning_goals": "Name the standard bug states and describe a valid transition between them.\nExplain who is responsible at each stage (QA, developer, lead/triage).\nHandle non-standard outcomes correctly: Rejected, Duplicate, Deferred, Cannot Reproduce, Reopened.\nVerify a fix properly so a bug is only closed when it is genuinely resolved.",
+    "theory": "The bug life cycle (defect life cycle) is the set of states a defect passes through from the moment it is found until it is closed, and the rules for moving between them. A shared, well-understood life cycle keeps everyone aligned: at any time you can ask 'what state is this bug in and who owns it next?' and get a clear answer. Trackers like Jira implement this as a configurable workflow.\n\nThe typical states are: New (just reported), Assigned/Triaged (a developer is responsible), Open/In Progress (being worked on), Fixed/Resolved (developer believes it is fixed and code is merged), Retest/In QA (QA re-verifies on the fixed build), Verified, and Closed. A bug that is fixed is never closed by the developer alone — QA must retest and confirm. If the bug still occurs, QA moves it to Reopened, sending it back to development; this loop can repeat.\n\nBeyond the happy path there are important branch states. Rejected/Invalid means it is not a real defect (works as designed, or a tester mistake). Duplicate means the same defect is already reported, and the new one is linked to the original. Deferred/Postponed means it is a genuine bug but will not be fixed now (low priority, future release). Cannot Reproduce means the team could not make it happen — often sent back to QA for more information rather than closed. Knowing which of these to use, and providing evidence, is part of professional triage.\n\nOwnership shifts as the bug moves. QA owns New, Retest, Reopened, and the final Close. Developers own Assigned/In Progress and Fixed. A lead or triage meeting owns the decisions to assign priority, Reject, mark Duplicate, or Defer. Mapping each state to an owner prevents bugs from stalling because nobody knows whose turn it is.\n\nThe discipline at the end matters most: a bug is only Closed after QA verifies the fix on the correct build, ideally also running a quick regression around the area to ensure the fix did not break something else. Closing a bug because the developer said it was fixed, without retesting, is a classic source of regressions reaching production.",
+    "key_terms": "defect life cycle, New, Assigned/Triaged, Fixed/Resolved, Retest, Verified, Closed, Reopened, Rejected, Duplicate, Deferred, Cannot Reproduce",
+    "real_world_example": "A QA reports a bug (New). In triage the lead sets it P2 and assigns it (Assigned). The developer fixes it and moves it to Fixed on build 4.12.1. QA retests on 4.12.1, finds the coupon error message now appears but the total is still wrong, and moves the bug to Reopened with a comment and screenshot. The developer fixes the second issue (Fixed, build 4.12.2). QA retests, confirms both the message and the total are correct, runs a quick check that normal coupons still work, and moves the bug to Verified then Closed. The Reopened step prevented a half-fixed bug from shipping.",
+    "step_by_step": "1. When you find a defect, create it in state New with a complete report.\n2. Triage assigns priority/severity and moves it to Assigned, or to Rejected/Duplicate/Deferred with a reason.\n3. The developer moves it to In Progress, then to Fixed/Resolved once code is merged, noting the fixed build.\n4. QA picks it up for Retest only on the build that contains the fix.\n5. Reproduce the original steps exactly; if the bug is gone, move to Verified.\n6. If the bug still occurs (or the fix broke something), move to Reopened with fresh evidence.\n7. Run a quick regression around the fixed area to catch side effects.\n8. Once confirmed fixed and clean, move the bug to Closed.",
+    "common_mistakes": "Closing a bug based on the developer's word without retesting on the fixed build.\nRetesting on the wrong build (one that does not contain the fix) and falsely reopening or closing.\nConfusing Rejected, Duplicate, and Deferred, or using them without a justification.\nLeaving bugs stuck in a state because the next owner is unclear.\nReopening without new evidence, or closing a Cannot Reproduce instead of supplying more information.",
+    "practical_use_case": "Used continuously in any team using a bug tracker. Daily standups and triage meetings review bugs by state; QA's main responsibilities are creating reports (New), retesting fixes (Retest -> Verified/Reopened), and the final close. Workflow states are configured per team in Jira, Azure DevOps, or similar.",
+    "summary": "The bug life cycle is the path a defect takes from New through Assigned, Fixed, Retest, and finally Closed, with branch states like Rejected, Duplicate, Deferred, Cannot Reproduce, and Reopened. Each state has a clear owner, and a bug is only closed after QA verifies the fix on the correct build. Knowing the cycle keeps defects moving and prevents half-fixed bugs from shipping.",
+    "example": "Defect DEF-501 life cycle log:\n\n1. New        — QA files DEF-501 \"Checkout: expired coupon silently fails (HTTP 500)\" (build 4.12.0).\n2. Assigned   — Triage sets Severity=Major, Priority=P2, assigns to dev A.\n3. In Progress— Dev A starts work.\n4. Fixed      — Dev A merges fix, sets Fixed-in = build 4.12.1.\n5. Retest     — QA verifies on 4.12.1: error message now shows, but total is still discounted incorrectly.\n6. Reopened   — QA reopens with screenshot of the wrong total.\n7. Fixed      — Dev A merges second fix, Fixed-in = build 4.12.2.\n8. Retest     — QA verifies on 4.12.2: message correct, total correct; valid coupons still work (regression check).\n9. Verified   — QA marks Verified.\n10. Closed    — Bug closed with comment \"Verified on build 4.12.2; regression around coupons clean.\"\n\nBranch outcomes seen on other bugs this sprint:\n- DEF-498 -> Duplicate of DEF-470 (linked).\n- DEF-505 -> Deferred to next release (P3, cosmetic).\n- DEF-510 -> Rejected (works as designed per REQ-204).",
+    "interactive": "A developer marks your bug as Fixed on build 7.3.0. Walk through, step by step, exactly what you do next as QA, including which build you test on, what you check, and the two possible states you could move the bug to and when.",
+    "expected_answer": "A strong answer: confirm the bug is in your Retest queue; ensure you are testing on build 7.3.0 (the build that contains the fix), not an older one; re-run the original reproduction steps with the same data and preconditions; verify the expected result now occurs; do a quick regression around the affected area to catch side effects. If the bug no longer reproduces and nothing nearby broke, move it to Verified/Closed with a comment noting the build tested. If it still reproduces or the fix broke something, move it to Reopened with fresh evidence (steps, screenshot, logs) and assign it back to the developer.",
+    "homework": "Draw or write out the full bug life cycle for your team (or a typical one) as a state diagram or numbered flow. For each state, name the owner and the conditions to move to the next state. Then write short notes on how you would handle three branch outcomes: a duplicate, a deferred bug, and a 'cannot reproduce'.",
+    "expected_result": "A clear diagram or flow covering New -> Assigned -> In Progress -> Fixed -> Retest -> Verified/Closed, with the Reopened loop, and the branch states Rejected, Duplicate, Deferred, Cannot Reproduce. Each state has an owner (QA, developer, lead/triage) and a transition condition. The branch notes correctly describe linking a duplicate to the original, deferring a real but low-priority bug to a future release with a reason, and responding to 'cannot reproduce' by supplying more detail (steps, environment, video) rather than simply closing it.",
+    "quiz": [
+      {
+        "question": "Who should normally move a bug to Closed?",
+        "answers": [
+          "The developer, right after writing the fix.",
+          "QA, after verifying the fix on the build that contains it.",
+          "The product owner automatically.",
+          "Anyone, since the state does not matter."
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "A bug is genuine but the team decides not to fix it in this release. The correct state is:",
+        "answers": [
+          "Rejected",
+          "Duplicate",
+          "Deferred",
+          "Closed"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "QA retests a 'Fixed' bug and finds it still happens. The bug should move to:",
+        "answers": [
+          "Closed",
+          "Reopened",
+          "Duplicate",
+          "Deferred"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "What does 'Rejected/Invalid' typically mean?",
+        "answers": [
+          "The bug is fixed and verified.",
+          "The same bug was already reported elsewhere.",
+          "It is not a real defect (works as designed or a tester error).",
+          "It will be fixed in a future release."
+        ],
+        "correct_index": 2
+      }
+    ]
+  },
+  {
+    "title": "Test plan",
+    "short_description": "How to write a test plan that defines scope, approach, resources, schedule, and entry/exit criteria for testing.",
+    "learning_goals": "List the standard sections of a test plan and explain the purpose of each.\nDefine clear scope (in and out), entry criteria, and exit criteria for a test effort.\nIdentify test items, risks, environment needs, and deliverables for a feature or release.\nDistinguish the test plan (the 'what/when/who') from the test strategy (the 'how/principles').",
+    "theory": "A test plan is a document that describes the scope, approach, resources, and schedule of the testing activities for a specific project, release, or feature. It answers: what will we test (and not test), how, who does it, on what environment, by when, and how do we know we are done. It is the operational blueprint a QA lead or team produces and the rest of the team agrees to. A widely referenced template is IEEE 829.\n\nThe standard sections include: a test plan identifier and introduction; test items (what is being tested — which builds, modules, APIs); features to be tested and features not to be tested (explicit scope and out-of-scope); the approach (levels and types of testing, e.g., functional, integration, regression, performance); pass/fail criteria; entry and exit criteria; suspension and resumption criteria; deliverables (test cases, reports, defect logs); environment and tooling; roles and responsibilities; schedule and milestones; and risks with mitigations.\n\nScope is the most consequential part. Stating what is in scope and explicitly out of scope prevents both gaps and wasted effort, and protects QA from blame for untested areas everyone assumed someone else covered. For a release you might write: in scope — checkout, coupon, and payment flows on web Chrome/Firefox; out of scope — the legacy admin panel and native mobile apps (covered separately).\n\nEntry and exit criteria make the plan enforceable. Entry criteria are conditions that must be true before testing starts: e.g., the build is deployed to the test environment, smoke test passes, and test cases are reviewed. Exit criteria define 'done': e.g., 100% of P1 test cases executed, 95% pass rate, zero open Blocker or Critical defects, and all P1 defects verified. Without exit criteria, 'are we done testing?' becomes a subjective argument.\n\nA test plan is living and risk-driven. It allocates more effort to high-risk, high-impact areas, lists what could go wrong (late build, unstable environment, missing test data) with mitigations, and is updated when scope or dates change. It differs from the test strategy: the strategy sets long-lived principles and standards across the organization or product, while the plan applies them to one specific effort with concrete dates, people, and criteria.",
+    "key_terms": "scope (in/out), test items, entry criteria, exit criteria, suspension/resumption criteria, deliverables, schedule/milestones, risk and mitigation, roles and responsibilities, IEEE 829",
+    "real_world_example": "A team is releasing a new checkout in three weeks. The QA lead writes a test plan: in scope — cart, coupon, payment, and order confirmation on web (Chrome, Firefox, Safari); out of scope — the mobile app and the legacy admin reports. Approach: functional + integration with the payment gateway sandbox, then regression and a performance smoke at 200 concurrent checkouts. Entry criteria: build on staging and smoke passing. Exit criteria: all P1 cases run, 95% pass, zero open Blockers/Criticals. Risk: payment sandbox may be unstable — mitigation: book a fallback test window and a mock service. When the build slips two days, the lead updates the schedule and flags the compressed regression window to stakeholders.",
+    "step_by_step": "1. Define the objective: what release/feature this plan covers and why.\n2. List test items: the specific builds, modules, services, and versions under test.\n3. Define scope: features to be tested and features explicitly not to be tested.\n4. Choose the approach: which test levels and types, and the order you will run them.\n5. Write entry criteria (what must be ready to start) and exit criteria (what 'done' means, with numbers).\n6. Identify environment, tools, and test data needs, plus roles and responsibilities.\n7. Build a schedule with milestones and estimate effort by risk and priority.\n8. List risks with mitigations and define deliverables; review the plan with the team and keep it updated.",
+    "common_mistakes": "Leaving scope vague, with no explicit 'out of scope', so gaps appear and blame is unclear.\nWriting exit criteria without measurable numbers, so 'done' becomes a subjective debate.\nIgnoring risks and environment/test-data needs until they block testing mid-effort.\nConfusing the plan (specific project: dates, people, criteria) with the strategy (long-lived principles).\nWriting the plan once and never updating it when the build slips or scope changes.",
+    "practical_use_case": "Created at the start of a project, release, or major feature by a QA lead or senior tester, then reviewed with developers, product, and stakeholders. It guides the whole test effort, is referenced to decide when testing is complete, and is updated as scope and schedule change.",
+    "summary": "A test plan is the operational blueprint for a specific testing effort: scope (in and out), approach, environment, roles, schedule, risks, and measurable entry/exit criteria. Clear scope and numeric exit criteria are what make it enforceable. It applies the broader test strategy to one concrete project with dates, people, and definitions of done.",
+    "example": "TEST PLAN — Checkout 2.0 Release (excerpt)\nID: TP-CHK2-2026-06\n\n1. Objective: Validate the redesigned checkout (cart, coupon, payment, confirmation) for the 2.0 release.\n2. Test items: Web build 5.0.x on staging; Payment Gateway sandbox v3; Coupon Service v2.\n3. In scope: Cart, coupon application, payment (card + PayPal), order confirmation, confirmation email. Browsers: Chrome 124+, Firefox 125+, Safari 17+.\n4. Out of scope: Native iOS/Android apps; legacy admin reporting; localization beyond English (covered in TP-LOC-09).\n5. Approach: Smoke -> functional -> integration with payment sandbox -> regression -> performance smoke (200 concurrent checkouts).\n6. Entry criteria: Build deployed to staging; smoke checklist passes; test cases reviewed and approved.\n7. Exit criteria: 100% of P1 test cases executed; >=95% pass rate; 0 open Blocker/Critical defects; all P1 defects Verified.\n8. Environment/tools: Staging env, TestRail, Jira, BrowserStack, JMeter (perf smoke).\n9. Roles: QA lead (plan, sign-off), 2 QA engineers (execution), Dev on-call (fixes).\n10. Schedule: Test design Wk1; execution Wk2; regression + perf Wk3; sign-off end of Wk3.\n11. Risks: Payment sandbox instability -> mitigation: mock service + backup window. Late build -> mitigation: prioritize P1, compress regression.\n12. Deliverables: Reviewed test cases, daily execution report, defect log, final test summary report.",
+    "interactive": "For a small feature — 'users can change their account email address' — draft the key parts of a test plan: objective, in scope, out of scope, approach, and measurable entry and exit criteria.",
+    "expected_answer": "A strong answer states an objective (validate email-change including verification and security), an in-scope list (change email form, validation, verification email to the new address, login with the new email, audit/notification to old address), an explicit out-of-scope list (e.g., password change, profile photo, mobile app), an approach (functional + negative + a security check for verification-link reuse/expiry), measurable entry criteria (build on test env, smoke passes, test cases reviewed), and measurable exit criteria (all P1 cases executed, e.g., 95% pass, zero open Blocker/Critical, all P1 defects verified). It should distinguish this concrete plan from general strategy.",
+    "homework": "Write a one-to-two page test plan for a feature or small app of your choice, including all standard sections: objective, test items, in/out scope, approach, entry/exit criteria (with numbers), environment and tools, roles, schedule with milestones, risks with mitigations, and deliverables.",
+    "expected_result": "A document containing every listed section with content specific to the chosen feature. Scope explicitly separates in and out of scope; exit criteria are measurable (percentages, defect thresholds); at least two real risks have concrete mitigations; the schedule has milestones; and deliverables are named. The plan should read as enforceable — a reader could use the exit criteria to decide objectively whether testing is complete.",
+    "quiz": [
+      {
+        "question": "Which is a well-formed exit criterion?",
+        "answers": [
+          "Testing feels complete.",
+          "Most of the important tests passed.",
+          "100% of P1 test cases executed, >=95% pass rate, and zero open Blocker/Critical defects.",
+          "The developers say it is ready."
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "Why is an explicit 'features not to be tested' (out of scope) section important?",
+        "answers": [
+          "It is optional filler with no real value.",
+          "It prevents coverage gaps and clarifies responsibility, so nothing is silently assumed covered by someone else.",
+          "It lists the bugs found so far.",
+          "It replaces the need for entry criteria."
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "What is the main difference between a test plan and a test strategy?",
+        "answers": [
+          "They are the same document.",
+          "The plan is long-lived principles; the strategy is the specific schedule.",
+          "The plan applies to a specific project with dates/people/criteria; the strategy sets long-lived principles and standards.",
+          "The strategy is written by QA; the plan is written by developers."
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "Entry criteria define:",
+        "answers": [
+          "When testing is finished.",
+          "The conditions that must be met before testing can start (e.g., build deployed, smoke passes).",
+          "The list of defects to fix.",
+          "The roles of each team member."
+        ],
+        "correct_index": 1
+      }
+    ]
+  },
+  {
+    "title": "Test strategy",
+    "short_description": "The high-level, long-lived document that defines testing principles, levels, types, and standards across a product or organization.",
+    "learning_goals": "Explain what a test strategy is and how it differs from a test plan.\nIdentify the core components: scope, test levels, test types, environment, automation, risk, and standards.\nRecognize common strategy approaches (analytical/risk-based, methodical, standard-compliant, reactive).\nApply risk-based thinking to decide where to focus testing effort.",
+    "theory": "A test strategy is a high-level document that sets the overall approach, principles, and standards for testing across an organization, product, or large program. It is relatively stable and long-lived: where a test plan is written per project with specific dates and people, the strategy describes how the company tests in general — the levels, types, tools, environments, automation philosophy, and quality standards that all projects follow. In many teams the strategy is a section or companion to the plan; in larger organizations it is a separate, owned document.\n\nA strategy typically covers: overall scope and objectives of testing; the test levels in use (unit, integration, system, acceptance) and who owns each; the test types applied (functional, regression, performance, security, usability, compatibility); the approach to test design and documentation standards; the automation strategy (what to automate, which frameworks, the target automation pyramid of many unit tests, fewer integration, fewest UI tests); environment and test-data management; defect management standards (severity/priority definitions, the bug life cycle); entry/exit and quality gates at a policy level; and the risk approach.\n\nStrategies are commonly classified by approach. Analytical (risk-based) strategy focuses effort on the areas of highest risk and impact — the default for most modern teams. Methodical strategy follows a fixed checklist or quality standard every time. Standard-compliant (process-compliant) strategy follows an external standard or regulation (e.g., medical or aviation). Reactive strategy responds to the system as it is built, leaning on exploratory testing. Most real teams blend these, anchored on risk.\n\nRisk-based thinking is the heart of a good strategy. You cannot test everything, so you rank features by the probability a defect exists and the impact if it fails. The payment flow (high impact, frequently changed) gets deep, automated, repeated testing; a rarely used cosmetic setting gets light coverage. The strategy encodes this principle so individual plans allocate effort consistently rather than testing everything to the same depth.\n\nA strong strategy also defines standards that make documentation consistent across the whole module you have been studying: how requirements are reviewed, how test cases are written and stored, what a checklist is used for, the format and required fields of bug reports, and the bug life cycle states. In this sense the test strategy is the umbrella that ties requirements analysis, scenarios, cases, checklists, bug reports, the bug life cycle, and the test plan into one coherent, repeatable way of working.",
+    "key_terms": "test strategy, risk-based testing, test levels, test types, automation pyramid, quality gates, test-data management, standard-compliant testing, exploratory testing",
+    "real_world_example": "A growing SaaS company has three product teams each testing differently, with inconsistent bug reports and no shared automation approach. A test lead writes a company test strategy: all teams use risk-based prioritization; the automation pyramid is the standard (heavy unit and API coverage, a thin layer of critical-path UI tests in Playwright); severity and priority have fixed definitions; every release passes the same quality gate (zero open Blocker/Critical, P1 cases executed, smoke automated in CI). Individual teams still write their own per-release test plans, but now those plans all follow the same principles, so a bug report or a test case looks the same across teams and quality is consistent.",
+    "step_by_step": "1. Define the overall testing objectives and quality goals for the product or organization.\n2. List the test levels (unit, integration, system, acceptance) and assign ownership.\n3. Decide the test types you will routinely apply (functional, regression, performance, security, etc.).\n4. Choose the strategy approach, usually risk-based, and define how risk is assessed and prioritized.\n5. Set the automation strategy: what to automate, frameworks, and the target test-pyramid balance.\n6. Define standards: documentation formats, severity/priority definitions, the bug life cycle, environments, and test data.\n7. Establish policy-level quality gates and entry/exit principles that every project must satisfy.\n8. Publish, socialize, and review the strategy periodically; let per-project test plans inherit from it.",
+    "common_mistakes": "Confusing the strategy (long-lived principles, product/org-wide) with the test plan (one project's dates, people, and criteria).\nWriting an 'everything-to-the-same-depth' strategy with no risk prioritization, wasting effort.\nIgnoring automation strategy, leading to an unmaintainable UI-heavy or zero-automation suite.\nLeaving out standards (bug report format, severity/priority definitions), so teams stay inconsistent.\nTreating the strategy as a one-time document and never revisiting it as the product and risks evolve.",
+    "practical_use_case": "Owned by QA leadership or a test architect and referenced across all projects. New team members read it to learn how the organization tests; per-release test plans inherit its principles; and it is the reference for decisions about automation tooling, risk prioritization, and quality gates. It is revisited periodically rather than per sprint.",
+    "summary": "A test strategy is the stable, high-level document that defines how an organization or product tests: its levels, types, automation approach, standards, and above all its risk-based prioritization. It differs from a test plan, which applies those principles to one specific project with concrete dates and criteria. A good strategy makes testing consistent and focuses effort where risk and impact are highest.",
+    "example": "TEST STRATEGY — Acme SaaS (excerpt)\n\n1. Objective: Ship releases with zero open Blocker/Critical defects and consistent quality across all product teams.\n2. Approach: Analytical / risk-based. Each feature is scored Risk = Probability x Impact (1-5 each); effort and automation depth scale with the score.\n3. Test levels: Unit (developers), API/Integration (developers + QA), System/E2E (QA), UAT (product + select customers).\n4. Test types: Functional and regression every release; performance and security for any change touching payments or auth; accessibility on customer-facing UI.\n5. Automation strategy: Test pyramid — many unit tests, strong API coverage (REST-assured/pytest), a thin critical-path UI layer in Playwright. Smoke suite runs in CI on every merge; full regression nightly.\n6. Documentation standards: Test cases in TestRail linked to Jira requirements; bug reports require title pattern, environment, steps, expected/actual, severity, priority, evidence.\n7. Defect management: Fixed severity (Blocker/Critical/Major/Minor/Trivial) and priority (P1-P3) definitions; standard bug life cycle (New -> Assigned -> Fixed -> Retest -> Verified/Reopened -> Closed).\n8. Quality gate (all releases): Smoke green in CI, all P1 cases executed, >=95% pass, zero open Blocker/Critical.\n9. Environments/data: Dedicated staging mirroring prod; anonymized production-like test data; no real PII in test.\n10. Review: Strategy reviewed quarterly by the test architecture group.",
+    "interactive": "Your company tests a banking app and a simple internal to-do tool with the exact same depth and process. Explain, using risk-based strategy principles, why that is wrong and how a test strategy should allocate effort differently between the two.",
+    "expected_answer": "A strong answer applies Risk = Probability x Impact: the banking app has very high impact (financial loss, regulatory and security consequences) and likely high change frequency, so the strategy should mandate deep functional, security, performance, and regression testing, strong automation (API + critical-path UI), strict quality gates, and possibly standard-compliant testing. The internal to-do tool has low impact and low risk, so lighter coverage, checklists or exploratory testing, and minimal automation are appropriate. Testing both identically wastes effort on the low-risk tool while under-investing relative to the bank's needs. The strategy encodes this so plans consistently scale effort to risk.",
+    "homework": "Write a one-page test strategy for a product of your choice. Include objectives, the strategy approach (and why), test levels and types, an automation strategy referencing the test pyramid, documentation and defect-management standards, and policy-level quality gates. Then add a short paragraph explaining how a specific per-release test plan would inherit from this strategy.",
+    "expected_result": "A document that clearly states it is product/org-wide and long-lived; justifies a risk-based (or blended) approach; lists test levels and types; describes an automation strategy aligned with the pyramid (more unit/API, fewer UI); defines documentation and severity/priority/bug-life-cycle standards; and sets quality gates. The closing paragraph correctly explains that a per-release test plan reuses these principles but adds concrete scope, dates, people, environment, and measurable entry/exit criteria for that specific release.",
+    "quiz": [
+      {
+        "question": "Which statement best captures the difference between a test strategy and a test plan?",
+        "answers": [
+          "The strategy is project-specific with dates and people; the plan is long-lived principles.",
+          "The strategy is long-lived, product/org-wide principles and standards; the plan applies them to one specific project with dates, people, and criteria.",
+          "They are interchangeable terms.",
+          "The strategy is only about automation; the plan is only about manual testing."
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "In a risk-based test strategy, how is testing effort allocated?",
+        "answers": [
+          "Equally across every feature regardless of importance.",
+          "Proportional to risk — features with higher probability of defects and higher impact get deeper testing.",
+          "Only to features the developers find interesting.",
+          "Randomly, to avoid bias."
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "The automation 'test pyramid' recommends:",
+        "answers": [
+          "Mostly UI tests, with few unit tests.",
+          "An equal number of unit, integration, and UI tests.",
+          "Many unit tests, fewer integration tests, and the fewest UI/end-to-end tests.",
+          "No unit tests, only end-to-end tests."
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "A strategy that follows an external regulation or quality standard for every project is called:",
+        "answers": [
+          "Reactive",
+          "Analytical/risk-based",
+          "Standard-compliant (process-compliant)",
+          "Exploratory"
+        ],
+        "correct_index": 2
+      }
+    ]
+  }
+]

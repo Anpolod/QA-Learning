@@ -1,0 +1,377 @@
+[
+  {
+    "section": "istqb",
+    "title": "SDLC models and testing",
+    "short_description": "How testing activities are organized and embedded within different software development lifecycle (SDLC) models, and the good practices that make testing effective regardless of the chosen model.",
+    "learning_goals": [
+      "(K2) Explain the impact of the chosen software development lifecycle on testing, including the timing and shape of test activities.",
+      "(K1) Recall the characteristics of sequential, iterative, and incremental development models and how testing maps onto each.",
+      "(K2) Summarize good testing practices that apply across all SDLC models, such as early testing and one test level per development activity.",
+      "(K1) Identify how Agile development, CI/CD, and shift-left influence test activities throughout the lifecycle."
+    ],
+    "theory": "A software development lifecycle (SDLC) model describes the types of activities performed at each stage of a software development project and how they relate logically and chronologically. Testing is not a single isolated phase; testing activities exist in every SDLC model and must be aligned with development activities to be effective. The choice of SDLC model directly affects the scope and timing of testing, the level of detail of test documentation, the choice of test techniques, the extent of test automation, and the role and tasks of the tester.\\n\\nSequential development models (such as the waterfall model and the V-model) describe the development process as a linear, sequential flow of activities, where any phase should begin only when the previous phase is complete. The V-model integrates the test process throughout the development process, implementing the principle of early testing: for each development phase an associated test level is planned, and test activities (such as test analysis and design) begin as soon as the corresponding test basis becomes available, rather than waiting until code exists.\\n\\nIncremental development involves establishing requirements, designing, building, and testing a system in pieces, so the system grows in functionality increment by increment. Iterative development groups requirements into a series of cycles (iterations); at the end of each iteration a working, tested piece of software is delivered. Both approaches deliver software in smaller releases and require regression testing to grow with the system, since new increments may break previously working features.\\n\\nAgile software development is an example of iterative-incremental development. In Agile, testing is highly integrated with development, test automation at all test levels is common, and testers work closely with developers and business representatives. Practices such as test-first development (test-driven development, acceptance test-driven development, behavior-driven development) write tests before the code that makes them pass.\\n\\nGood testing practices apply regardless of the model: for every development activity there is a corresponding test activity; each test level has test objectives specific to that level (to avoid redundant testing across levels); test analysis and design for a given test level begins during the corresponding development activity (shift-left / early testing); and testers participate in reviewing work products (such as requirements, user stories, and design) as soon as drafts are available. SDLC models must often be tailored or combined to fit the project context, organizational factors, and the criticality of the software.",
+    "key_terms": "software development lifecycle (SDLC), sequential development model, V-model, incremental development, iterative development, Agile software development, test basis, shift-left, test-driven development (TDD), acceptance test-driven development (ATDD)",
+    "real_world_example": "A bank builds a new payments platform using a V-model because of strict regulatory and audit requirements. While business analysts write the requirements specification, testers in parallel begin acceptance test analysis and design against that specification (the test basis). When the architecture document is produced, system and integration test cases are designed. By the time developers deliver code, the test cases are ready and execution can start immediately. Six months later the same bank starts a customer-facing mobile app using Scrum; here testers sit in the team, automate component and API tests in the CI pipeline, and every two-week sprint delivers a tested increment that requires updated regression tests.",
+    "step_by_step": "1. Identify the SDLC model in use (sequential, iterative, incremental, Agile, or a hybrid).\\n2. For each development activity in that model, define the corresponding test activity and test level.\\n3. Determine when each test basis (requirements, user stories, design, code) becomes available.\\n4. Start test analysis and design as soon as the relevant test basis is drafted (apply early testing / shift-left).\\n5. Assign distinct test objectives to each test level to avoid duplicated effort.\\n6. Plan how regression testing and test automation will grow with each increment or iteration.\\n7. Tailor and combine model elements to match project context, risk, and regulatory constraints.",
+    "common_mistakes": "1. Believing the V-model means testing only happens after coding; in fact test design starts early, in parallel with development phases. 2. Thinking testing is a single phase at the end of the project rather than activities present in every SDLC model. 3. Assuming Agile means no test documentation or no test planning at all. 4. Confusing iterative (cycles that refine the whole) with incremental (adding pieces) development. 5. Expecting one SDLC model to fit every project unchanged, rather than tailoring or combining models to the context.",
+    "practical_use_case": "On the job, the SDLC model drives how a test manager structures the test plan, staffing, and automation strategy. On the exam, expect K2 questions asking you to match development activities to test activities, to recognize the early testing principle in the V-model, and to identify how the chosen lifecycle (especially Agile/CI-CD) impacts the scope, timing, and documentation of testing.",
+    "summary": "The SDLC model determines the timing, scope, and shape of testing activities. Every model contains test activities, and good practice ensures each development activity has a matching test activity, each test level has unique objectives, and test design begins as early as the test basis is available.",
+    "example": "Mapping the V-model (development phase to test level):\\n```\\nDevelopment phase            | Associated test level\\n-----------------------------|------------------------------\\nRequirements specification    | Acceptance testing (design)\\nFunctional/system design      | System testing (design)\\nArchitecture/component design | Integration testing (design)\\nCoding                        | Component testing\\n```\\nExecution then flows up the right side of the V: component -> integration -> system -> acceptance. Note that the DESIGN of acceptance tests starts at the top-left (requirements), even though acceptance tests are EXECUTED last. This is the early testing principle in action: defects in requirements are found during test design, long before code is written.",
+    "interactive": "You are starting a 3-month project to build a medical device control module that must comply with safety regulations and full traceability. Decide between a V-model and Scrum, and justify your choice in terms of testing impact (documentation, traceability, test levels, regression).",
+    "expected_answer": "A V-model (sequential) is the stronger fit because regulatory and safety-critical contexts demand formal, traceable test documentation and a clear test basis at each phase. Each development phase maps to a test level with documented test cases traceable to requirements, supporting audit. Test design starts early against each test basis (early testing). A pure Scrum approach could still be used but would need to be tailored to add the rigorous documentation, traceability, and formal verification the regulator requires. Regression testing would be planned but, in a sequential model, runs primarily during the upward execution phases rather than continuously each iteration.",
+    "homework": "Take two real or hypothetical projects (one regulated/safety-critical, one a fast-moving consumer web app). For each, choose an SDLC model and produce a one-page mapping of development activities to test activities and test levels, noting when each test basis becomes available and how regression testing scales.",
+    "expected_result": "A submission that correctly classifies each chosen model (sequential vs iterative/incremental/Agile), maps every development activity to a corresponding test activity and level, shows test design starting early against the test basis, assigns distinct objectives per level, and explains how regression and automation grow across increments/iterations.",
+    "quiz": [
+      {
+        "question": "Which statement best reflects how the V-model applies the principle of early testing?",
+        "answers": [
+          "All testing is delayed until the code is complete and integrated.",
+          "Test analysis and design for each level begin when the corresponding test basis becomes available, during development.",
+          "Only acceptance testing is performed, and only after delivery.",
+          "Testers write code first and then design tests afterward."
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Which is a key difference between incremental and iterative development?",
+        "answers": [
+          "Incremental adds functionality piece by piece; iterative refines the product over repeated cycles.",
+          "Incremental forbids any regression testing.",
+          "Iterative development is always sequential and never delivers working software.",
+          "There is no difference; the terms are interchangeable in ISTQB."
+        ],
+        "correct_index": 0
+      },
+      {
+        "question": "How does the chosen SDLC model impact testing?",
+        "answers": [
+          "It has no effect on testing activities.",
+          "It only affects the programming language used.",
+          "It affects the scope, timing, documentation, test techniques, and automation of testing.",
+          "It only determines the number of testers, nothing else."
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "Which is an example of iterative-incremental development with highly integrated testing and frequent test automation?",
+        "answers": [
+          "Classic waterfall model",
+          "The V-model",
+          "Agile software development (e.g., Scrum)",
+          "Big-bang single-release development"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "Which is a good testing practice that applies across all SDLC models?",
+        "answers": [
+          "Each test level should duplicate the objectives of the level below it.",
+          "For each development activity there should be a corresponding test activity, and each test level has objectives specific to that level.",
+          "Testers should never review requirements or design documents.",
+          "Test design should always wait until after coding is finished."
+        ],
+        "correct_index": 1
+      }
+    ]
+  },
+  {
+    "section": "istqb",
+    "title": "Test levels",
+    "short_description": "The groups of test activities organized and managed together component, integration, system, and acceptance testing each with its own test object, test basis, and typical defects.",
+    "learning_goals": [
+      "(K1) Recall the four common test levels: component, component integration, system, and acceptance testing.",
+      "(K2) Compare the test levels by their objectives, test basis, test objects, and typical defects and failures.",
+      "(K2) Distinguish the different forms of acceptance testing (UAT, operational, contractual/regulatory, alpha, and beta testing).",
+      "(K1) Identify why each test level should have objectives specific to that level to avoid redundancy."
+    ],
+    "theory": "Test levels are groups of test activities that are organized and managed together. Each test level is an instance of the test process, performed in relation to software at a given stage of development, from individual components to complete systems and, where applicable, systems of systems. The four common test levels are: component testing, component integration testing, system testing, and acceptance testing. Each level is characterized by its own test object (what is tested), its own test basis (the source from which tests are derived), and the typical defects and failures it is designed to find.\\n\\nComponent testing (also called unit or module testing) focuses on testing components in isolation. Its test object is the individual component, module, or class; its test basis includes detailed design, code, and the data model. It typically requires test doubles such as stubs, drivers, and mocks, and is frequently performed by developers using test automation and often test-driven development.\\n\\nComponent integration testing (sometimes called integration testing) focuses on testing the interfaces and interactions between components. Its test basis includes software and system design, sequence diagrams, interface and communication protocol specifications, and use cases. Integration can follow a big-bang strategy (everything at once) or an incremental strategy (top-down, bottom-up, or functional). Incremental integration makes defect isolation easier because fewer interfaces are integrated at a time. System integration testing focuses on interactions between different systems and external services.\\n\\nSystem testing focuses on the behavior and capabilities of a whole system or product, often considering the end-to-end tasks the system can perform and the non-functional behaviors it exhibits. Its test basis includes system and software requirement specifications, risk analysis reports, use cases, and models of system behavior. System testing is often the responsibility of an independent test team and uses black-box techniques.\\n\\nAcceptance testing focuses on validation and demonstrating readiness for deployment its objective is to establish confidence that the system works as expected and meets business needs, rather than primarily finding defects. Its test basis includes business processes, user/business requirements, regulations, and use cases. Common forms include user acceptance testing (UAT, fitness for use by intended users), operational acceptance testing (backup/restore, security, performance from an operations viewpoint), contractual and regulatory acceptance testing, alpha testing (at the developer site by potential users), and beta testing (at the users own locations). The key principle is that each level should have objectives specific to that level so testing is not unnecessarily duplicated across levels.",
+    "key_terms": "test level, component testing, component integration testing, system testing, system integration testing, acceptance testing, user acceptance testing (UAT), operational acceptance testing, alpha testing, beta testing, test object, test basis",
+    "real_world_example": "A team building an online insurance portal tests at four levels. Developers write component tests for the premium-calculation class using mocks for the database (component testing). They then verify that the calculation service correctly calls the rating engine and the customer service over REST APIs (component integration testing). QA runs end-to-end quote-to-purchase journeys against the full deployed portal, including performance under load (system testing). Finally, business users from the underwriting department run real-world quote scenarios to confirm the portal meets their business needs (user acceptance testing), while the operations team verifies backup, failover, and monitoring (operational acceptance testing).",
+    "step_by_step": "1. Identify the test object for the level (component, interfaces, whole system, or business fitness).\\n2. Select the appropriate test basis for that level (design and code; interface specs; requirements; business processes).\\n3. Define objectives specific to the level to avoid duplicating coverage from other levels.\\n4. Choose the integration strategy where relevant (big-bang vs incremental top-down/bottom-up/functional).\\n5. Select techniques and tooling (test doubles for component testing; black-box techniques for system testing).\\n6. Assign responsibility (developers for component testing; often independent testers for system testing; business users for UAT).\\n7. Decide which acceptance forms apply (UAT, operational, contractual/regulatory, alpha, beta).",
+    "common_mistakes": "1. Confusing the test basis of one level with another (e.g., using code as the basis for acceptance testing instead of business requirements). 2. Thinking the main objective of acceptance testing is to find defects when it is primarily to build confidence and validate fitness for use. 3. Assuming integration testing only means combining the whole system at once (ignoring incremental strategies and the harder defect isolation of big-bang). 4. Mixing up alpha testing (at the developer's site) and beta testing (at the customer's own site). 5. Duplicating the same objectives across levels instead of giving each level distinct objectives.",
+    "practical_use_case": "On the job, test levels structure who tests what and when, and which test basis each team works from. On the exam, expect questions that ask you to match a described activity to the correct test level, identify the correct test basis or test object for a level, recognize alpha vs beta and the various acceptance forms, and apply the principle that each level has its own objectives.",
+    "summary": "Test levels component, component integration, system, and acceptance group test activities by the test object and stage of development. Each level has its own test basis, objectives, and typical defects; acceptance testing focuses on validation and confidence rather than primarily on defect finding.",
+    "example": "Test levels at a glance:\\n```\\nLevel                 | Test object        | Typical test basis            | Main focus\\n----------------------|--------------------|-------------------------------|---------------------------\\nComponent             | Single unit/class  | Detailed design, code         | Internal logic, isolation\\nComponent integration | Interfaces         | Design, interface specs       | Interactions between units\\nSystem                | Whole system       | Requirements, use cases       | End-to-end + non-functional\\nAcceptance            | Whole system       | Business processes, contracts | Validation, confidence\\n```\\nAcceptance forms: UAT (user fitness for use), Operational AT (backup, security, performance from ops view), Contractual/Regulatory AT (meets contract/law), Alpha (potential users at developer's site), Beta (real users at their own site).",
+    "interactive": "For each scenario, name the test level (and acceptance form if relevant): (a) A developer mocks the database and tests the discount-calculation method. (b) Business users run real order scenarios to confirm the system meets their needs before go-live. (c) Testers verify the order service correctly calls the payment gateway API. (d) External customers use a pre-release build at their own offices and report issues.",
+    "expected_answer": "(a) Component testing (uses a test double/mock, tests a unit in isolation). (b) Acceptance testing specifically user acceptance testing (UAT), validating business fitness for use. (c) Component integration testing (verifying the interface/interaction between two components/services). (d) Beta testing (a form of acceptance testing performed by real users at their own locations).",
+    "homework": "Choose a system you know (e.g., an e-commerce checkout). Document a one-page test approach across all four levels: for each level list the test object, the test basis, two example test objectives, and one typical defect type. Then list which acceptance forms you would run and why.",
+    "expected_result": "A submission that correctly assigns test object and test basis per level, gives level-specific (non-duplicated) objectives, names realistic typical defects, and correctly selects and justifies acceptance forms (UAT, operational, contractual/regulatory, alpha, beta) for the chosen system.",
+    "quiz": [
+      {
+        "question": "What is the PRIMARY objective of acceptance testing?",
+        "answers": [
+          "To find as many code-level defects as possible.",
+          "To establish confidence that the system meets business needs and is ready for use.",
+          "To test individual components in isolation using stubs and drivers.",
+          "To verify the interfaces between two software components."
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Which test basis is MOST appropriate for component testing?",
+        "answers": [
+          "Business processes and contracts",
+          "System requirement specifications and use cases",
+          "Detailed design and the code itself",
+          "National regulations and legal standards"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "Alpha testing and beta testing differ MAINLY in that:",
+        "answers": [
+          "Alpha testing is automated and beta testing is always manual.",
+          "Alpha testing is performed at the developer's site, beta testing at the users' own locations.",
+          "Alpha testing is a component test level and beta testing is system testing.",
+          "Beta testing is performed before alpha testing in every project."
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "An incremental integration strategy (top-down or bottom-up) is generally preferred over big-bang integration because:",
+        "answers": [
+          "It removes the need for any test doubles.",
+          "It guarantees zero interface defects.",
+          "It makes defect isolation easier since fewer interfaces are integrated at once.",
+          "It is the only strategy that allows system testing."
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "Verifying that an application's order service correctly interacts with an external payment provider's service is an example of which test level?",
+        "answers": [
+          "Component testing",
+          "System integration testing",
+          "Operational acceptance testing",
+          "Alpha testing"
+        ],
+        "correct_index": 1
+      }
+    ]
+  },
+  {
+    "section": "istqb",
+    "title": "Test types",
+    "short_description": "Groups of test activities aimed at testing specific characteristics functional, non-functional, black-box (structural), and white-box (structure-based) plus confirmation and regression testing as change-related testing.",
+    "learning_goals": [
+      "(K2) Distinguish functional, non-functional, black-box, and white-box testing and the quality characteristics each addresses.",
+      "(K1) Recall that functional testing evaluates what the system does and non-functional testing evaluates how well it does it.",
+      "(K2) Explain the purpose of confirmation testing and regression testing as change-related testing.",
+      "(K1) Identify that test types can be applied at any test level."
+    ],
+    "theory": "A test type is a group of test activities aimed at testing specific characteristics of a software system. Each test type can focus on a single quality characteristic or several quality characteristics, and any test type can be performed at any test level. The main test types are functional testing, non-functional testing, black-box testing, and white-box testing.\\n\\nFunctional testing evaluates the functions that the system should perform what the system does. The functions are 'what' the test object should do, described in work products such as requirements specifications, user stories, use cases, or functional specifications, or may be undocumented. Functional testing considers the behavior of the software, and functional coverage measures the extent to which some functionality has been exercised by tests, expressed as a percentage of the type of element being covered.\\n\\nNon-functional testing evaluates attributes other than functional characteristics how well the system behaves. It tests quality characteristics defined in the ISO/IEC 25010 product quality model, such as performance efficiency, compatibility, usability (interaction capability), reliability, security, maintainability, portability (flexibility), and functional suitability. Non-functional testing can and should be performed at all test levels, and finding non-functional defects late can be extremely costly to fix.\\n\\nBlack-box testing (specification-based) derives tests from the externally visible behavior described in documentation; it is procedure-independent and focuses on inputs and outputs without reference to internal structure. White-box testing (structure-based) derives tests from the internal structure or implementation of the system, including code, architecture, workflows, and data flows; structural coverage (e.g., statement or branch coverage) measures how much of the structure has been exercised.\\n\\nChange-related testing addresses what to test after a change. Confirmation testing (re-testing) confirms that an original defect has been successfully fixed by re-running the tests that previously failed (and, where appropriate, executing new tests for changed code). Regression testing confirms that a change has not caused adverse consequences either in the changed component itself or in other components of the same or different systems regressions are unwanted side effects from a change, such as a fix that breaks previously working functionality. Because regression testing is repeated frequently and evolves over many iterations, it is a strong candidate for test automation. Both confirmation and regression testing are needed whenever software is changed, including during maintenance.",
+    "key_terms": "test type, functional testing, non-functional testing, black-box testing, white-box testing, functional coverage, structural coverage, confirmation testing (re-testing), regression testing, quality characteristic (ISO/IEC 25010)",
+    "real_world_example": "A retailer adds a new loyalty-points feature to its checkout. Functional testing verifies that points are correctly calculated and applied for each order type. Non-functional testing checks that the checkout still responds within two seconds under peak load (performance efficiency) and that the new screens meet accessibility/usability standards. A developer uses white-box testing to ensure every branch in the points-calculation method is exercised (branch coverage). After a bug where points doubled on returns is fixed, confirmation testing re-runs the exact failing test to prove the fix works, and regression testing re-runs the broader checkout suite to ensure nothing else broke automated in the CI pipeline.",
+    "step_by_step": "1. Identify the characteristic to test: a function (functional), a quality attribute (non-functional), external behavior (black-box), or internal structure (white-box).\\n2. Select the test basis and a matching technique for the chosen test type.\\n3. For non-functional testing, pick the relevant ISO/IEC 25010 quality characteristic and define measurable criteria.\\n4. Measure coverage appropriately (functional coverage for functions; structural coverage like statement/branch for white-box).\\n5. After any change, run confirmation testing to verify the fix by re-running the failed tests.\\n6. Run regression testing to detect unintended side effects in changed and related areas.\\n7. Automate regression tests where they are stable and frequently repeated.",
+    "common_mistakes": "1. Confusing confirmation testing (re-run the failed test to verify the fix) with regression testing (check for new side effects elsewhere). 2. Believing non-functional testing can only be done at the system level it can be performed at all test levels. 3. Equating black-box testing with system testing and white-box testing with component testing; test types and test levels are independent. 4. Thinking functional coverage and structural (statement/branch) coverage are the same measure. 5. Assuming a regression suite is built once and never changes; it must evolve as the software evolves.",
+    "practical_use_case": "On the job, test types help you plan a balanced approach covering both what the system does and how well, across all levels, and ensure changes are safely confirmed and regression-checked. On the exam, expect questions distinguishing functional vs non-functional and black-box vs white-box, mapping non-functional needs to ISO/IEC 25010 characteristics, and clearly separating confirmation testing from regression testing.",
+    "summary": "Test types group test activities by the characteristic under test: functional (what it does), non-functional (how well), black-box (external behavior), and white-box (internal structure), and any type can run at any level. After changes, confirmation testing verifies the fix and regression testing checks for unintended side effects.",
+    "example": "Classifying tests on a login feature:\\n```\\nTest                                                   | Test type\\n-------------------------------------------------------|--------------------------\\nValid/invalid credentials produce correct result        | Functional (black-box)\\nLogin page loads in < 2s with 1000 concurrent users      | Non-functional (perf.)\\nEvery branch in the password-validation method exercised | White-box (branch cov.)\\nPasswords are encrypted and lockout works after 5 fails  | Non-functional (security)\\n```\\nAfter fixing a defect where lockout failed:\\n- Confirmation testing: re-run the exact lockout test that previously failed -> it now passes.\\n- Regression testing: re-run the login + account suite to confirm the fix did not break valid login, password reset, or session handling.",
+    "interactive": "A team fixed a defect in the shopping-cart total. Describe exactly which tests you would run as (a) confirmation testing and (b) regression testing, and explain why both are needed.",
+    "expected_answer": "(a) Confirmation testing: re-execute the specific test case(s) that previously failed because of the incorrect cart total (and any new tests written for the changed code) to confirm the original defect is fixed. (b) Regression testing: re-execute a broader set of related tests around the cart and checkout (apply discounts, taxes, shipping, multiple items, promotions) and ideally the wider automated suite to ensure the fix did not introduce unintended side effects elsewhere. Both are needed because a fix that passes its own re-test can still break other functionality; confirmation proves the fix, regression protects the rest of the system.",
+    "homework": "Take a feature you know and produce a small test plan that includes at least: two functional tests, two non-functional tests (each mapped to an ISO/IEC 25010 quality characteristic), one white-box coverage goal, and a change-related section describing your confirmation and regression strategy after a defect fix.",
+    "expected_result": "A plan that correctly classifies each test type, maps non-functional tests to the right ISO/IEC 25010 quality characteristics with measurable criteria, states a structural coverage goal for the white-box part, and clearly separates confirmation testing (verify the fix) from regression testing (detect side effects), noting automation where appropriate.",
+    "quiz": [
+      {
+        "question": "Non-functional testing evaluates:",
+        "answers": [
+          "Only the functions the system must perform.",
+          "How well the system behaves with respect to quality characteristics such as performance, usability, and security.",
+          "Only the internal code structure of the system.",
+          "Whether an individual defect fix worked."
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Which statement about confirmation testing and regression testing is correct?",
+        "answers": [
+          "Confirmation testing checks for side effects; regression testing re-runs the failed test.",
+          "Confirmation testing re-runs the previously failed test to verify a fix; regression testing checks that the change caused no adverse side effects elsewhere.",
+          "They are the same activity with different names.",
+          "Both are only performed during component testing."
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "At which test levels can non-functional testing be performed?",
+        "answers": [
+          "Only at the system test level.",
+          "Only at the acceptance test level.",
+          "At any test level.",
+          "Only at the component test level."
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "Which of the following is a white-box (structure-based) coverage measure?",
+        "answers": [
+          "Functional coverage of use cases",
+          "Branch coverage of the code",
+          "Number of requirements signed off",
+          "Count of usability issues found"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Which test type is BEST described as deriving tests from the externally visible behavior described in specifications, without reference to internal structure?",
+        "answers": [
+          "White-box testing",
+          "Black-box (specification-based) testing",
+          "Structural testing",
+          "Confirmation testing"
+        ],
+        "correct_index": 1
+      }
+    ]
+  },
+  {
+    "section": "istqb",
+    "title": "Maintenance testing",
+    "short_description": "Testing performed on changes to a system already in operation, covering the triggers for maintenance, the use of impact analysis to scope the testing, and the role of confirmation and regression testing.",
+    "learning_goals": [
+      "(K2) Summarize the triggers for maintenance testing, including modifications, migration, and retirement.",
+      "(K2) Explain the role of impact analysis in maintenance testing and what determines its scope.",
+      "(K1) Recall that maintenance testing relies heavily on confirmation testing and regression testing.",
+      "(K1) Identify the factors that influence the size and risk of a maintenance change."
+    ],
+    "theory": "Once deployed to production, software and its environment must be maintained. Changes such as defect fixes, adaptations to a new environment, new features, and quality improvements are continually made. Maintenance testing focuses on testing the changes to an operational system, as well as testing the unchanged parts that might have been affected by the changes. The scope of maintenance testing depends on the risk of the change, the size of the existing system, and the size of the change.\\n\\nMaintenance can be triggered by several categories. Modifications include planned enhancements (for example, release-based changes), corrective changes, and adaptive changes (such as adapting to a new operating system, database, browser, or platform). Migration triggers include moving from one platform to another, which can require operational tests of the new environment as well as of the changed software, and conversion testing when data from another application is migrated into the system being maintained. Retirement of a system can also trigger testing for example, testing data archiving when long retention periods are required, and testing restore and retrieval procedures after archiving.\\n\\nDepending on the trigger, the changes that lead to maintenance testing can be planned (e.g., a scheduled release or a hot fix) or unplanned (e.g., an emergency fix for a critical production defect). A hot fix may require its own maintenance testing under time pressure.\\n\\nImpact analysis evaluates the changes that were made for a maintenance release to identify the intended consequences as well as the expected and possible side effects of a change, and to identify the areas in the system that will be affected by the change. Impact analysis can also help identify the impact of a change on existing tests and is used to help decide how much regression testing to perform. The side effects and affected areas in the system need to be tested for regressions, possibly after updating any existing tests affected by the change. Impact analysis may be difficult if specifications are out of date or missing, if the test basis is incomplete, or if the people who made the changes are unavailable.\\n\\nIn practice, maintenance testing makes heavy use of two change-related test types: confirmation testing, to verify that each maintenance change (such as a defect fix) achieves its intended effect, and regression testing, to ensure the change has not introduced unwanted side effects in the changed or unchanged parts of the system. Because maintenance releases recur over a system's operational life, automated regression suites are especially valuable.",
+    "key_terms": "maintenance testing, impact analysis, regression testing, confirmation testing, adaptive maintenance, corrective maintenance, perfective maintenance, migration testing, conversion testing, retirement",
+    "real_world_example": "A logistics company runs an order-management system in production. Three maintenance triggers occur in one quarter: (1) a corrective hot fix for a critical bug that double-charged customers handled under time pressure with confirmation testing of the fix and targeted regression testing of billing; (2) an adaptive change to support a new database version, requiring operational and regression testing; and (3) a data migration from a retired warehouse app into the order system, requiring conversion testing of the migrated data plus regression testing of reporting. Before each release, a tester performs impact analysis to decide which existing tests must be updated and how much regression testing is justified by the risk and size of each change.",
+    "step_by_step": "1. Identify the maintenance trigger (corrective/adaptive/perfective modification, migration, or retirement).\\n2. Classify whether the change is planned or unplanned (e.g., scheduled release vs emergency hot fix).\\n3. Perform impact analysis to determine intended effects, side effects, and affected areas of the system.\\n4. Use impact analysis to identify which existing tests are affected and need updating.\\n5. Decide the scope of regression testing based on risk, system size, and change size.\\n6. Run confirmation testing to verify each change achieves its intended effect.\\n7. Run regression testing on affected and related areas; add conversion/operational tests for migration or retirement.",
+    "common_mistakes": "1. Thinking maintenance testing only covers the changed code, ignoring the unchanged parts that may be affected. 2. Skipping impact analysis and therefore under- or over-scoping regression testing. 3. Believing maintenance is always planned forgetting unplanned emergency hot fixes. 4. Forgetting that retirement and migration are valid maintenance triggers requiring archiving, restore, and conversion testing. 5. Confusing confirmation testing (verify the change worked) with regression testing (detect side effects) within maintenance.",
+    "practical_use_case": "On the job, maintenance testing dominates the long operational life of most systems and impact analysis is what keeps regression effort proportionate to risk. On the exam, expect questions listing maintenance triggers (modification, migration, retirement), asking what impact analysis is used for, and testing the relationship between maintenance testing, confirmation testing, and regression testing.",
+    "summary": "Maintenance testing tests changes to an operational system and the unchanged parts they may affect; its scope depends on the risk, the system size, and the change size. Triggers include modification, migration, and retirement, and impact analysis scopes the necessary confirmation and regression testing.",
+    "example": "Maintenance triggers and the testing they imply:\\n```\\nTrigger                        | Example                         | Testing emphasis\\n-------------------------------|----------------------------------|-----------------------------\\nCorrective modification         | Emergency hot fix for billing bug| Confirmation + regression\\nAdaptive modification           | Support new OS/browser/DB         | Operational + regression\\nPerfective/enhancement          | Scheduled feature release         | Functional + regression\\nMigration                       | Move to new platform; import data | Operational + conversion testing\\nRetirement                      | Decommission legacy system        | Archiving + restore/retrieve testing\\n```\\nImpact analysis on a change to the discount engine reveals it also feeds the loyalty and reporting modules -> those areas (plus updated existing tests) are added to the regression scope, sized according to the risk of the change.",
+    "interactive": "A critical production defect causes some invoices to omit tax. An emergency hot fix is deployed. Describe the maintenance testing you would perform, including how impact analysis shapes your regression scope and how confirmation testing fits in.",
+    "expected_answer": "First, treat this as an unplanned (corrective) maintenance change under time pressure. Perform impact analysis to identify what the tax calculation touches invoicing, reporting, possibly accounting exports and to find which existing tests are affected. Run confirmation testing by re-executing the test(s) that reproduced the missing-tax defect to verify the fix achieves its intended effect. Then run regression testing across the affected and related areas identified by impact analysis (invoice generation, tax rules for different regions, totals, reporting), sized to the risk and the small scope of the change, updating any affected existing tests. Where stable, use automated regression to speed the emergency cycle.",
+    "homework": "Pick an operational system and write a maintenance testing plan for three different triggers (one corrective, one adaptive or migration, one retirement). For each, describe the impact analysis you would do, the confirmation testing, and how you would scope regression testing based on risk, system size, and change size.",
+    "expected_result": "A plan that correctly identifies each trigger category, performs impact analysis to find affected areas and affected existing tests, applies confirmation testing to verify each change, and scopes regression testing proportionally to risk, system size, and change size including conversion/archiving tests for migration/retirement.",
+    "quiz": [
+      {
+        "question": "Maintenance testing is performed to test:",
+        "answers": [
+          "Only brand-new systems before their first release.",
+          "Changes to an operational system and the unchanged parts that may be affected by the changes.",
+          "Only the user interface of a system in development.",
+          "Only performance characteristics of a system."
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "The PRIMARY purpose of impact analysis in maintenance testing is to:",
+        "answers": [
+          "Replace the need for any regression testing.",
+          "Identify the intended consequences and possible side effects of a change, the affected areas, and how much regression testing is needed.",
+          "Decide the programming language for the fix.",
+          "Guarantee the change has no defects without any testing."
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Which of the following is a valid trigger for maintenance testing?",
+        "answers": [
+          "Writing the very first requirements specification.",
+          "Initial component testing during first development.",
+          "Migration of the system to a new platform and conversion of data into it.",
+          "Choosing the SDLC model at project start."
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "The scope of maintenance testing depends MAINLY on:",
+        "answers": [
+          "The risk of the change, the size of the existing system, and the size of the change.",
+          "The number of developers on the team only.",
+          "The color scheme of the user interface.",
+          "Whether the project uses Java or Python."
+        ],
+        "correct_index": 0
+      },
+      {
+        "question": "When a system is retired, maintenance testing may include:",
+        "answers": [
+          "Only confirmation testing of new features.",
+          "Only white-box branch coverage of the old code.",
+          "No testing at all, since the system is being removed.",
+          "Testing data archiving and the restore/retrieval procedures."
+        ],
+        "correct_index": 3
+      }
+    ]
+  },
+  {
+    "section": "istqb",
+    "title": "Testing and DevOps",
+    "short_description": "How DevOps and its continuous integration / continuous delivery pipelines automate building and testing, the benefits this brings to testing, and the risks and tester responsibilities it introduces.",
+    "learning_goals": [
+      "(K2) Explain the benefits and risks of testing within a DevOps approach and its CI/CD pipelines.",
+      "(K1) Recall how continuous integration and continuous delivery automate building, testing, and deploying software.",
+      "(K2) Summarize the tester's responsibilities in a DevOps environment, including maintaining automated regression suites.",
+      "(K1) Identify why test automation and shift-left are central to effective testing in DevOps."
+    ],
+    "theory": "DevOps is an organizational approach aiming to create synergy by getting development (including testing) and operations to work together to achieve a common set of objectives. DevOps requires a cultural shift within an organization to bridge the gaps between development (including testing) and operations while treating their functions with equal value. DevOps promotes team autonomy, fast feedback, integrated toolchains, and the technical practices of continuous integration (CI) and continuous delivery (CD), which enable teams to build, test, and deploy software frequently, consistently, and quickly.\\n\\nWith CI/CD, the delivery pipeline automatically builds, integrates, and tests code as part of the toolchain. When a developer commits code, the pipeline triggers automated static analysis, automated component (unit) and integration tests, and other automated checks, providing immediate feedback. Continuous delivery extends this so that validated changes can be released to production-like environments quickly and reliably. This automated framework gives testers fast, frequent feedback on code quality.\\n\\nDevOps brings several benefits to testing: fast feedback on code quality and on whether changes adversely affect existing code; CI promotes a shift-left approach (earlier static and dynamic testing) and encourages developers to submit higher-quality code because automated tests gate the pipeline; automation reduces the need for repetitive manual testing and lowers the cost of running regression tests; and the risk in regression is minimized due to the scale and range of automated regression tests, which also frees testers for more valuable exploratory and new-feature testing.\\n\\nDevOps also introduces risks and challenges: the DevOps delivery pipeline must be defined, established, and maintained, which is extra effort; CI/CD tools must be introduced and maintained; test automation requires additional resources and can be difficult to set up and maintain. Automated testing in a DevOps pipeline does not replace all manual testing some testing (such as exploratory testing and certain non-functional aspects) still requires human judgment. Because so much relies on automation, the regression test suite must be kept comprehensive and up to date or it gives false confidence.\\n\\nTesters in a DevOps environment have important responsibilities: they continue to apply test design and good testing practices; they collaborate closely with developers and operations; they are heavily involved in creating and maintaining the automated tests in the pipeline (especially the automated regression suite); and they perform the testing that automation cannot, such as exploratory testing and aspects of non-functional and usability testing. Even with strong automation, the fundamental test process and good testing practices still apply.",
+    "key_terms": "DevOps, continuous integration (CI), continuous delivery (CD), delivery pipeline, test automation, regression testing, shift-left, exploratory testing, static analysis, fast feedback",
+    "real_world_example": "A SaaS company adopts DevOps with a CI/CD pipeline in GitLab. Every commit triggers static analysis, the automated unit and integration test suite, and a deploy to a staging environment where automated API and UI regression tests run. Developers get feedback within minutes if a change breaks a test, the pipeline blocks the merge. Because the large automated regression suite runs on every change, the risk of regressions reaching production is minimized and testers spend their time on exploratory testing of new features and on usability and security aspects that automation cannot judge. The QA engineers own and continuously maintain the automated regression suite so it stays trustworthy as the product evolves.",
+    "step_by_step": "1. Establish DevOps culture: development, testing, and operations share objectives and tooling.\\n2. Build a CI/CD delivery pipeline that automatically builds, integrates, and tests on every commit.\\n3. Add automated static analysis and automated component/integration tests as pipeline gates (shift-left).\\n4. Maintain a comprehensive automated regression suite that runs on every change.\\n5. Use fast feedback to fix defects early and keep the pipeline green.\\n6. Reserve human effort for exploratory, usability, and judgment-based non-functional testing.\\n7. Continuously maintain the pipeline, tools, and automated tests so they stay reliable and trustworthy.",
+    "common_mistakes": "1. Believing DevOps and automation eliminate the need for testers or for manual/exploratory testing they do not. 2. Assuming CI/CD removes the need to design tests well; good testing practices and the test process still apply. 3. Neglecting maintenance of the pipeline and automated regression suite, leading to false confidence. 4. Treating DevOps as only a toolchain rather than also a cultural shift uniting dev, test, and ops. 5. Forgetting that building and maintaining the pipeline and automation is itself significant, ongoing effort (a real risk/cost).",
+    "practical_use_case": "On the job, DevOps shapes how testing is automated, gated, and fed back to developers, and defines what testers focus their human effort on. On the exam, expect K2 questions about the benefits (fast feedback, shift-left, reduced regression risk and cost) and risks (pipeline/tool/automation effort, automation not replacing all testing) of testing in DevOps, plus the tester's responsibilities such as maintaining automated regression tests and performing exploratory testing.",
+    "summary": "DevOps unites development, testing, and operations around shared goals and uses CI/CD pipelines to automatically build and test on every change, giving fast feedback, enabling shift-left, and minimizing regression risk. It also brings real costs setting up and maintaining the pipeline and automation and still requires skilled testers for exploratory and judgment-based testing.",
+    "example": "A typical DevOps CI/CD pipeline and where testing fits:\\n```\\nCommit -> Static analysis -> Unit tests -> Build -> Integration tests\\n       -> Deploy to staging -> Automated API/UI regression -> (gate) -> Deploy\\n```\\nWhat each part gives testing:\\n- Static analysis + unit tests on commit = shift-left, fast feedback, higher-quality submissions.\\n- Automated regression on every change = regression risk minimized, lower cost of repetition.\\n- Green pipeline gate = changes that break existing behavior are blocked early.\\nWhat still needs humans: exploratory testing of new features, usability, and judgment-based non-functional checks the automated pipeline cannot perform.",
+    "interactive": "Your team is moving to DevOps with a CI/CD pipeline. List three concrete benefits this brings to testing and three risks or challenges you must manage, then state two responsibilities you (as tester) will own in this environment.",
+    "expected_answer": "Benefits: (1) fast, frequent feedback on code quality and whether changes broke existing code; (2) shift-left automated static and dynamic testing runs earlier, encouraging higher-quality submissions; (3) regression risk and cost are minimized by the large automated regression suite, freeing testers for higher-value work. Risks/challenges: (1) the pipeline must be defined, built, and maintained (effort/cost); (2) CI/CD tools must be introduced and maintained; (3) test automation needs resources and is hard to set up/maintain, and automation does not replace all manual/exploratory testing. Tester responsibilities: creating and maintaining the automated regression suite in the pipeline, and performing exploratory and judgment-based non-functional/usability testing that automation cannot, while still applying good test design and the test process.",
+    "homework": "Design a one-page CI/CD testing strategy for a web application. Show the pipeline stages, which automated tests run at each stage (static analysis, unit, integration, regression), how the pipeline gates releases, the benefits and risks for testing, and which testing activities you keep manual and why.",
+    "expected_result": "A strategy that places automated static analysis and unit/integration tests early (shift-left), includes a maintained automated regression suite gating releases, articulates the DevOps benefits (fast feedback, reduced regression risk/cost) and risks (pipeline/tool/automation effort, automation not replacing all testing), and correctly reserves exploratory, usability, and judgment-based testing for humans while keeping good test design practices.",
+    "quiz": [
+      {
+        "question": "Which is a benefit of testing within a DevOps / CI-CD approach?",
+        "answers": [
+          "It removes the need for any test design or testers.",
+          "Fast feedback on code quality and minimized regression risk through extensive automated regression testing.",
+          "It guarantees that no manual testing is ever required.",
+          "It eliminates the cost of building and maintaining the pipeline."
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Which is a recognized RISK or challenge of testing in a DevOps environment?",
+        "answers": [
+          "There is never any feedback to developers.",
+          "Automated testing replaces all human judgment, so no skills are needed.",
+          "The delivery pipeline and test automation require effort to set up and maintain, and automation does not replace all manual testing.",
+          "Regression testing becomes impossible to perform."
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "In a DevOps environment, continuous integration MAINLY promotes:",
+        "answers": [
+          "A shift-right approach where testing only happens in production.",
+          "A shift-left approach with earlier automated static and dynamic testing and fast feedback.",
+          "The removal of all automated tests from the pipeline.",
+          "Manual-only testing with no automation."
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Which testing activity typically still requires human testers even with strong DevOps automation?",
+        "answers": [
+          "Re-running the same scripted regression tests on every commit.",
+          "Automated static code analysis.",
+          "Exploratory testing and judgment-based usability/non-functional testing.",
+          "Automated unit testing triggered by a commit."
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "DevOps is BEST described as:",
+        "answers": [
+          "A single tool that automatically writes all tests.",
+          "An organizational and cultural approach uniting development (including testing) and operations around shared objectives, supported by CI/CD.",
+          "A test level that replaces system and acceptance testing.",
+          "A documentation standard for test cases only."
+        ],
+        "correct_index": 1
+      }
+    ]
+  }
+]

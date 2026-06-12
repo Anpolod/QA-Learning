@@ -80,6 +80,7 @@ class LessonRead(BaseModel):
     practical_use_case: str
     summary: str
     order_index: int
+    next_lesson_id: int | None = None
     slides: list[SlideRead] = []
     examples: list[ExampleRead] = []
     interactive_tasks: list[InteractiveTaskRead] = []
@@ -152,7 +153,7 @@ class FinalProjectRead(BaseModel):
 
 
 class FinalProjectSubmitRequest(BaseModel):
-    user_id: int = 1
+    user_id: int | None = None  # ignored; attributed to the authenticated user
     submission_text: str
     file_url: str = ""
 

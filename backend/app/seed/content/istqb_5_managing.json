@@ -1,0 +1,352 @@
+[
+  {
+    "section": "istqb",
+    "title": "Test planning and estimation",
+    "short_description": "How the test manager defines the purpose, scope, objectives and approach of testing in a test plan, and how testing effort is estimated.",
+    "learning_goals": "(K2) Explain the purpose and content of a test plan.\n(K2) Differentiate the testing concepts entry criteria and exit criteria (definition of ready and definition of done).\n(K3) Use estimation techniques to estimate the testing effort for a given context.\n(K2) Recognise how testing fits into an iteration and how a test pyramid and testing quadrants help shape the test approach.",
+    "theory": "A test plan describes the test objectives, resources and processes for a test project. It documents the means and schedule for achieving test objectives, helps to ensure that the performed test activities meet the established criteria, and acts as a means of communication with team members and other stakeholders. A test plan typically covers the context of testing (scope, objectives, test basis, constraints), assumptions, stakeholders, the overall test approach (test levels and test types, techniques, test objects, entry and exit criteria, test environment, automation, deliverables, schedule), and risks. Writing a test plan promotes thinking through the challenges ahead, even where the document is not retained.\n\nThe value of testing is the difference between the cost of finding and fixing defects through testing and the cost of leaving them in. Testers seek the most effective test cases (those most likely to reveal failures) and prioritise to test the most important features first, in line with the agreed test strategy and schedule. Test prioritisation strategies include risk-based, coverage-based and requirements-based prioritisation.\n\nEntry criteria define the preconditions that must be met before a given test activity can start; without them, the activity may be more difficult, time-consuming and risky. Exit criteria (also: the definition of done) define what must be achieved to declare a test activity completed; for example, measures of coverage achieved, the number of unresolved defects, the level of residual risk, or the available time and budget. Checking exit criteria is part of test completion. In Agile, the team often uses a definition of ready (entry) and definition of done (exit).\n\nTesting in an iteration must rely on test types and test levels that produce feedback quickly, so that product quality is not reduced as each increment is added. Test automation across test levels helps manage the regression burden. The testing quadrants group test levels with appropriate test types, activities, techniques and work products: they distinguish business-facing from technology-facing tests and tests that support the team (guide development) from tests that critique the product. The test pyramid emphasises having many fast, isolated unit/component tests at the bottom and fewer slow, integrated end-to-end tests at the top.\n\nEstimation predicts the effort needed for testing. Two metrics-based techniques use data from past projects or typical values: estimation based on ratios (e.g. development-to-test effort ratios) and extrapolation (early measurements extended over the remaining work, common in iterative SDLCs such as using burndown charts). Two expert-based techniques rely on the experience of the task owners or experts: the Wideband Delphi technique (experts estimate individually, then discuss and re-estimate until consensus, with Planning Poker as a popular variant) and three-point estimation, where the estimate is calculated from optimistic (a), most likely (m) and pessimistic (b) values as E = (a + 4m + b) / 6, which also yields a measurement error to express uncertainty.",
+    "key_terms": "test plan, entry criteria, exit criteria, definition of ready, definition of done, test approach, test pyramid, testing quadrants, estimation based on ratios, three-point estimation",
+    "real_world_example": "A test manager on a banking web application drafts a test plan: scope covers the new payments module, test basis is the user stories and the API specification, test levels are component, integration and system, and exit criteria require 100% of high-risk requirements covered, statement coverage of at least 80% for the payment engine, and no open critical or high defects. To estimate effort, the team has historical data showing testing is roughly 40% of development effort (ratio-based). For a new risky feature with little history, they instead apply three-point estimation: optimistic 5 days, most likely 8 days, pessimistic 17 days, giving E = (5 + 32 + 17) / 6 = 9 days, with the spread signalling high uncertainty to stakeholders.",
+    "step_by_step": "1. Establish the context: scope, objectives, test basis, stakeholders and constraints.\n2. Define the test approach: which test levels and test types, techniques, and test objects.\n3. Agree entry criteria (definition of ready) and exit criteria (definition of done) for each activity.\n4. Plan the test environment, tools, automation and required deliverables.\n5. Prioritise test cases (risk-based, coverage-based or requirements-based).\n6. Estimate effort using a metrics-based technique (ratios, extrapolation) and/or an expert-based technique (Wideband Delphi/Planning Poker, three-point estimation).\n7. Identify and document product and project risks affecting the plan.\n8. Schedule the work and align it with the iteration cadence and the test pyramid.",
+    "common_mistakes": "Confusing entry criteria with exit criteria: entry is what must be ready before starting, exit (definition of done) is what must be true before declaring complete.\nTreating the test plan as a one-time document instead of revising it continuously as feedback arrives.\nAssuming exhaustive testing is feasible instead of prioritising the most important and most risky tests.\nThinking three-point estimation just averages the three values, when the correct formula is (a + 4m + b) / 6 weighting the most likely value.\nIgnoring that testing in iterations needs fast feedback, and overloading the top of the test pyramid with slow end-to-end tests.",
+    "practical_use_case": "On the job, planning and estimation drive sprint commitments, staffing and tooling decisions, and the negotiation of realistic deadlines with product owners. On the CTFL exam, expect K2 questions distinguishing entry vs exit criteria and definition of ready vs done, identifying contents of a test plan, classifying estimation techniques as metrics-based vs expert-based, and a K3 item asking you to compute a three-point estimate or apply a prioritisation strategy.",
+    "summary": "A test plan defines the objectives, scope, approach and schedule of testing and is continuously revised; entry criteria (definition of ready) and exit criteria (definition of done) bound each activity. Effort is estimated with metrics-based techniques (ratios, extrapolation) or expert-based techniques (Wideband Delphi/Planning Poker, three-point estimation, E = (a + 4m + b) / 6). The test pyramid and testing quadrants help shape an approach that gives fast feedback within each iteration.",
+    "example": "Three-point estimation worked example for testing a new search feature:\n\n```\nInputs (in person-days):\n  optimistic (a)   = 6\n  most likely (m)  = 10\n  pessimistic (b)  = 26\n\nEstimate E = (a + 4m + b) / 6\n          = (6 + 4*10 + 26) / 6\n          = (6 + 40 + 26) / 6\n          = 72 / 6\n          = 12 person-days\n\nMeasurement error (standard deviation) = (b - a) / 6\n          = (26 - 6) / 6\n          = 20 / 6\n          = 3.33 person-days\n\nReported estimate: 12 +/- 3.33 person-days\n```\n\nInterpretation: the most likely value dominates because it is weighted by 4, but the wide pessimistic value pushes the estimate above 10 and produces a large error, which the test manager reports to stakeholders as significant uncertainty that may justify a spike or risk mitigation.",
+    "interactive": "Your team must estimate testing for a new export-to-PDF feature. Experts give optimistic = 4 days, most likely = 7 days, pessimistic = 16 days. Calculate the three-point estimate and its measurement error, then state in one sentence how you would communicate the result.",
+    "expected_answer": "E = (4 + 4*7 + 16) / 6 = (4 + 28 + 16) / 6 = 48 / 6 = 8 days. Measurement error = (16 - 4) / 6 = 12 / 6 = 2 days, so the estimate is 8 +/- 2 days. I would communicate it as 'about 8 days, but with notable uncertainty (6 to 10 days)', recommending we reserve buffer and revisit after the first day of measured progress (extrapolation).",
+    "homework": "Write a one-page test plan outline for a feature of an app you know (for example a login or checkout flow). It must include: scope and objectives, test basis, the test levels and test types you will use, explicit entry criteria (definition of ready) and exit criteria (definition of done), a prioritisation strategy, and an effort estimate produced with one named technique. Justify which estimation technique you chose for your context.",
+    "expected_result": "A test plan outline that clearly separates entry from exit criteria, names concrete test levels and test types, states a prioritisation strategy (risk-, coverage- or requirements-based), and includes an effort estimate computed with a named technique (e.g. ratios or three-point estimation with the formula shown) plus a one-sentence justification of the technique for that context.",
+    "quiz": [
+      {
+        "question": "Which statement best describes exit criteria (the definition of done)?",
+        "answers": [
+          "The preconditions that must be met before testing can start",
+          "What must be achieved to declare a test activity completed, such as coverage achieved and number of unresolved defects",
+          "The list of test cases to be automated first",
+          "The ratio of development effort to test effort used for estimation"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Using three-point estimation, what is the estimate for optimistic = 3, most likely = 6 and pessimistic = 15 days?",
+        "answers": [
+          "8 days",
+          "6 days",
+          "7 days",
+          "9 days"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "Which of the following is an expert-based estimation technique?",
+        "answers": [
+          "Estimation based on ratios",
+          "Extrapolation",
+          "Wideband Delphi (Planning Poker)",
+          "Burndown extrapolation"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "What is the main purpose of the test pyramid?",
+        "answers": [
+          "To require equal numbers of tests at every test level",
+          "To emphasise many fast lower-level tests and fewer slow integrated end-to-end tests",
+          "To classify tests as business-facing or technology-facing",
+          "To define entry and exit criteria for each iteration"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Which item is typically NOT part of a test plan?",
+        "answers": [
+          "The test approach including test levels and test types",
+          "Entry and exit criteria for test activities",
+          "The exact source code of the defects to be fixed",
+          "Risks affecting the test project"
+        ],
+        "correct_index": 2
+      }
+    ]
+  },
+  {
+    "section": "istqb",
+    "title": "Risk management in testing",
+    "short_description": "Identifying, analysing and mitigating product and project risks so that testing effort is focused where failure would hurt most.",
+    "learning_goals": "(K1) Identify risk level by using risk likelihood and risk impact.\n(K2) Distinguish between project risks and product risks.\n(K2) Explain how product risk analysis may influence the thoroughness and scope of testing.\n(K2) Explain how product risk analysis can support test monitoring and control.",
+    "theory": "A risk is a potential event, hazard, threat or situation whose occurrence causes an adverse effect. A risk can be characterised by two factors: risk likelihood, the probability of the risk occurring (greater than zero, less than one, since it is a possibility not a certainty), and risk impact, the consequences of that occurrence. These two factors together express the risk level: the higher the risk level, the more important its treatment. Risk-based testing uses risk analysis to prioritise testing and to allocate effort where it matters most.\n\nThere are two categories of risk. Project risks are related to the management and control of the project; they include organisational issues (delays in deliverables, inaccurate estimates, cost-cutting), people issues (skills, training, staffing, conflicts), and technical issues (scope creep, poor tool support, environment readiness). Project risks, if they occur, may affect the project schedule, budget or scope and so impair the ability to achieve test objectives. Product risks are related to a quality characteristic of the product (for example missing or wrong functionality, incorrect calculations, runtime failures, poor performance, security vulnerabilities or unreliable user experience). Product risks, when they become actual events, may result in failures that harm users, the organisation or third parties; this is why product risk analysis is central to testing.\n\nProduct risk analysis aims to provide an awareness of product risk and to reduce the level of product risk. It involves identifying product risks and assessing each risk by estimating its likelihood and impact. Risk assessment can be quantitative (numeric values for likelihood and impact combined into a risk level) or qualitative (categories such as high/medium/low arranged in a risk matrix). Product risk analysis influences the thoroughness and scope of testing: it can determine which test techniques to employ, which test levels and types to perform, the extent of testing to be carried out, the priority order of tests, and whether activities besides testing (for example training inexperienced developers) could reduce risk.\n\nRisk control comprises all measures taken in response to identified and assessed product risks. Risk mitigation reduces a risk by selecting and implementing appropriate measures, while risk monitoring ensures the mitigation actions are effective, obtains further information to improve risk assessment, and identifies emerging risks. On the basis of risk likelihood and impact, options include risk mitigation (test more thoroughly), contingency (have a plan ready), transfer (let another party handle it) or acceptance (do nothing). When a test item passes its tests, the associated product risk has been reduced; when a defect is found and fixed, risk is reduced; residual risks remain and must be communicated. Product risk analysis is performed iteratively throughout the lifecycle and the results are used in test monitoring and control to manage the project toward a successful outcome.",
+    "key_terms": "risk, risk likelihood, risk impact, risk level, product risk, project risk, risk-based testing, product risk analysis, risk mitigation, residual risk",
+    "real_world_example": "On an online tax-filing system, the team runs a product risk analysis before the season. They rate 'incorrect tax calculation' as high likelihood (new rules, complex code) and high impact (legal and financial harm), giving it the highest risk level, so it receives deep boundary value and decision-table testing across component and system levels. 'Outdated help text' is rated low impact and gets only a light review. A project risk, 'the test environment is shared and often down', is mitigated by booking dedicated environment slots. After two test cycles the calculation tests pass and several defects are fixed, reducing that product risk; the residual risk of rare edge-case jurisdictions is documented and accepted by the product owner.",
+    "step_by_step": "1. Identify risks: gather product risks (quality characteristics) and project risks (management/control) from stakeholders.\n2. Classify each risk as a product risk or a project risk.\n3. Assess each product risk's likelihood and impact (quantitatively or qualitatively) to derive its risk level.\n4. Prioritise risks and decide the thoroughness, scope, levels, types and order of testing accordingly.\n5. Choose a risk control response: mitigate (test more), contingency, transfer or accept.\n6. Execute risk-based testing, focusing effort on the highest risk levels first.\n7. Monitor risks: confirm mitigations are effective, reassess likelihood and impact, and detect new risks.\n8. Track and report residual risk and feed results back into test monitoring and control.",
+    "common_mistakes": "Confusing project risks (schedule, staffing, tools) with product risks (a quality characteristic that could fail in the product).\nForgetting that risk level is a combination of BOTH likelihood and impact, not just one of them.\nTreating risk analysis as a one-off activity instead of an iterative one repeated as the product and information change.\nAssuming risk-based testing means testing everything; it means prioritising effort toward the highest risk items.\nIgnoring residual risk after testing, instead of communicating it so stakeholders can make an informed release decision.",
+    "practical_use_case": "On the job, risk analysis decides what gets tested first and how deeply when time is short, and it justifies those decisions to management. It also drives test monitoring and control by tracking residual risk toward a release decision. On the exam, expect K2 questions distinguishing product vs project risks, identifying that risk level combines likelihood and impact, and explaining how product risk analysis influences the scope, thoroughness, levels and priority of testing.",
+    "summary": "A risk is a possible event with an adverse effect, characterised by likelihood and impact, which together give the risk level. Project risks concern managing the project, while product risks concern a quality characteristic of the product. Product risk analysis (identify, assess, control) drives risk-based testing: it shapes the scope, thoroughness, levels, types and priority of tests, supports monitoring and control, and leaves residual risk that must be communicated.",
+    "example": "Qualitative product risk matrix for a checkout feature (likelihood x impact, level = High/Medium/Low):\n\n| Product risk                          | Likelihood | Impact | Risk level | Test response                                  |\n|---------------------------------------|-----------|--------|-----------|------------------------------------------------|\n| Payment charged twice                 | Medium    | High   | High      | Deep integration + decision-table testing, retest |\n| Discount calculated incorrectly       | High      | High   | High      | Boundary value analysis on all discount tiers   |\n| Order confirmation email delayed      | Medium    | Low    | Low       | Light system-level check, low priority          |\n| Currency symbol wrong in one locale   | Low       | Low    | Low       | Spot check / exploratory, accept residual risk  |\n\nThe two High-level risks are tested first and most thoroughly; the Low-level items get minimal effort, and residual risk on the locale issue is documented and accepted.",
+    "interactive": "Classify each of these as a PRODUCT risk or a PROJECT risk, and for the product risks say which has the higher risk level: (a) the lead automation engineer leaves mid-project; (b) the payment module miscalculates VAT (high likelihood, high impact); (c) the test environment licence expires; (d) a rarely used report shows a cosmetic typo (low likelihood, low impact).",
+    "expected_answer": "(a) Project risk (people/staffing). (b) Product risk. (c) Project risk (technical/organisational). (d) Product risk. Among the product risks, (b) VAT miscalculation has the higher risk level because both its likelihood and impact are high, whereas (d) is low on both, so (b) should be tested first and most thoroughly while (d) can be a low-priority check with accepted residual risk.",
+    "homework": "For a feature you know well, produce a product risk analysis table with at least six identified risks. For each, mark it as product or project risk, rate likelihood and impact (high/medium/low), derive the risk level, and state the test response (mitigate/contingency/transfer/accept) and the techniques or levels you would use. End with a short paragraph on the residual risk you would report.",
+    "expected_result": "A risk table that correctly separates product and project risks, assigns a risk level derived from both likelihood and impact, maps each high risk to specific test techniques/levels and an explicit control response, and closes with a clear statement of residual risk to communicate to stakeholders.",
+    "quiz": [
+      {
+        "question": "Risk level is determined by which combination of factors?",
+        "answers": [
+          "Risk likelihood and risk impact",
+          "Risk impact and test coverage",
+          "Risk likelihood and the number of test cases",
+          "Defect density and severity only"
+        ],
+        "correct_index": 0
+      },
+      {
+        "question": "Which of the following is a PROJECT risk rather than a product risk?",
+        "answers": [
+          "The application crashes under heavy load",
+          "A key tester resigns and is not replaced in time",
+          "A calculation returns the wrong total",
+          "A security vulnerability allows data leakage"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "How does product risk analysis typically influence testing?",
+        "answers": [
+          "It fixes the defects automatically",
+          "It determines the thoroughness, scope, levels, types and priority of testing",
+          "It removes the need for exit criteria",
+          "It guarantees zero residual risk after testing"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "After risk-based testing of high-risk items has passed and defects are fixed, what remains and must be handled?",
+        "answers": [
+          "Nothing, the risk is eliminated",
+          "Only project risks remain",
+          "Residual risk, which must be communicated to stakeholders",
+          "The risk level automatically becomes zero"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "Which statement about product risk analysis is correct?",
+        "answers": [
+          "It is performed once at the start and never repeated",
+          "It only uses quantitative values and never categories",
+          "It is iterative and supports test monitoring and control",
+          "It applies only to performance risks"
+        ],
+        "correct_index": 2
+      }
+    ]
+  },
+  {
+    "section": "istqb",
+    "title": "Test monitoring, control and completion",
+    "short_description": "Tracking test progress against the plan, steering corrective actions, and properly closing out testing with metrics and reports.",
+    "learning_goals": "(K1) Recall metrics used for testing.\n(K2) Summarise the purposes and content of test reports (test progress report and test completion report).\n(K2) Explain how to communicate the status of testing.\n(K2) Explain the activities of test monitoring, test control and test completion.",
+    "theory": "Test monitoring gathers information about testing to assess test progress and to check whether the test exit criteria, or the testing tasks associated with them, are satisfied. Test control uses the information from monitoring to give direction and take corrective actions to achieve the most effective and efficient testing; examples include reprioritising tests when a risk becomes an issue, re-evaluating whether a test item meets entry or exit criteria after rework, and adjusting the schedule, environment or resources. Together, monitoring and control are ongoing throughout the test project.\n\nA variety of metrics support monitoring and control. These include project progress metrics (task completion, resource usage, test effort), test progress metrics (test case implementation and execution progress, test environment preparation), product quality metrics (availability, response time, mean time to failure), defect metrics (number and priority of defects found and fixed, defect density, defect detection percentage), risk metrics (residual risk level), coverage metrics (requirements coverage, code coverage), and cost metrics (cost of testing, organisational cost of quality). Metrics are gathered to show progress against the planned schedule and budget, the current quality of the test object, and the effectiveness of the test activities with respect to the objectives or an iteration goal.\n\nThe purpose of test reporting is to summarise and communicate test information during and after testing. A test progress report supports the ongoing control of testing and provides enough information to make adjustments; it is produced on a regular, often periodic, basis and covers the status of test activities and progress against the test plan, factors impeding progress, planned testing for the next reporting period, and the quality of the test object. A test completion report summarises a specific test activity (such as a test level, test cycle or iteration) and is prepared when agreed exit criteria are reached; it provides a summary of testing performed, evaluation against exit criteria, deviations from the plan, an assessment of the quality of the test object and the testing performed, factors that impeded progress, metrics on defects, risks, coverage and so on, and residual risks. The content of a test report varies with the test object, the project, the organisation and the SDLC; for example Agile projects may use less formal reporting such as task boards and burndown charts.\n\nTest completion collects data from completed test activities to consolidate experience, testware and other relevant information. Test completion activities include: checking that all defect reports are closed and entering change requests or product backlog items for any defects unresolved at the end of testing; creating a test completion report for stakeholders; finalising and archiving the test environment, test data, test infrastructure and other testware for later reuse; handing over the testware to the maintenance teams, other project teams and stakeholders who could benefit from it; analysing lessons learned to determine changes needed for future iterations, releases or projects; and using the information gathered to improve test process maturity. Test completion typically occurs at project milestones such as when a test level is completed, an Agile iteration is finished, a test project is completed (or cancelled), a software product is released, or a maintenance release is finished.",
+    "key_terms": "test monitoring, test control, test completion, test progress report, test completion report, metrics, defect density, coverage, residual risk, exit criteria",
+    "real_world_example": "A test lead on a two-week Agile iteration tracks daily metrics: test cases executed vs planned, pass/fail rates, open defects by priority, and requirements coverage shown on a burndown chart and task board (monitoring). Mid-iteration, the payment area shows a spike of high-priority defects and execution is falling behind, so the lead reprioritises tests toward payment, pulls in an extra tester and defers low-risk locale tests (control). At the end of the iteration the exit criteria are checked; remaining minor defects are logged as backlog items, a test completion report summarises coverage, defects and residual risk, the test data and automated suite are archived for the next iteration, and a short lessons-learned note feeds process improvement (completion).",
+    "step_by_step": "1. Define the metrics to collect (progress, defect, coverage, risk, cost) against the test plan and exit criteria.\n2. Continuously gather measurements during execution (monitoring).\n3. Compare actuals to the plan and exit criteria to spot deviations.\n4. Take corrective actions where needed: reprioritise, adjust schedule/resources/environment, re-evaluate entry/exit criteria (control).\n5. Produce regular test progress reports to communicate status and impediments to stakeholders.\n6. When exit criteria are met, perform test completion: close or log remaining defects as change requests/backlog items.\n7. Write the test completion report summarising results, deviations, metrics and residual risk.\n8. Archive and hand over testware, capture lessons learned and feed test process improvement.",
+    "common_mistakes": "Confusing monitoring (gathering and assessing information) with control (taking corrective action based on it).\nMixing up the test progress report (ongoing, supports control) and the test completion report (at the end, when exit criteria are reached).\nForgetting that unresolved defects at the end of testing should be logged as change requests or backlog items, not silently dropped.\nThinking test completion is just 'finishing testing' rather than archiving testware, handing it over and capturing lessons learned.\nReporting only raw defect counts without relating them to coverage, risk and exit criteria for an actual status assessment.",
+    "practical_use_case": "On the job, monitoring and control keep a release on track and give management an honest, metrics-backed status; completion turns a finished cycle into reusable assets and improvements. On the exam, expect K1 recall of metric types, K2 questions distinguishing monitoring from control, identifying the contents and timing of progress vs completion reports, and listing test completion activities such as logging unresolved defects as change requests and archiving testware.",
+    "summary": "Test monitoring gathers metrics to assess progress and exit-criteria satisfaction; test control acts on that information with corrective measures such as reprioritising or adjusting resources. Test progress reports communicate ongoing status while a test completion report summarises an activity once exit criteria are met. Test completion then closes or logs remaining defects, archives and hands over testware, captures lessons learned and feeds process improvement.",
+    "example": "Worked status snapshot midway through a test cycle (used to drive control decisions):\n\n```\nPlanned test cases:        200\nImplemented:               200 (100%)\nExecuted:                  140 (70%)\n  Passed:                  110\n  Failed:                   25\n  Blocked:                   5\nRequirements coverage:      80% (high-risk reqs: 100%)\nOpen defects by priority:  Critical 1, High 6, Medium 12, Low 9\nDefect density (payments):  high vs other modules -> clustering\n```\n\nMonitoring read: execution is behind the 85% target and one critical defect is open.\nControl actions taken: block the release gate on the critical defect, reprioritise execution toward the high-defect payments module (defect clustering), add a tester, and defer low-risk tests. This snapshot, plus impediments and next-period plan, becomes the periodic test progress report; the end-of-cycle version evaluated against exit criteria becomes the test completion report.",
+    "interactive": "You are mid-cycle. The dashboard shows 60% of tests executed against a 90% target, one open critical defect in checkout, and high-risk requirements only 70% covered. State (a) whether each observation is monitoring or control, and (b) two specific control actions you would take.",
+    "expected_answer": "(a) Observing the execution percentage, the open critical defect and the coverage figures is test monitoring (gathering and assessing information). Deciding what to do about them is test control. (b) Two control actions: reprioritise execution toward the high-risk requirements to push their coverage from 70% toward 100%, and treat the open critical checkout defect as a release blocker while pulling resources (or extending time) to retest checkout; if needed, defer low-risk tests and update the schedule and the progress report.",
+    "homework": "For a recent or imagined test cycle, draft (1) a one-page test progress report with status against plan, impediments, next-period plan and product quality, and (2) a short test completion report evaluated against named exit criteria, including defect/coverage/risk metrics, deviations, residual risk, and at least two test completion activities (e.g. logging unresolved defects as backlog items, archiving testware, lessons learned).",
+    "expected_result": "Two distinct reports: a progress report that clearly supports ongoing control, and a completion report tied to exit criteria with concrete metrics, residual risk, and explicit completion activities such as handing over/archiving testware and capturing lessons learned for process improvement.",
+    "quiz": [
+      {
+        "question": "What is the main difference between test monitoring and test control?",
+        "answers": [
+          "Monitoring writes the test plan; control executes the test cases",
+          "Monitoring gathers and assesses information; control takes corrective actions based on it",
+          "Monitoring happens only at the end; control happens only at the start",
+          "Monitoring is manual; control is automated"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "When is a test completion report typically prepared?",
+        "answers": [
+          "Daily, before each stand-up",
+          "Only when a critical defect is found",
+          "When the agreed exit criteria for a test activity are reached",
+          "Before any test cases are written"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "Which of the following is a test completion activity?",
+        "answers": [
+          "Reprioritising tests when a risk becomes an issue",
+          "Logging unresolved defects as change requests or backlog items and archiving testware",
+          "Estimating the test effort for the next sprint",
+          "Defining entry criteria for the test level"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Which set are all valid testing metrics used for monitoring?",
+        "answers": [
+          "Defect density, requirements coverage, residual risk level",
+          "Font size, screen brightness, cache hit ratio",
+          "Number of commits, lines of comments, build colour",
+          "Office occupancy, coffee consumption, ticket colour"
+        ],
+        "correct_index": 0
+      },
+      {
+        "question": "What is the primary purpose of a test progress report?",
+        "answers": [
+          "To replace the test plan",
+          "To provide information that supports ongoing control and adjustments during testing",
+          "To archive the test environment",
+          "To estimate effort for the project"
+        ],
+        "correct_index": 1
+      }
+    ]
+  },
+  {
+    "section": "istqb",
+    "title": "Configuration management",
+    "short_description": "Establishing and maintaining the integrity of work products and testware through identification, version control and traceability.",
+    "learning_goals": "(K2) Summarise how configuration management supports testing.\n(K1) Recall what configuration items and a baseline are.\n(K2) Explain why all test items, testware and test objects must be uniquely identified and version controlled.\n(K2) Explain how configuration management enables traceability between the test basis, testware and defects.",
+    "theory": "Configuration management (CM) is a discipline for establishing and maintaining consistency of a work product's performance and its functional and physical attributes throughout its life. In testing, CM provides a way to uniquely identify, version, track and control the configuration items that make up the test object and the testware, so that the integrity of these items is maintained throughout the project and beyond.\n\nA configuration item is an aggregation of work products that is treated as a single entity for the purposes of configuration management. A baseline is a specification or work product that has been formally reviewed and agreed upon, that serves as the basis for further development, and that can be changed only through a formal change control procedure. CM keeps a record of changed configuration items so that a baseline can be restored when needed.\n\nTo properly support testing, configuration management ensures that: all configuration items, including test items (the individual components of the test object), are uniquely identified, version controlled, tracked for changes, and related to each other; and all items of testware are uniquely identified, version controlled, tracked for changes, related to each other and related to versions of the test items, so that traceability can be maintained throughout the test process. This means a tester always knows exactly which version of the test object a given test result, test case or defect report applies to.\n\nDuring test planning, the configuration items and the level of configuration management to be applied are identified and documented. Once they are under CM, changes are controlled through a formal change control process, which protects the integrity of baselines. CM is what makes traceability practical: it links the test basis, test conditions, test cases, test scripts and test results to specific versions, and links defects back to the version where they were found. This supports impact analysis, reproducibility of failures, accurate status reporting and reliable regression and confirmation testing. Continuous integration and DevOps pipelines rely heavily on configuration management to ensure that the right versions of code, tests and test data are built and tested together.",
+    "key_terms": "configuration management, configuration item, baseline, version control, traceability, testware, test item, change control, test object, test basis",
+    "real_world_example": "A team uses Git for source code and a test management tool for testware. Each release is a baseline (for example v2.3.0) made of identified configuration items: application binaries, the requirements specification, the automated regression suite and the test data set. When a tester logs defect DEF-417, the report records that it was found against build v2.3.0-rc2 and test case TC-payments-09. A developer fixes it and the build becomes v2.3.0-rc3; the tester reruns exactly TC-payments-09 (confirmation testing) on rc3 and the full suite (regression testing) knowing precisely which versions of test object and testware were used. Because everything is version controlled and traceable, the team can reproduce the original failure and prove the fix.",
+    "step_by_step": "1. During test planning, identify the configuration items (test object components, requirements, test cases, scripts, test data) and the level of CM to apply.\n2. Place each configuration item under version control with a unique identifier.\n3. Establish baselines (e.g. an agreed release version) that can only change via formal change control.\n4. Relate testware to the specific versions of the test items it tests.\n5. Maintain traceability links: test basis to test conditions to test cases to results, and defects to versions.\n6. Record every change to a configuration item so a baseline can be restored if needed.\n7. Use the version information to reproduce failures, run confirmation and regression testing, and report status accurately.",
+    "common_mistakes": "Confusing a configuration item (a work product managed as one entity) with a baseline (a formally agreed, change-controlled version).\nThinking configuration management applies only to source code, when test cases, scripts, test data and environments must also be under CM.\nLogging a defect without recording the exact version of the test object it was found against, making it impossible to reproduce.\nAssuming CM is just backups; its real value is unique identification, version control, change control and traceability.\nBelieving traceability is automatic, when it depends on testware being related to specific versions of the test items under CM.",
+    "practical_use_case": "On the job, CM lets teams reproduce defects on the exact build, run reliable confirmation and regression cycles, perform impact analysis, and trust their status reports; it underpins CI/CD pipelines. On the exam, expect K1 recall of the definitions of configuration item and baseline, and K2 questions explaining that all test items and testware must be uniquely identified and version controlled, and that CM is what enables traceability between the test basis, testware, test object versions and defects.",
+    "summary": "Configuration management establishes and maintains the integrity of work products by uniquely identifying, version controlling and change controlling configuration items, with formally agreed baselines that change only through change control. In testing, it ensures every test item and all testware are identified, versioned and related to specific versions of the test object. This makes traceability, reproducibility, accurate reporting and reliable confirmation and regression testing possible.",
+    "example": "Traceability and versioning supported by configuration management:\n\n```\nBaseline: Release v2.3.0\n\nConfiguration items under version control:\n  - REQ-spec        v2.3            (test basis)\n  - App build       v2.3.0-rc2/rc3  (test object / test items)\n  - Test suite      v2.3.0          (testware)\n  - Test data set   v2.3.0          (testware)\n\nTraceability chain:\n  REQ-payments-12 (test basis)\n      -> TC-payments-09 (test case, testware, v2.3.0)\n          -> executed on build v2.3.0-rc2  -> FAIL  -> DEF-417\n          -> re-executed on build v2.3.0-rc3 (confirmation testing) -> PASS\n```\n\nBecause each item is uniquely identified and version controlled, DEF-417 is unambiguously tied to a build, the failure is reproducible, and confirmation testing is run on the exact fixed version while the rest of the suite provides regression testing.",
+    "interactive": "Explain, in your own words, why logging a defect without recording the version of the build it was found on is a configuration management failure, and describe two concrete problems it causes downstream.",
+    "expected_answer": "Configuration management requires every test item and testware to be uniquely identified and version controlled and the defect to be related to the specific version of the test object. Without the build version on the defect, traceability is broken. Two concrete problems: (1) the failure may not be reproducible because no one knows which build showed it, wasting time and possibly leading to a 'cannot reproduce' closure; and (2) confirmation testing is unreliable because you cannot be sure the fix was verified against the correct version, and regression status and reporting become inaccurate.",
+    "homework": "For a small project of your choice, list at least five configuration items spanning the test object and testware, assign each a unique identifier and version scheme, define one baseline, and draw a traceability chain from a test basis item through a test case to a defect, showing the build versions for the failed and the fixed (confirmation) runs.",
+    "expected_result": "A submission that distinguishes configuration items from a baseline, places both test object and testware items under versioned, uniquely identified control, and shows an end-to-end traceability chain (test basis -> test case -> result -> defect) with explicit build versions for the failing and confirmation runs.",
+    "quiz": [
+      {
+        "question": "Which definition matches a baseline?",
+        "answers": [
+          "Any file stored in version control",
+          "A formally reviewed and agreed work product that serves as a basis for further development and can be changed only through formal change control",
+          "The newest untested build of the software",
+          "A single test case treated as one entity"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "What is a configuration item?",
+        "answers": [
+          "An aggregation of work products treated as a single entity for configuration management",
+          "A defect found during system testing",
+          "A metric used in test monitoring",
+          "An entry criterion for a test level"
+        ],
+        "correct_index": 0
+      },
+      {
+        "question": "How does configuration management primarily support testing?",
+        "answers": [
+          "By automatically fixing defects in the build",
+          "By ensuring test items and testware are uniquely identified, version controlled and traceable",
+          "By eliminating the need for regression testing",
+          "By estimating the test effort"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Why must testware be related to specific versions of the test items?",
+        "answers": [
+          "To reduce the number of test cases",
+          "To maintain traceability so results and defects map to the correct version of the test object",
+          "To avoid writing a test plan",
+          "To remove the need for baselines"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "A defect found on build 4.1.2 is fixed and the tester reruns the same test case on build 4.1.3 to verify the fix. Configuration management makes this reliable mainly because it provides what?",
+        "answers": [
+          "Exhaustive testing of all builds",
+          "Automatic exit criteria evaluation",
+          "Unique identification and version control of builds and testware",
+          "A guarantee that no new defects exist"
+        ],
+        "correct_index": 2
+      }
+    ]
+  },
+  {
+    "section": "istqb",
+    "title": "Defect management",
+    "short_description": "Detecting, recording, classifying and tracking anomalies and defects through a defined process until closure.",
+    "learning_goals": "(K3) Prepare a defect report.\n(K2) Distinguish between an error, a defect, a failure and the root cause.\n(K2) Explain the typical content of a defect report and the objectives of defect management.\n(K2) Explain how defect reports support communication, tracking and process improvement.",
+    "theory": "Since one objective of testing is to find defects, a defect management process is needed. Anomalies may be reported during any phase of the SDLC, and the form depends on the SDLC. A key chain of terms: a person makes an error (a human mistake), which can introduce a defect (also called a fault or bug, a flaw in a work product), and a defect, if executed, may cause the system to fail to do what it should (or to do something it should not), which is a failure. Not all defects cause failures (some code is never executed, or conditions never met), and not every failure is caused by a defect (failures can be caused by environmental conditions such as radiation or electromagnetic interference). The root cause is the source of a problem which, if removed, prevents recurrence; root cause analysis is typically triggered during defect detection.\n\nAnomalies can be reported in order to be analysed and resolved. At minimum, defects found during dynamic testing must be logged and investigated to manage them to resolution. Defects detected during static testing (reviews) are usually documented differently. The objectives of a defect report are to provide those responsible for handling and resolving reported defects with sufficient information to resolve the issue, to provide a means of tracking the quality of the work product, and to provide ideas for improvement of the development and test process.\n\nA defect report logged during dynamic testing typically includes: a unique identifier; a title and a short summary of the anomaly; the date the defect was observed, the issuing organisation and the author including their role; identification of the test object and test environment; the context (such as the test case being run, the test activity, the test phase and other relevant information like the test technique, checklist or test data); a description of the failure to enable reproduction and resolution, including the steps that detected it, and any test logs, database dumps, screenshots or recordings; expected results and actual results; the severity of the defect (degree of impact on the interests of stakeholders or requirements); the priority to fix; the status of the defect (for example open, deferred, duplicate, waiting to be fixed, awaiting confirmation testing, re-opened, closed); references such as the test case. Some of this information may be automated or managed by defect management tools, for example a unique identifier, status or related dates.\n\nA defect that is fixed must be re-tested. Confirmation testing is run to confirm that the original defect has been successfully fixed; regression testing is run on related areas to check that the fix has not introduced new defects elsewhere. Severity and priority are different: severity is the degree of impact a defect has on the product, while priority is the urgency of fixing it from a business or stakeholder perspective. A high-severity defect may have low priority (for example a rare crash in a feature about to be removed) and a low-severity defect may have high priority (for example a misspelled company name on the home page).",
+    "key_terms": "error, defect, failure, root cause, defect report, severity, priority, anomaly, confirmation testing, regression testing",
+    "real_world_example": "During system testing of an e-commerce site, a tester running TC-checkout-14 on build v3.1.0-rc1 sees the order total ignore an applied coupon. They log DEF-902: unique id, title 'Coupon discount not applied to order total', date, author and role, test object and environment, the exact steps (add item, apply COUPON10, view total), expected result (total reduced by 10%), actual result (full price charged), a screenshot and the test log, severity High (wrong money charged), priority High (peak sale next week), status Open, and a reference to TC-checkout-14. The root cause analysis later shows an error in rounding logic introduced in a recent refactor. After the fix on rc2, the tester runs confirmation testing on TC-checkout-14 and regression testing on related pricing tests, then sets the status to Closed.",
+    "step_by_step": "1. Detect the anomaly during dynamic testing and reproduce it to confirm it is a genuine failure.\n2. Capture the context: test object, environment, test case, build version, steps performed.\n3. Record expected vs actual results with supporting evidence (logs, screenshots, recordings).\n4. Assign a unique identifier, a clear title and a description that enables reproduction and resolution.\n5. Set severity (impact on the product) and priority (urgency to fix) independently.\n6. Set the status (e.g. open) and route the report through the agreed workflow to those who resolve it.\n7. After a fix, run confirmation testing on the original defect and regression testing on related areas.\n8. Update the status to closed (or deferred/duplicate etc.) and feed root-cause findings into process improvement.",
+    "common_mistakes": "Confusing error, defect and failure: an error is the human mistake, a defect is the resulting flaw in the work product, and a failure is the observable deviation when the defect is executed.\nTreating severity and priority as the same thing; a high-severity defect can be low priority and vice versa.\nLogging a defect without steps to reproduce, expected vs actual results, or the build version, so it cannot be acted upon.\nForgetting that not every failure is caused by a defect (environmental causes) and not every defect causes a failure.\nClosing a fixed defect after confirmation testing only, while skipping regression testing on related areas.",
+    "practical_use_case": "On the job, well-written defect reports speed resolution, give an honest measure of product quality, and feed root-cause analysis and process improvement. On the exam, expect a K3 task to prepare a defect report, K2 questions distinguishing error/defect/failure/root cause, distinguishing severity from priority, identifying the typical contents of a defect report, and recognising the objectives of defect management.",
+    "summary": "A person's error introduces a defect, which when executed may cause a failure; the root cause is the underlying source. Defect management logs, classifies and tracks anomalies through a status workflow, with reports that enable resolution, measure quality and drive process improvement. A good defect report includes a unique id, context, reproduction steps, expected vs actual results, evidence, severity (impact) and priority (urgency); fixed defects need confirmation testing plus regression testing.",
+    "example": "A worked defect report prepared during dynamic testing (K3):\n\n```\nID:           DEF-902\nTitle:        Coupon discount not applied to order total at checkout\nDate:         2026-06-08            Author: J. Tester (Test Engineer)\nTest object:  ShopApp build v3.1.0-rc1\nEnvironment:  Staging, Chrome 124, test data set TD-checkout-v3\nContext:      Test case TC-checkout-14, System Test, black-box (EP/BVA)\nSteps to reproduce:\n  1. Add 'Item A' (price 100.00) to cart\n  2. Apply coupon code COUPON10 (10% off)\n  3. Open the order summary / total\nExpected result: Order total = 90.00 (10% discount applied)\nActual result:   Order total = 100.00 (discount ignored)\nEvidence:     screenshot checkout_total.png, app log app-2026-06-08.log\nSeverity:     High (incorrect amount charged to customer)\nPriority:     High (major sale campaign next week)\nStatus:       Open\nReferences:   TC-checkout-14, REQ-pricing-07\n```\n\nAfter the fix on v3.1.0-rc2: run confirmation testing on TC-checkout-14 (now PASS) and regression testing on related pricing test cases; if all pass, set Status -> Closed and record the root cause (rounding error in refactored discount logic) for process improvement.",
+    "interactive": "A teammate writes this defect: 'Checkout is broken, please fix.' List at least five mandatory pieces of information missing from this report, and state the severity-vs-priority distinction you would add.",
+    "expected_answer": "Missing information includes: a unique identifier and clear title; the test object and build version plus environment; steps to reproduce; expected vs actual results; supporting evidence (logs/screenshots); the test case/context reference; and a status. I would also add severity and priority as separate fields, explaining that severity is the degree of impact of the defect on the product while priority is the urgency of fixing it from a business standpoint, so a high-severity bug could still be low priority and vice versa.",
+    "homework": "Find or reproduce a defect in any app and write a complete defect report containing every standard field: unique id, title, date/author/role, test object and environment, context/test case, steps to reproduce, expected and actual results, evidence, severity, priority and status. In a short note, identify the likely error, defect and failure for your case, distinguish severity from priority for it, and state what confirmation and regression testing you would run after the fix.",
+    "expected_result": "A defect report with all standard fields, reproducible steps, and clearly separated severity and priority, accompanied by a correct mapping of error/defect/failure (and root cause if known) for the case and a plan that includes both confirmation testing of the original defect and regression testing of related areas.",
+    "quiz": [
+      {
+        "question": "Which sequence correctly describes the relationship between the terms?",
+        "answers": [
+          "A failure causes a defect, which causes an error",
+          "An error (human mistake) introduces a defect, which when executed may cause a failure",
+          "A defect causes an error, which causes a failure",
+          "A failure and a defect are the same thing"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "What is the difference between severity and priority of a defect?",
+        "answers": [
+          "They are identical and always set to the same value",
+          "Severity is the degree of impact on the product; priority is the urgency of fixing it",
+          "Severity is set by the business; priority is set by the compiler",
+          "Severity applies only in Agile; priority only in sequential models"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Which is NOT a typical objective of a defect report?",
+        "answers": [
+          "To give those resolving the defect enough information to fix it",
+          "To provide a means of tracking the quality of the work product",
+          "To automatically correct the source code that caused the defect",
+          "To provide ideas for improving the development and test process"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "Which statement is correct?",
+        "answers": [
+          "Every defect always causes a failure",
+          "Every failure is always caused by a defect",
+          "Some defects never cause failures, and some failures are caused by environmental conditions rather than defects",
+          "Defects can only be found during static testing"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "After a defect is fixed, which testing should be performed?",
+        "answers": [
+          "Only confirmation testing of the original defect",
+          "Only regression testing of unrelated areas",
+          "Confirmation testing that the defect is fixed, plus regression testing to check no new defects were introduced",
+          "No further testing is needed once the developer marks it fixed"
+        ],
+        "correct_index": 2
+      }
+    ]
+  }
+]

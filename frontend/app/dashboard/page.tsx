@@ -1,26 +1,65 @@
+"use client";
+
 import Link from "next/link";
-import { BookOpen, Brain, ClipboardCheck, Gamepad2, Trophy } from "lucide-react";
+import { useEffect, useState } from "react";
+import { BookOpen, Brain, CheckCircle2, ClipboardCheck, Gamepad2, Trophy } from "lucide-react";
 import { ProgressCard } from "@/components/course/ProgressCard";
+import { RequireAuth } from "@/components/auth/RequireAuth";
 import { api } from "@/lib/api";
 
-export default async function DashboardPage() {
-  const defaultProgress = {
-    completedLessons: 0,
-    openedLessons: 0,
-    quizCompleted: 0,
-    homeworkSubmitted: 0,
-    totalLessons: 9,
-    currentModule: "Manual QA Foundations",
-    currentLesson: "QA / QC / Testing basics",
-    recommendedNextLesson: "QA / QC / Testing basics",
-    recommendedLessonId: 1,
-    aiUsageToday: 0,
-    aiDailyLimit: 50,
-    finalProjectsSubmitted: 0,
-    finalProjectsApproved: 0,
-    totalFinalProjects: 3
-  };
-  const progress = { ...defaultProgress, ...(await api.dashboardProgress().catch(() => ({}))) };
+const defaultProgress = {
+  completedLessons: 0,
+  completedLessonIds: [] as number[],
+  openedLessons: 0,
+  quizCompleted: 0,
+  homeworkSubmitted: 0,
+  totalLessons: 9,
+  currentModule: "Manual QA Foundations",
+  currentLesson: "QA / QC / Testing basics",
+  recommendedNextLesson: "QA / QC / Testing basics",
+  recommendedLessonId: 1 as number | null,
+  aiUsageToday: 0,
+  aiDailyLimit: 50,
+  finalProjectsSubmitted: 0,
+  finalProjectsApproved: 0,
+  totalFinalProjects: 3
+};
+
+type Player = Awaited<ReturnType<typeof api.playerStats>> | null;
+type CourseStat = { id: number; title: string; done: number; total: number };
+
+export default function DashboardPage() {
+  const [progress, setProgress] = useState(defaultProgress);
+  const [player, setPlayer] = useState<Player>(null);
+  const [docStats, setDocStats] = useState({ count: 0, best: 0 });
+  const [courseStats, setCourseStats] = useState<CourseStat[]>([]);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      const [p, pl, docs, courses] = await Promise.all([
+        api.dashboardProgress().catch(() => ({}) as Partial<typeof defaultProgress>),
+        api.playerStats().catch(() => null),
+        api.docAttempts().catch(() => []),
+        api.courses().catch(() => [])
+      ]);
+      if (!mounted) return;
+      setProgress({ ...defaultProgress, ...p });
+      setPlayer(pl);
+      setDocStats({ count: docs.length, best: docs.reduce((m, a) => Math.max(m, a.score), 0) });
+      const doneIds = new Set(p?.completedLessonIds ?? []);
+      setCourseStats(
+        courses.map((c) => {
+          const ids = c.modules.flatMap((m) => m.lessons.map((l) => l.id));
+          return { id: c.id, title: c.title, done: ids.filter((id) => doneIds.has(id)).length, total: ids.length };
+        })
+      );
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   const totalLessons = progress.totalLessons || 9;
   const lessonProgress = Math.min((progress.completedLessons / totalLessons) * 100, 100);
   const openedProgress = Math.min((progress.openedLessons / totalLessons) * 100, 100);
@@ -32,9 +71,9 @@ export default async function DashboardPage() {
     progress.finalProjectsApproved > 0
       ? `${progress.finalProjectsApproved}/${progress.totalFinalProjects} approved`
       : `${progress.finalProjectsSubmitted}/${progress.totalFinalProjects} submitted`;
-  const player = await api.playerStats().catch(() => null);
 
   return (
+    <RequireAuth>
     <main className="mx-auto max-w-7xl px-4 py-8">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
@@ -75,16 +114,43 @@ export default async function DashboardPage() {
           <h2 className="mt-1 text-lg font-semibold">{player ? `${player.rank} · ${player.xp} XP` : "Open player hub"}</h2>
         </Link>
       </section>
-      <section className="mt-8 rounded-lg border border-slate-200 bg-white p-5">
+      <section className="mt-8 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
         <div className="flex items-center gap-2">
-          <ClipboardCheck className="h-5 w-5 text-mint" />
-          <h2 className="text-lg font-semibold">Completed lessons</h2>
+          <CheckCircle2 className="h-5 w-5 text-mint" />
+          <h2 className="text-lg font-semibold">Course completion</h2>
         </div>
-        <p className="mt-3 text-sm text-slate-600">Progress tracking is connected to the backend foundation and ready for real user auth.</p>
+        <p className="mt-2 text-sm text-slate-600">A lesson counts as completed once you pass its quiz and submit its homework.</p>
+        <div className="mt-4 grid gap-4 md:grid-cols-2">
+          {(courseStats.length
+            ? courseStats
+            : [{ id: 0, title: "Loading…", done: 0, total: 0 }]
+          ).map((c) => (
+            <ProgressCard
+              key={c.id}
+              label={c.title}
+              value={`${c.done}/${c.total}`}
+              progress={c.total ? Math.min((c.done / c.total) * 100, 100) : 0}
+            />
+          ))}
+        </div>
       </section>
+      <Link
+        href="/test-docs"
+        className="mt-8 flex items-center justify-between rounded-lg border border-slate-200 bg-white p-5 shadow-sm transition hover:border-coral"
+      >
+        <span>
+          <ClipboardCheck className="h-5 w-5 text-coral" />
+          <p className="mt-3 text-sm text-slate-500">Test documentation practice</p>
+          <h2 className="mt-1 text-lg font-semibold">
+            {docStats.count
+              ? `${docStats.count} reviewed · best ${docStats.best}/100`
+              : "Start practising test cases & bug reports"}
+          </h2>
+        </span>
+      </Link>
       <section className="mt-6 grid gap-3 md:grid-cols-3">
-        <Link href="/progress" className="rounded-lg border border-slate-200 bg-white p-4 text-sm font-medium hover:border-mint">
-          View detailed progress
+        <Link href="/courses" className="rounded-lg border border-slate-200 bg-white p-4 text-sm font-medium hover:border-mint">
+          Browse courses
         </Link>
         <Link href="/final-projects" className="rounded-lg border border-slate-200 bg-white p-4 text-sm font-medium hover:border-mint">
           Open final projects
@@ -94,5 +160,6 @@ export default async function DashboardPage() {
         </Link>
       </section>
     </main>
+    </RequireAuth>
   );
 }

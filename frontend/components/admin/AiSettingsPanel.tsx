@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Save, SlidersHorizontal } from "lucide-react";
+import { KeyRound, Save, SlidersHorizontal } from "lucide-react";
 import { api } from "@/lib/api";
 
 export type AiSettings = {
@@ -32,6 +32,8 @@ export function AiSettingsPanel({ initialSettings }: Props) {
   const [dailyImageLimitAdmin, setDailyImageLimitAdmin] = useState(initialSettings?.dailyImageLimitAdmin ?? 100);
   const [openaiConfigured, setOpenaiConfigured] = useState(initialSettings?.openaiConfigured ?? false);
   const [openrouterConfigured, setOpenrouterConfigured] = useState(initialSettings?.openrouterConfigured ?? false);
+  const [openaiApiKey, setOpenaiApiKey] = useState("");
+  const [openrouterApiKey, setOpenrouterApiKey] = useState("");
   const [status, setStatus] = useState("");
   const [error, setError] = useState(initialSettings ? "" : "AI settings are unavailable.");
 
@@ -47,7 +49,10 @@ export function AiSettingsPanel({ initialSettings }: Props) {
         maxTokens,
         dailyTextLimitPerUser,
         dailyImageLimitPerUser,
-        dailyImageLimitAdmin
+        dailyImageLimitAdmin,
+        // Send keys only when the admin typed something, so a blank field never clears a stored key.
+        ...(openaiApiKey.trim() ? { openaiApiKey: openaiApiKey.trim() } : {}),
+        ...(openrouterApiKey.trim() ? { openrouterApiKey: openrouterApiKey.trim() } : {})
       });
       setProvider(updated.provider as "openai" | "openrouter");
       setTextModel(updated.textModel);
@@ -59,7 +64,24 @@ export function AiSettingsPanel({ initialSettings }: Props) {
       setDailyImageLimitAdmin(updated.dailyImageLimitAdmin);
       setOpenaiConfigured(updated.openaiConfigured);
       setOpenrouterConfigured(updated.openrouterConfigured);
+      setOpenaiApiKey("");
+      setOpenrouterApiKey("");
       setStatus("AI settings saved.");
+    } catch {
+      setError("AI settings could not be saved.");
+    }
+  }
+
+  async function clearKey(target: "openai" | "openrouter") {
+    setStatus("");
+    setError("");
+    try {
+      const updated = await api.updateAiSettings(
+        target === "openai" ? { openaiApiKey: "" } : { openrouterApiKey: "" }
+      );
+      setOpenaiConfigured(updated.openaiConfigured);
+      setOpenrouterConfigured(updated.openrouterConfigured);
+      setStatus(`${target === "openai" ? "OpenAI" : "OpenRouter"} key cleared.`);
     } catch {
       setError("AI settings could not be saved.");
     }
@@ -71,7 +93,7 @@ export function AiSettingsPanel({ initialSettings }: Props) {
         <SlidersHorizontal className="h-5 w-5 text-coral" />
         <div>
           <h2 className="font-semibold">AI settings</h2>
-          <p className="mt-1 text-sm text-slate-600">Manage non-secret AI provider, model, and request limits.</p>
+          <p className="mt-1 text-sm text-slate-600">Manage AI provider, model, request limits, and provider API keys.</p>
         </div>
       </div>
       <div className="mt-4 grid gap-3 md:grid-cols-2">
@@ -133,6 +155,55 @@ export function AiSettingsPanel({ initialSettings }: Props) {
             className="mt-1 w-full rounded-md border p-3 text-sm"
           />
         </label>
+      </div>
+      <div className="mt-5 rounded-md border border-slate-200 bg-slate-50 p-4">
+        <div className="flex items-center gap-2">
+          <KeyRound className="h-4 w-4 text-coral" />
+          <h3 className="text-sm font-semibold">Provider API keys</h3>
+        </div>
+        <p className="mt-1 text-xs text-slate-500">
+          Stored on the backend and never shown again. Leave a field blank to keep the current key. Saving a new value replaces it.
+        </p>
+        <div className="mt-3 grid gap-3 md:grid-cols-2">
+          <label className="block text-sm font-medium">
+            OpenAI API key{" "}
+            <span className={`text-xs font-normal ${openaiConfigured ? "text-emerald-600" : "text-red-500"}`}>
+              ({openaiConfigured ? "configured" : "missing"})
+            </span>
+            <input
+              type="password"
+              autoComplete="off"
+              value={openaiApiKey}
+              onChange={(event) => setOpenaiApiKey(event.target.value)}
+              placeholder={openaiConfigured ? "••••••••  (saved)" : "sk-..."}
+              className="mt-1 w-full rounded-md border p-3 text-sm"
+            />
+            {openaiConfigured ? (
+              <button type="button" onClick={() => clearKey("openai")} className="mt-1 text-xs text-red-500 underline">
+                Clear stored key
+              </button>
+            ) : null}
+          </label>
+          <label className="block text-sm font-medium">
+            OpenRouter API key{" "}
+            <span className={`text-xs font-normal ${openrouterConfigured ? "text-emerald-600" : "text-red-500"}`}>
+              ({openrouterConfigured ? "configured" : "missing"})
+            </span>
+            <input
+              type="password"
+              autoComplete="off"
+              value={openrouterApiKey}
+              onChange={(event) => setOpenrouterApiKey(event.target.value)}
+              placeholder={openrouterConfigured ? "••••••••  (saved)" : "sk-or-..."}
+              className="mt-1 w-full rounded-md border p-3 text-sm"
+            />
+            {openrouterConfigured ? (
+              <button type="button" onClick={() => clearKey("openrouter")} className="mt-1 text-xs text-red-500 underline">
+                Clear stored key
+              </button>
+            ) : null}
+          </label>
+        </div>
       </div>
       <div className="mt-4 flex flex-wrap items-center gap-3">
         <button type="button" onClick={save} className="inline-flex items-center gap-2 rounded-md bg-mint px-4 py-2 text-sm text-white">

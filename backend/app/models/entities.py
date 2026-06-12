@@ -338,3 +338,39 @@ class AiGeneratedImage(Base):
     provider: Mapped[str] = mapped_column(String(80), default="openai")
     model: Mapped[str] = mapped_column(String(120))
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class GlossaryTerm(Base):
+    __tablename__ = "glossary_terms"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    slug: Mapped[str] = mapped_column(String(160), unique=True, index=True)
+    term: Mapped[str] = mapped_column(String(160))
+    definition: Mapped[str] = mapped_column(Text)
+    category: Mapped[str] = mapped_column(String(60), default="")
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class DocScenario(Base):
+    __tablename__ = "doc_scenarios"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    doc_type: Mapped[str] = mapped_column(String(20))  # keys of testdocs_service.EXPECTED_FIELDS
+    title: Mapped[str] = mapped_column(String(200))
+    brief: Mapped[str] = mapped_column(Text)
+    context: Mapped[str] = mapped_column(Text, default="")
+    source: Mapped[str] = mapped_column(String(20), default="seed")  # seed | ai
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class DocAttempt(Base):
+    __tablename__ = "doc_attempts"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    scenario_id: Mapped[int] = mapped_column(ForeignKey("doc_scenarios.id"))
+    doc_type: Mapped[str] = mapped_column(String(20))
+    submission_json: Mapped[str] = mapped_column(Text)
+    score: Mapped[int] = mapped_column(Integer, default=0)
+    feedback_json: Mapped[str] = mapped_column(Text, default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)

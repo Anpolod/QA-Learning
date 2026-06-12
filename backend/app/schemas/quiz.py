@@ -2,7 +2,7 @@ from pydantic import BaseModel
 
 
 class QuizSubmitRequest(BaseModel):
-    user_id: int = 1
+    user_id: int | None = None  # ignored; attributed to the authenticated user
     answers: dict[int, list[int]]
 
 

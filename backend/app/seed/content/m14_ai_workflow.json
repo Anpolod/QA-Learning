@@ -1,0 +1,297 @@
+[
+  {
+    "title": "AI for test data generation",
+    "short_description": "How to use AI/LLMs to generate realistic, varied, and edge-case test data for functional, boundary, and negative testing.",
+    "learning_goals": "Write effective prompts that produce structured, schema-correct test data (JSON, CSV, SQL).\nUse AI to systematically cover equivalence classes, boundary values, and negative cases instead of only happy-path data.\nValidate and sanitize AI-generated data before loading it into a test environment.\nUnderstand the difference between test data (real-shaped inputs for assertions) and pure mock/placeholder data.",
+    "theory": "Test data generation means producing the input values your tests feed into the system under test: user records, order payloads, form inputs, API request bodies. Good test data exercises the full input space, not just the obvious case. An LLM is useful here because it can produce hundreds of plausible, varied rows in seconds and, when prompted well, will deliberately include the awkward values testers care about: empty strings, very long strings, Unicode, leading zeros, boundary numbers like 0, 1, and 2147483647 (max 32-bit int), and locale-specific formats.\n\nThe core technique is to give the model the schema and the rules, then ask for data that targets specific test-design categories. Equivalence partitioning groups inputs that should be treated the same (e.g., ages 18-64 = 'adult'); boundary value analysis targets the edges of those partitions (17, 18, 64, 65). Instead of writing 'give me some users', you instruct: 'generate 3 valid adults, 2 boundary ages (17 and 18), 2 invalid (negative and 200), and 1 with a Unicode name'. This turns the LLM into a fast partition-and-boundary generator.\n\nA critical rule: never put real production data or real personally identifiable information (PII) into prompts or test environments. AI-generated synthetic data is valuable precisely because it is fake but realistic, letting you avoid GDPR/privacy exposure. Ask for clearly synthetic values (example.com emails, +1-555 phone numbers, fictional names).\n\nAI data is a draft, not a source of truth. Models hallucinate: they invent invalid country codes, produce dates like 2023-02-30, or break your JSON schema. Always validate generated data against the real schema (JSON Schema, a Pydantic model, or DB constraints) and reject or fix bad rows before loading. Treat the LLM as a productivity tool that drafts data you then verify, the same way you would review a junior tester's work.\n\nFor reproducibility, prefer asking the model to output a small generator script (e.g., Python with Faker) rather than a giant static blob. A seeded Faker generator (Faker(); Faker.seed(42)) gives you deterministic, regenerable, unlimited data, which is far more maintainable in CI than a 500-row JSON file the model produced once.",
+    "key_terms": "synthetic data, equivalence partitioning, boundary value analysis, PII, JSON Schema validation, Faker, seed/determinism, edge case, data sanitization",
+    "real_world_example": "A QA engineer must test a registration form before a release. The dev environment database is empty. Instead of hand-typing 20 users, she prompts an LLM with the exact field schema (name, email, age, country ISO code, password) and asks for 15 valid rows plus targeted edge cases: an empty name, a 256-character email, age 17 and 18 (the legal-age boundary), an invalid country code 'XX', and an emoji in the name. She validates the output against the API's JSON Schema, fixes two malformed rows the model produced, and bulk-loads them via the seed endpoint, completing in 10 minutes what used to take an hour.",
+    "step_by_step": "1. Define the exact schema: field names, types, formats, and constraints (e.g., age 0-120, email RFC-5322, country = ISO 3166 alpha-2).\n2. List the test-design targets you want covered: valid partitions, boundary values, and negative/invalid cases.\n3. Write a prompt that includes the schema, the rules, the desired count per category, and the exact output format (\"Return only valid JSON, an array of objects, no prose\").\n4. Explicitly demand synthetic, non-PII values (example.com, +1-555 numbers, fictional names).\n5. Generate the data, then validate it against the real schema (JSON Schema validator, Pydantic, or DB insert in a transaction).\n6. Reject, regenerate, or manually fix any rows that fail validation.\n7. For ongoing use, ask the model to produce a seeded Faker script so you can regenerate unlimited deterministic data instead of relying on a static blob.\n8. Load the validated data into the test environment and run your tests.",
+    "common_mistakes": "Pasting real customer data or production PII into the prompt, creating a privacy/GDPR breach.\nTrusting the output blindly and loading it without schema validation, so malformed rows (bad dates, wrong types) silently corrupt the test run.\nAsking only for 'some test users' and getting 100% happy-path data with no boundaries or negative cases.\nGenerating a giant one-off static dataset instead of a seeded generator, making the data impossible to regenerate or maintain.\nForgetting to constrain output format, so the model wraps JSON in markdown or adds commentary that breaks the parser.",
+    "practical_use_case": "Day to day, QA engineers use AI data generation to seed empty test/staging databases, build CSV fixtures for data-driven tests, create varied payloads for API and form testing, and quickly produce edge-case inputs during exploratory testing of new features.",
+    "summary": "AI can rapidly generate varied, schema-correct, edge-case-rich test data when you give it the schema, the rules, and explicit test-design targets like boundaries and negative cases. Always demand synthetic non-PII values and validate output against the real schema before use. For maintainability, prefer a seeded generator script over a static one-off dump.",
+    "example": "Prompt:\n\"Generate test data as a JSON array. Schema: {name: string 1-50 chars, email: valid email, age: int 0-120, country: ISO 3166 alpha-2}. Use only synthetic data (example.com emails, fictional names). Produce exactly: 3 valid adults, the age boundaries 17 and 18, 1 invalid age (-5), 1 over-long name (>50 chars), 1 Unicode name. Return only JSON, no markdown.\"\n\nA stronger, reusable approach is a seeded generator script:\n```python\nfrom faker import Faker\nimport json\n\nfake = Faker()\nFaker.seed(42)  # deterministic output\n\ndef make_user(age):\n    return {\n        \"name\": fake.name(),\n        \"email\": fake.email(domain=\"example.com\"),\n        \"age\": age,\n        \"country\": fake.country_code(),  # ISO 3166 alpha-2\n    }\n\nvalid = [make_user(fake.random_int(18, 64)) for _ in range(3)]\nboundaries = [make_user(17), make_user(18), make_user(0), make_user(120)]\nnegatives = [make_user(-5), make_user(200)]\n\ndataset = valid + boundaries + negatives\nprint(json.dumps(dataset, ensure_ascii=False, indent=2))\n```",
+    "interactive": "You are testing a 'transfer money' API field amount (a positive number, max 1,000,000.00, two decimal places). Write a prompt that asks an LLM to generate test data covering valid values, all boundaries, and invalid/negative cases. List the specific values you expect it to produce.",
+    "expected_answer": "A strong answer gives the model the exact constraint (positive number, max 1000000.00, 2 decimals) and asks for targeted categories. Expected values to cover: valid mid-range (e.g., 250.00); lower boundary 0.01 and just-below 0.00; upper boundary 1000000.00 and just-over 1000000.01; invalid formats like three decimals (10.999), negative (-50.00), zero (0.00), non-numeric ('abc'), and empty. The prompt must specify output format (JSON) and that only synthetic data is needed. Bonus: notes that each generated value must still be validated against the real constraint before use.",
+    "homework": "Pick a real form or API endpoint you can access (or invent a realistic 5-field schema). Use an LLM to generate a test dataset that covers, per field, at least: valid partition values, both boundaries, and two negative/invalid cases. Validate the output against a JSON Schema or a Pydantic model and document which rows the model got wrong and how you fixed them.",
+    "expected_result": "A submission with: the schema definition, the exact prompt used, the raw AI output, a JSON Schema or Pydantic model, the validation result, and a short list of rows the model produced incorrectly (e.g., invalid date, wrong type) plus the fix. It should demonstrate boundary and negative coverage, not just happy-path rows, and use only synthetic (non-PII) data.",
+    "quiz": [
+      {
+        "question": "Why should you never paste real customer records into an AI prompt to 'make similar test data'?",
+        "answers": [
+          "The model will refuse to respond to any record data",
+          "It exposes real PII and can breach privacy regulations like GDPR",
+          "AI cannot read tabular data at all",
+          "It makes the generated data too realistic to test with"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "An LLM returns a user row with the date 2023-02-30. What is the correct lesson?",
+        "answers": [
+          "Use the row as a valid date test case",
+          "AI output is authoritative, so the date must be real",
+          "AI output must be validated against the real schema/constraints before use because models hallucinate",
+          "Reject the entire dataset and stop using AI for data"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "Which test-design techniques should you explicitly target when prompting for test data?",
+        "answers": [
+          "Equivalence partitioning and boundary value analysis",
+          "Only the happy path",
+          "Load and stress profiles only",
+          "Random sampling with no structure"
+        ],
+        "correct_index": 0
+      },
+      {
+        "question": "Why is asking the model for a seeded Faker generator often better than a one-off static dataset?",
+        "answers": [
+          "Static datasets are illegal to store",
+          "Faker is the only tool that can produce emails",
+          "Seeded generators are deterministic, regenerable, and easier to maintain in CI than a frozen blob",
+          "A generator avoids the need to validate any data"
+        ],
+        "correct_index": 2
+      }
+    ]
+  },
+  {
+    "title": "AI for mock data",
+    "short_description": "Using AI to create mock data, stub responses, and fake service payloads so tests can run without real dependencies.",
+    "learning_goals": "Distinguish mock data, stubs, and mock services, and know when each is appropriate.\nUse AI to generate realistic mock API responses (including error responses) that match a contract or schema.\nWire AI-generated mock responses into tools like a mock server, MSW, WireMock, or a fixtures folder.\nKeep mock data in sync with the real API contract to avoid false-green tests.",
+    "theory": "Mock data is fake data that stands in for a real dependency so a test can run in isolation. The distinction from the previous lesson matters: test data is the input you drive the system with and assert on; mock data is the canned response a dependency gives back so the system under test believes the dependency answered. If your checkout page calls a payment API, you don't want to hit the real bank in every test, you mock its response (for example a JSON body {\"status\": \"approved\", \"txn_id\": \"abc123\"}) so the page behaves as if payment succeeded.\n\nThree related terms: a stub returns a fixed, pre-programmed response; a mock additionally records and verifies how it was called (which arguments, how many times); a mock server (WireMock, json-server, MSW, Prism) is a fake HTTP service that returns your canned payloads on matching requests. AI is useful for the data inside all three: it drafts realistic-looking response bodies fast, including the messy nested shapes real APIs return.\n\nThe most valuable thing AI adds is breadth of failure modes. Beginners mock only the 200 OK happy path. Real systems must handle HTTP 400 (bad request), 401 (unauthorized), 404 (not found), 429 (rate limited), 500 (server error), timeouts, and malformed bodies. You can prompt an LLM: 'given this success response, produce the matching 404, 401, and 500 error bodies in the same envelope format', and it will mirror your structure across the error cases, which is exactly the negative coverage flaky integrations need.\n\nThe biggest risk with mocks is drift: the real API changes (a field is renamed, a status code changes) but your mock still returns the old shape, so your tests stay green while production breaks. This is why contract testing (tools like Pact) and generating mocks from the live OpenAPI/Swagger spec matter. If you feed the model the OpenAPI schema and ask it to generate examples that conform, your mocks stay anchored to the contract instead of to your imagination.\n\nWhen you build mocks, match the real contract exactly: correct status codes, headers (Content-Type: application/json), the real envelope (e.g., {\"data\": ..., \"error\": null}), and realistic latency where it matters. A mock that is too clean (instant, always 200, perfectly formed) hides the very bugs integration tests exist to catch.",
+    "key_terms": "stub, mock, mock server (WireMock/MSW/json-server), fixture, contract testing, OpenAPI/Swagger, response envelope, mock drift, HTTP status codes",
+    "real_world_example": "A QA automating the orders page finds the tests fail intermittently because the real inventory microservice is slow and sometimes down in staging. She extracts the service's OpenAPI spec, asks an LLM to generate conforming mock responses for the success case plus 404 (item not found), 429 (rate limited), and 500 (service error), and loads them into WireMock. Now the orders-page tests run deterministically against the mock, and she has explicit cases proving the UI shows the right message on each failure, something the real flaky service never let her test reliably.",
+    "step_by_step": "1. Identify the dependency to mock (an external API, a microservice, a third-party SDK) and get its contract: OpenAPI/Swagger spec or a real sample response.\n2. Choose a mechanism: a fixtures folder, MSW (frontend), WireMock or json-server (HTTP), or your framework's built-in mocking.\n3. Prompt the LLM with the schema/sample and ask for a realistic success body plus the relevant error bodies (400/401/404/429/500) in the same envelope.\n4. Include correct status codes, headers, and any required fields; demand synthetic values.\n5. Validate the mock against the contract (OpenAPI validator) so it conforms to the real shape.\n6. Wire each mock to its matching request (method + path + optional query/body matchers) in the mock server.\n7. Write tests asserting the system handles each mocked outcome correctly (success and every error).\n8. Schedule a check (or contract test) to catch drift when the real API changes.",
+    "common_mistakes": "Mocking only the 200 happy path and never the error/timeout responses the app must handle.\nLetting mocks drift from the real contract, producing false-green tests while production breaks.\nReturning unrealistic payloads (instant, perfectly clean, missing real fields/headers) that hide integration bugs.\nConfusing mock data with test data, mocking the thing you actually meant to assert on.\nHardcoding the same mock body in many tests instead of centralizing fixtures, so a contract change means editing dozens of files.",
+    "practical_use_case": "QA engineers use AI-generated mocks daily to test against slow, paid, rate-limited, or not-yet-built dependencies; to make integration and UI tests deterministic in CI; and to force error paths (payment declined, service down) that are hard to trigger on demand in a real environment.",
+    "summary": "Mock data is the canned response a dependency returns so tests run in isolation; AI accelerates drafting realistic bodies, especially the error and edge responses beginners forget. Anchor mocks to the real contract (OpenAPI) and watch for drift so your tests don't go false-green. Match real status codes, headers, and envelopes so mocks reveal bugs instead of hiding them.",
+    "example": "Mock responses for a GET /api/orders/{id} endpoint, generated to match the contract and wired into MSW:\n```javascript\nimport { http, HttpResponse } from 'msw'\n\nexport const handlers = [\n  // 200 success\n  http.get('/api/orders/:id', ({ params }) => {\n    if (params.id === '404') {\n      return HttpResponse.json(\n        { data: null, error: { code: 'NOT_FOUND', message: 'Order not found' } },\n        { status: 404 }\n      )\n    }\n    if (params.id === '500') {\n      return HttpResponse.json(\n        { data: null, error: { code: 'INTERNAL', message: 'Server error' } },\n        { status: 500 }\n      )\n    }\n    return HttpResponse.json(\n      {\n        data: { id: params.id, status: 'shipped', total: 129.99, currency: 'USD' },\n        error: null\n      },\n      { status: 200, headers: { 'Content-Type': 'application/json' } }\n    )\n  }),\n]\n```",
+    "interactive": "You have a real success response: {\"data\": {\"userId\": 42, \"plan\": \"pro\"}, \"error\": null} returned with HTTP 200. Write the matching 401 (unauthorized) and 500 (server error) mock bodies that keep the same envelope, and state the status code for each.",
+    "expected_answer": "A correct answer keeps the {data, error} envelope and sets data to null on errors. 401: {\"data\": null, \"error\": {\"code\": \"UNAUTHORIZED\", \"message\": \"Invalid or missing token\"}} with HTTP status 401. 500: {\"data\": null, \"error\": {\"code\": \"INTERNAL\", \"message\": \"Server error\"}} with HTTP status 500. The key points: same envelope shape as the success response, correct distinct status codes, and a machine-readable error code plus human message. Mentioning Content-Type: application/json is a bonus.",
+    "homework": "Take a public or internal API endpoint (or its OpenAPI spec). Use an LLM to generate a complete set of mock responses: one success plus at least three error cases (e.g., 400, 404, 500). Wire them into a mock server or fixtures folder of your choice and write tests that assert the consuming code behaves correctly for each. Note one way the mock could drift from the real API and how you'd detect it.",
+    "expected_result": "A submission containing: the endpoint/contract, the prompt used, the generated success and error mock bodies (correct envelopes and status codes), the mock-server or fixtures wiring, and passing tests covering each case. It should include a short paragraph on a realistic drift scenario (renamed field, changed status) and a detection idea (contract test, regenerating mocks from the spec).",
+    "quiz": [
+      {
+        "question": "What is the difference between test data and mock data?",
+        "answers": [
+          "They are the same thing with different names",
+          "Test data is the input you drive and assert on; mock data is the canned response a dependency returns",
+          "Mock data must always be real production data",
+          "Test data is only for performance tests"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "A 'mock' differs from a plain 'stub' because it additionally:",
+        "answers": [
+          "Connects to the real database",
+          "Returns random data each call",
+          "Records and lets you verify how it was called (arguments, call count)",
+          "Can only return HTTP 200"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "What is 'mock drift' and why is it dangerous?",
+        "answers": [
+          "When mocks load too slowly in CI",
+          "When the mock and the real API diverge, so tests stay green while production breaks",
+          "When mocks consume too much memory",
+          "When the model refuses to generate a mock"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Why prompt the AI to also generate error responses (404, 429, 500) and not just the 200?",
+        "answers": [
+          "Error responses are required by HTTP to exist",
+          "200-only mocks are faster to write",
+          "Real systems must handle failures; mocking only success leaves error-handling paths untested",
+          "The model cannot generate a 200 without the errors"
+        ],
+        "correct_index": 2
+      }
+    ]
+  },
+  {
+    "title": "AI agents in QA workflow",
+    "short_description": "What AI agents are, how they differ from a single LLM call, and where they fit (and don't) in real QA workflows.",
+    "learning_goals": "Explain what an AI agent is and how it differs from a one-shot prompt.\nMap concrete QA tasks where agents help: triage, test generation, log analysis, exploratory crawling.\nDesign a safe agent loop with tools, guardrails, and a human-in-the-loop checkpoint.\nIdentify the failure modes (hallucination, runaway actions, cost) and how to contain them.",
+    "theory": "An AI agent is an LLM placed in a loop with tools and a goal: it observes a situation, decides on an action, calls a tool, reads the result, and repeats until the goal is met or a limit is hit. This is fundamentally different from a single prompt. A one-shot call answers once; an agent can run a real command, read the failing output, adjust, and try again. In QA terms, a plain LLM can suggest a test; an agent can write the test, run it, read the failure, and fix it across several iterations.\n\nThe practical building blocks are: a goal (what success looks like), tools the agent may call (run tests, read a file, query an API, take a screenshot, search the DOM), a memory/context of what it has done, and a stopping condition (goal met, max iterations, or budget exhausted). The popular patterns are ReAct (reason then act, looping) and tool-calling agents. Frameworks like LangChain, the OpenAI/Anthropic tool-use APIs, AutoGen, and browser-driving agents (Playwright + an LLM) implement this loop.\n\nWhere agents genuinely help QA today: bug triage (read a new report, search existing issues, label and route it), test generation and self-healing (regenerate a selector when the UI changed), exploratory crawling (an agent navigates an app, clicking around to surface broken links or console errors), and log/failure analysis (read a CI failure, summarize the root cause, link to the offending commit). These are tasks with clear feedback signals the agent can check against.\n\nThe danger is autonomy without guardrails. An agent that can run shell commands or hit live endpoints can delete data, spam an API, run up token cost in an infinite loop, or confidently report a passing test that never ran. Containment is non-negotiable: scope tools to read-only or a sandbox, cap iterations and budget, require human approval before destructive or production actions (human-in-the-loop), and log every tool call for auditability. Never let an agent act on production without a gate.\n\nThe right mental model is 'a fast, tireless junior tester that needs supervision'. Agents are excellent at the mechanical loop of try-observe-adjust, but they hallucinate, take shortcuts, and miss context a human would catch. You design the workflow so the agent does the legwork and a human approves the consequential decisions, and you measure whether the agent actually saved time versus just adding noise.",
+    "key_terms": "AI agent, agentic loop, tool use/function calling, ReAct pattern, human-in-the-loop, guardrails, sandbox, self-healing tests, autonomy/iteration limit",
+    "real_world_example": "A QA team gets 30+ bug reports a week, many duplicates. They build a triage agent: when a new report arrives, the agent reads it, searches the existing issue tracker via an API tool for similar bugs, proposes a severity and component label, and drafts a 'possible duplicate of #123' comment. Crucially, it never closes or merges anything itself, it posts a suggestion and a human QA lead clicks approve. Triage time per report drops from 8 minutes to under 2, and the human still owns every decision.",
+    "step_by_step": "1. Pick a narrow, well-bounded QA task with a clear success signal (triage a report, analyze a CI failure, crawl for broken links).\n2. Define the goal precisely and what 'done' means.\n3. List the minimal tools the agent needs and scope them tightly (read-only API, sandbox filesystem, a single test command).\n4. Add hard limits: max iterations, max tokens/cost, and a timeout.\n5. Insert a human-in-the-loop checkpoint before any destructive, irreversible, or production action.\n6. Run the agent on a few real cases and read its full tool-call log, not just its final answer.\n7. Evaluate: did it reach the goal, how often was it wrong, did it loop or overspend?\n8. Iterate on the prompt, tools, and limits; only widen autonomy after it proves reliable on the narrow task.",
+    "common_mistakes": "Giving an agent broad, destructive tools (shell, production DB) with no sandbox or approval gate.\nTrusting the agent's final summary without reading its tool-call log, so a 'tests pass' claim that never actually ran goes unnoticed.\nNo iteration or cost cap, letting the agent loop indefinitely and burn tokens/money.\nPointing an agent at a vague, open-ended goal it can't verify, so it produces confident but unchecked output.\nReplacing human judgment entirely instead of keeping a human-in-the-loop for consequential decisions.",
+    "practical_use_case": "In a working QA team, agents assist with bug-report triage and deduplication, CI failure root-cause summaries, exploratory crawling for broken links and console errors, and self-healing of brittle selectors, always under iteration limits and human approval for anything irreversible.",
+    "summary": "An AI agent is an LLM in a loop with tools, memory, and a goal, able to act, observe, and adjust rather than answer once. In QA it shines at bounded, verifiable tasks like triage, failure analysis, and exploratory crawling. Treat it as a supervised junior: scope tools tightly, cap iterations and cost, keep a human-in-the-loop for consequential actions, and always read the tool-call log.",
+    "example": "A minimal, safe agent loop (pseudocode) for triaging a bug report. Note the read-only tool, the iteration cap, and the human gate:\n```python\nMAX_STEPS = 5\ntools = {\n    \"search_issues\": search_issues_readonly,  # read-only API\n}\n\ndef triage_agent(report):\n    context = [f\"Goal: classify and find duplicates for this bug report:\\n{report}\"]\n    for step in range(MAX_STEPS):\n        decision = llm_decide(context, tools.keys())  # returns action + args\n        if decision.action == \"final\":\n            break\n        result = tools[decision.action](**decision.args)\n        context.append(f\"Tool {decision.action} -> {result}\")\n\n    proposal = {\n        \"severity\": decision.severity,\n        \"component\": decision.component,\n        \"possible_duplicate\": decision.duplicate_id,\n    }\n    # Human-in-the-loop: agent suggests, human approves. It never closes/merges itself.\n    return require_human_approval(proposal)\n```",
+    "interactive": "Design (in words) a safe AI agent to analyze failing CI test runs. Specify: the goal, the exact tools it may use, the guardrails/limits, and where a human must approve. Keep it tightly scoped.",
+    "expected_answer": "A strong answer defines a narrow goal (summarize the root cause of a CI failure and link the likely offending commit). Tools are read-only: read the CI log, read the diff/git blame, search prior similar failures. Guardrails: max iterations (e.g., 5), token/cost cap, timeout, no write access, no ability to rerun against production. Human-in-the-loop: the agent only posts a suggested root-cause comment; a human decides whether to reopen, assign, or revert. The answer should note reading the agent's tool-call log to verify it didn't hallucinate the cause.",
+    "homework": "Choose one QA task suitable for an agent (bug triage, CI failure analysis, broken-link crawling, or selector self-healing). Write a one-page design: the goal, the tool list with scopes, the guardrails (iteration/cost/timeout limits, sandbox), the human-in-the-loop checkpoints, and the failure modes you're guarding against. If you can, prototype it with any agent framework and report what its tool-call log revealed.",
+    "expected_result": "A one-page design naming a narrow task, a minimal and tightly-scoped tool list, explicit limits (max steps, cost cap, timeout), a clear human-approval gate before irreversible actions, and a list of failure modes (hallucination, runaway loop, cost, false 'pass'). A prototype, if included, should show the tool-call log and an honest assessment of how often the agent was right.",
+    "quiz": [
+      {
+        "question": "What distinguishes an AI agent from a single LLM prompt?",
+        "answers": [
+          "An agent uses a bigger model",
+          "An agent loops: it acts via tools, observes results, and adjusts toward a goal",
+          "An agent never hallucinates",
+          "An agent only works in the browser"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Why must you read an agent's tool-call log rather than only its final summary?",
+        "answers": [
+          "Logs are required for billing",
+          "The final summary is always wrong",
+          "An agent may confidently claim success (e.g., 'tests pass') without the action actually happening",
+          "Tool logs run faster than summaries"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "Which is the safest scoping for an agent's tools in production QA?",
+        "answers": [
+          "Full shell and production DB write access for flexibility",
+          "Read-only/sandboxed tools with iteration and cost limits, plus human approval for irreversible actions",
+          "No limits, but a longer timeout",
+          "Only allow it to run once with no tools at all"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Which QA task is the BEST early fit for an agent?",
+        "answers": [
+          "Autonomously deleting flaky tests from production",
+          "Approving releases without review",
+          "Triaging and deduplicating incoming bug reports with a human approving the action",
+          "Setting employee salaries"
+        ],
+        "correct_index": 2
+      }
+    ]
+  },
+  {
+    "title": "How to verify AI-generated tests",
+    "short_description": "A disciplined process for reviewing AI-written tests so they genuinely catch bugs instead of producing false confidence.",
+    "learning_goals": "Detect tautological and assertion-free tests that always pass.\nConfirm a test actually fails when the behavior it claims to check is broken (mutation/sabotage check).\nReview AI tests for correct selectors, real assertions, proper waits, and meaningful coverage.\nUse coverage and mutation tools as evidence, while understanding their limits.",
+    "theory": "AI can write tests fast, but a test that always passes is worse than no test: it gives false confidence. The core verification question is not 'does this test pass?' but 'will this test fail when the thing it checks is broken?'. A test that can never fail is not testing anything. Much of verifying AI-generated tests is hunting for tests that look legitimate but assert nothing meaningful.\n\nThe classic AI failure modes are concrete. A tautological assertion like assertEqual(2, 2) or expect(true).toBe(true) always passes. A test that calls the code but has no assertion at all 'passes' simply because nothing threw. An assertion that checks the function's output against the function's own output (or a value the model hardcoded to match buggy behavior) locks in the bug. AI also loves brittle, made-up selectors (#submit-btn that doesn't exist) and missing waits, producing tests that are flaky rather than wrong, which is harder to spot.\n\nThe single most powerful verification technique is sabotage, the manual mutation test: temporarily break the production code the test claims to cover, then run the test. If it still passes, the test is worthless and must be fixed. For example, if a test claims to verify that login rejects a wrong password, change the auth code to accept everything; a real test now turns red. This 'red proves it works' step catches the majority of fake AI tests in seconds.\n\nBeyond sabotage, read the test like a code reviewer. Check that assertions target the actual behavior and expected values (not just 'response is truthy'); that selectors and endpoints really exist; that boundary and negative cases are covered, not just the happy path; that waits are explicit rather than sleeps; and that the test is independent (no hidden order dependence on another test). AI tests frequently over-mock, stubbing the very thing under test so the assertion never exercises real logic.\n\nTooling provides evidence but not proof. Line/branch coverage tells you the code was executed, not that it was meaningfully asserted, so 100% coverage can still hide assertion-free tests. Mutation testing tools (Stryker for JS/TS, mutmut/Cosmic Ray for Python, PIT for Java) automate the sabotage idea at scale: they mutate the code and check whether tests catch it, producing a mutation score that is a far better quality signal than coverage. Use coverage to find untested code and mutation testing to judge whether the tests that exist are real.",
+    "key_terms": "tautological test, assertion-free test, mutation testing, mutation score, sabotage/red-green check, false positive (false green), over-mocking, code coverage, flaky test",
+    "real_world_example": "A developer hands a QA engineer 40 AI-generated unit tests; all 40 pass, and coverage reads 92%. Suspicious, the QA picks the test named test_rejects_invalid_coupon and sabotages the code: she makes apply_coupon accept every code. The test still passes green, revealing it never asserted the rejection (it only checked the response wasn't null). She finds eight more such tests by running a mutation tool (mutmut), which reports a mutation score of just 41% despite 92% coverage. She rewrites the hollow tests so each one fails when its target behavior is broken.",
+    "step_by_step": "1. Read each AI test and identify exactly what behavior it claims to verify.\n2. Scan for red flags: missing assertions, tautologies (expect(true).toBe(true)), 'truthy' checks, hardcoded expected values copied from current output, and made-up selectors/endpoints.\n3. Run the suite and confirm tests pass for the right reason, not because nothing throws.\n4. Sabotage: break the production code the test covers, rerun, and confirm the test turns red. If it stays green, the test is fake, fix it.\n5. Restore the code and re-confirm green.\n6. Check coverage to find untested paths, but don't trust it as quality proof.\n7. Run a mutation testing tool (Stryker/mutmut/PIT) to get a mutation score; investigate surviving mutants.\n8. Verify non-happy-path coverage (boundaries, errors), test independence, and that nothing the test claims to check is over-mocked.",
+    "common_mistakes": "Accepting 'all green' as proof of quality without ever checking a test can fail.\nTrusting high code coverage as evidence the tests are meaningful (coverage ignores assertions).\nLeaving assertion-free or tautological tests in the suite because they pass.\nNot noticing the AI hardcoded the expected value to match current (possibly buggy) output, locking in the bug.\nIgnoring over-mocking, where the AI stubbed the exact unit under test so the real logic is never exercised.",
+    "practical_use_case": "Whenever AI (or Copilot-style tooling) generates tests, QA engineers run this verification pass before the tests are merged: sabotage-checking critical tests, reviewing assertions and selectors, and using mutation testing on important modules so the suite provides real protection instead of false green.",
+    "summary": "An AI test is only valuable if it fails when the behavior it covers is broken; many AI tests pass for the wrong reason. Verify by reading assertions critically and, above all, by sabotaging the code to prove the test turns red. Use coverage to find gaps and mutation testing to judge whether existing tests are genuine, never treating 'all green' as proof.",
+    "example": "A hollow AI test versus a real one, and the sabotage check that exposes the difference:\n```python\n# HOLLOW: passes even when discounting is completely broken\ndef test_apply_discount_hollow():\n    result = apply_discount(price=100, percent=20)\n    assert result is not None        # truthy-only: asserts nothing meaningful\n\n# REAL: pins the exact expected value, will fail if logic breaks\ndef test_apply_discount_real():\n    assert apply_discount(price=100, percent=20) == 80.0\n    assert apply_discount(price=100, percent=0) == 100.0   # boundary\n    assert apply_discount(price=100, percent=100) == 0.0   # boundary\n\n# SABOTAGE CHECK: temporarily break the source to verify the test catches it\n# def apply_discount(price, percent):\n#     return price            # <-- bug: ignores the discount\n# Now run the suite:\n#   test_apply_discount_real   -> FAILS (good, it works)\n#   test_apply_discount_hollow -> PASSES (bad, it proves nothing)\n```",
+    "interactive": "You are given this AI-generated test: `def test_create_user(): user = create_user('alice'); assert user`. Explain why it is weak and rewrite it into a meaningful test. Then describe the sabotage check you'd run to prove your version works.",
+    "expected_answer": "Weakness: `assert user` is a truthy-only check; it passes as long as create_user returns anything non-null, even if the user's name, id, or persistence is wrong. A stronger version asserts the actual fields and side effects: assert user.name == 'alice'; assert user.id is not None; and ideally that the user is retrievable (get_user(user.id).name == 'alice'). The sabotage check: temporarily make create_user ignore the name (e.g., always set name='bob') or return a stub without persisting; rerun. The original test still passes (proving it was hollow), while the rewritten test turns red, proving it actually verifies behavior. Restore the code and confirm green.",
+    "homework": "Generate 10 tests for a small module using any AI tool. Run the suite, then verify each test by sabotaging the relevant production code and recording whether the test correctly turned red. Run a mutation testing tool (Stryker, mutmut, or PIT) and report the mutation score versus the coverage percentage. Rewrite every test that stayed green during sabotage.",
+    "expected_result": "A submission listing the 10 AI tests, a table of which ones failed correctly under sabotage and which were hollow, the coverage percentage and the mutation score side by side (showing why coverage alone is misleading), and the rewritten versions of the hollow tests with real assertions. It should include at least one boundary/negative case the original AI tests missed.",
+    "quiz": [
+      {
+        "question": "The most important question when verifying an AI-generated test is:",
+        "answers": [
+          "Does it pass?",
+          "Is it short?",
+          "Will it fail when the behavior it checks is broken?",
+          "Did AI write it quickly?"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "Why is 100% code coverage NOT proof that AI tests are good?",
+        "answers": [
+          "Coverage tools are usually buggy",
+          "Coverage shows code was executed, not that it was meaningfully asserted",
+          "100% coverage is impossible to reach",
+          "Coverage only measures performance"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "What does the 'sabotage' (manual mutation) check involve?",
+        "answers": [
+          "Deleting the test and seeing if the build fails",
+          "Breaking the production code the test covers and confirming the test turns red",
+          "Running the test 100 times to check for flakiness",
+          "Asking the AI if the test is correct"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Which is a classic hollow AI test pattern?",
+        "answers": [
+          "assert apply_discount(100, 20) == 80.0",
+          "Asserting both boundaries and the negative case",
+          "assert result is not None as the only assertion",
+          "Using an explicit wait before asserting"
+        ],
+        "correct_index": 2
+      }
+    ]
+  },
+  {
+    "title": "Final AI QA project",
+    "short_description": "A capstone project where you apply AI across a full QA workflow, generating data, mocks, and tests, then verifying them and reporting honestly.",
+    "learning_goals": "Integrate AI-assisted test data, mock data, and test generation into one coherent QA deliverable.\nVerify every AI-produced artifact (sabotage tests, validate data/mocks against contracts) before trusting it.\nDocument prompts, AI outputs, your corrections, and where AI helped versus hurt.\nProduce a professional test report and a short retrospective on AI's real value in your workflow.",
+    "theory": "This capstone ties together the whole module. You will pick one realistic application under test (a small web app, an API, or a feature like login/checkout) and run a complete AI-assisted QA cycle on it, then prove the results are trustworthy. The point is not to show AI can produce artifacts, it obviously can, but to demonstrate the senior skill: using AI for speed while keeping a rigorous verification gate so nothing false-green reaches the report.\n\nScope. Choose a target with at least one happy path and a few error paths (e.g., a login flow with valid, invalid-password, and locked-account cases, or a /orders API with 200/404/500). Keep it small enough to finish but real enough to have boundaries and failure modes. Define clear acceptance criteria up front: what 'tested' means for this feature.\n\nDeliverables. (1) An AI-generated test dataset covering valid partitions, boundaries, and negative cases, validated against the schema. (2) AI-generated mock responses for at least one dependency, including success and error envelopes matching the contract. (3) An AI-generated automated test suite (unit, API, or UI) that you have verified by sabotage and, where possible, mutation testing. (4) A test report. (5) A prompt log showing each prompt, the raw AI output, and your corrections. (6) A short retrospective.\n\nAcceptance criteria for the project itself. Test data must pass schema validation and visibly include boundaries and negatives, not just happy path. Mocks must match the real contract (status codes, envelope) and cover error cases. Every test in the suite must demonstrably fail when its target behavior is sabotaged, no hollow or tautological tests survive. The report must distinguish real defects from test artifacts. The prompt log must be honest about where the AI was wrong (hallucinated fields, fake selectors, assertion-free tests) and how you fixed it.\n\nThis mirrors real on-the-job expectations. Teams increasingly let AI draft data, mocks, and tests; what makes you employable is owning the verification and being able to say, with evidence, 'these tests genuinely protect this feature'. A great submission reads like work a lead QA would approve and merge.",
+    "key_terms": "capstone, acceptance criteria, scope, test report, prompt log, verification gate, sabotage/mutation check, contract conformance, retrospective",
+    "real_world_example": "A junior QA is asked to fully test a new 'apply coupon' feature in one sprint. She uses AI to generate coupon test data (valid codes, expired codes, the boundary of 0% and 100% discount, malformed codes), AI-generated mocks for the pricing service (200 plus 404 unknown-coupon and 500), and an AI-written pytest suite. Before reporting done, she sabotages the discount logic and finds three AI tests stay green, so she rewrites them. Her final report lists two real bugs found, the verified test suite, and a prompt log noting that the AI invented a non-existent discount field she had to remove. The lead merges it as-is.",
+    "step_by_step": "1. Choose the application/feature under test and write its acceptance criteria (what 'tested' means).\n2. Define the schema(s) and the dependency you'll mock; note the contract (OpenAPI or sample responses).\n3. Use AI to generate test data covering valid, boundary, and negative cases; validate it against the schema and fix bad rows.\n4. Use AI to generate mock responses for the dependency (success + error envelopes); confirm they match the contract.\n5. Use AI to generate the automated test suite for the feature.\n6. Verify the suite: run it, then sabotage the production code and confirm each test turns red; run a mutation tool if possible. Rewrite any hollow tests.\n7. Execute the full suite against the app and capture results.\n8. Write the test report (scope, what was tested, defects found, pass/fail, residual risk).\n9. Assemble the prompt log (prompt, raw output, your correction) and a short retrospective on where AI helped and hurt.\n10. Package everything into one clearly structured deliverable.",
+    "common_mistakes": "Submitting AI artifacts without verifying them, so hollow tests and contract-mismatched mocks slip through.\nOnly covering the happy path because that's what the AI produced by default.\nHiding the AI's mistakes instead of documenting them in the prompt log (the corrections are the most impressive part).\nScoping too large and finishing nothing, or too small (one happy-path test) with no boundaries or errors.\nConfusing a test artifact (a flaky or wrong test) with a real product defect in the report.",
+    "practical_use_case": "This is exactly the kind of end-to-end deliverable a QA produces when AI-assisting the testing of a new feature: fast AI-drafted data, mocks, and tests, all passed through a verification gate, then a credible report a team can act on.",
+    "summary": "The capstone proves you can use AI across the QA workflow, data, mocks, and tests, while owning the verification that makes the output trustworthy. Cover happy, boundary, and negative cases; validate data and mocks against contracts; sabotage-check every test; and report defects honestly. The deliverable should read like merge-ready work, with a prompt log that candidly shows where AI was wrong and how you corrected it.",
+    "example": "A suggested deliverable structure (folder + report skeleton) you can copy:\n```text\nfinal-ai-qa-project/\n  README.md                  # scope + acceptance criteria\n  data/\n    users.json               # AI-generated, schema-validated (boundaries + negatives)\n    schema.json              # JSON Schema used to validate\n  mocks/\n    pricing_service.js       # success + 404 + 500, contract-matching envelopes\n  tests/\n    test_coupon.py           # AI-generated, sabotage-verified\n  report/\n    test_report.md\n    prompt_log.md            # prompt -> raw AI output -> my correction\n    retrospective.md\n```\nTest report skeleton (report/test_report.md):\n```markdown\n# Test Report: Apply Coupon\n## Scope & Acceptance Criteria\n- Valid coupon applies correct discount; invalid/expired rejected; boundaries 0% and 100% handled.\n## Test Data\n- 12 rows, schema-validated. Includes boundaries (0%, 100%) and negatives (expired, malformed).\n## Mocks\n- Pricing service: 200 (priced), 404 (unknown coupon), 500 (service error) - matches contract.\n## Results\n- 14 tests, 13 pass, 1 fail.\n## Defects Found\n- BUG-1 (High): 100% coupon yields negative total instead of 0.00.\n- BUG-2 (Medium): expired coupon still applies discount.\n## Verification\n- All tests sabotage-checked; mutation score 78% (mutmut). 3 hollow AI tests rewritten.\n## Residual Risk\n- Concurrency of two coupons not yet covered.\n```",
+    "interactive": "Draft the scope and acceptance criteria for your final project in 6-10 lines: name the feature under test, list the happy/boundary/negative cases you'll cover, the dependency you'll mock, and how you'll verify the AI-generated tests.",
+    "expected_answer": "A strong answer names a concrete, appropriately-sized feature (e.g., login or apply-coupon), lists specific cases across all three categories (happy: valid login; boundary: e.g., min/max password length; negative: wrong password, locked account), identifies one dependency to mock with its error cases (e.g., auth service 200/401/500), and states the verification method explicitly: schema-validate the data, contract-check the mocks, and sabotage-verify (plus mutation test if possible) every generated test so none is hollow. It should read like acceptance criteria a lead could sign off on, not a vague intention.",
+    "homework": "Complete the full final AI QA project on a feature of your choice. Deliver: (1) AI-generated, schema-validated test data with boundaries and negatives; (2) AI-generated contract-matching mocks with error cases; (3) an AI-generated test suite you have sabotage-verified; (4) a test report with real defects; (5) a prompt log showing AI outputs and your corrections; (6) a one-page retrospective on where AI helped and where it produced wrong output.",
+    "expected_result": "A single, well-organized deliverable meeting the acceptance criteria: data passes schema validation and visibly covers boundaries/negatives; mocks match the contract and include error responses; every test demonstrably fails under sabotage (no hollow tests), ideally backed by a mutation score; the report separates real defects from test artifacts and states residual risk; and the prompt log honestly documents at least two AI mistakes and the fixes. Overall it should look like merge-ready professional QA work.",
+    "quiz": [
+      {
+        "question": "What is the central skill this capstone is meant to demonstrate?",
+        "answers": [
+          "That AI can generate artifacts quickly",
+          "Using AI for speed while owning a rigorous verification gate so nothing false-green ships",
+          "Writing the longest possible test suite",
+          "Avoiding AI entirely in QA work"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Which deliverable best shows senior-level judgment?",
+        "answers": [
+          "A screenshot of all tests passing",
+          "A prompt log that honestly documents the AI's mistakes and your corrections",
+          "The largest possible dataset",
+          "A claim that AI made no errors"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Before reporting the project 'done', every generated test must:",
+        "answers": [
+          "Run in under one second",
+          "Be written without any mocks",
+          "Demonstrably fail when its target behavior is sabotaged",
+          "Have 100% line coverage"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "In the test report, what must be kept distinct?",
+        "answers": [
+          "Real product defects versus test artifacts (flaky/wrong tests)",
+          "Morning runs versus afternoon runs",
+          "The number of prompts versus tokens used",
+          "Frontend versus backend file names"
+        ],
+        "correct_index": 0
+      }
+    ]
+  }
+]

@@ -32,6 +32,7 @@ export type Lesson = {
   practical_use_case: string;
   summary: string;
   order_index: number;
+  next_lesson_id?: number | null;
   slides: Slide[];
   examples: Example[];
   interactive_tasks: InteractiveTask[];

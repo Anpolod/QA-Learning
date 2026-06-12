@@ -21,10 +21,13 @@ export default function LoginPage() {
     setError("");
     try {
       const response = await api.login({ email, password });
-      localStorage.setItem("qa_learning_token", response.accessToken);
+      // Token is set by the backend as an httpOnly cookie; we only keep the
+      // non-sensitive user object for UI state.
       localStorage.setItem("qa_learning_user", JSON.stringify(response.user));
+      window.dispatchEvent(new Event("auth-change"));
       setStatus(`Logged in as ${response.user.email}`);
-      router.replace(response.user.role === "admin" ? "/admin" : "/dashboard");
+      const next = new URLSearchParams(window.location.search).get("next");
+      router.replace(next || (response.user.role === "admin" ? "/admin" : "/dashboard"));
     } catch {
       setError("Login failed. Check your email and password.");
     } finally {

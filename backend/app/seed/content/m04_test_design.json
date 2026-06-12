@@ -1,0 +1,356 @@
+[
+  {
+    "title": "Test design techniques",
+    "short_description": "An overview of why test design techniques exist and how black-box, white-box, and experience-based techniques help you build effective test cases from limited time.",
+    "learning_goals": "Explain the purpose of test design techniques and why exhaustive testing is impossible.\nDistinguish between black-box, white-box, and experience-based techniques and name examples of each.\nChoose an appropriate technique for a given requirement (e.g., a numeric field, a form with dependent rules, a multi-state workflow).\nDerive test conditions and test cases systematically instead of guessing.",
+    "theory": "A test design technique is a structured method for deriving test cases from a requirement, model, or piece of code. The core problem they solve is that exhaustive testing is impossible: a single text field accepting up to 50 characters from a 100-character alphabet has more possible inputs than there are atoms you could ever type. Techniques let you cover the most important cases with a small, defensible set of tests rather than guessing.\n\nTechniques are usually grouped into three families. Black-box (specification-based) techniques derive tests from the requirements and external behavior without looking at the code; examples include equivalence partitioning, boundary value analysis, decision tables, state transition testing, and pairwise testing. White-box (structure-based) techniques derive tests from the internal structure, aiming at coverage such as statement, branch, or path coverage. Experience-based techniques rely on the tester's knowledge: error guessing, exploratory testing, and checklist-based testing.\n\nWhy this matters on the job: techniques make your testing repeatable, reviewable, and measurable. If a teammate asks 'why did you pick these 6 cases?', a technique gives a concrete answer ('these are the equivalence classes plus their boundaries'). They also reduce redundancy, two test cases in the same equivalence class rarely add value, and they expose gaps you would otherwise miss, such as the empty input or the maximum-length value.\n\nChoosing a technique depends on the shape of the requirement. A numeric range (age 18-65) screams boundary value analysis. A field with discrete valid/invalid groups calls for equivalence partitioning. Many interdependent business rules (discount depends on membership AND order total AND coupon) fit a decision table. A feature that behaves differently based on its current status (order: New, Paid, Shipped, Cancelled) needs state transition testing. A configuration screen with many independent dropdowns is a candidate for pairwise testing.\n\nIn practice you combine techniques. A registration form might use equivalence partitioning and boundary analysis on the age field, a decision table for the password rules, and pairwise testing across the optional preference dropdowns. The goal is never to apply one technique dogmatically, but to pick the smallest set of cases that gives you confidence the feature works.",
+    "key_terms": "test design technique, black-box testing, white-box testing, experience-based testing, exhaustive testing, test condition, coverage, equivalence partitioning",
+    "real_world_example": "You are handed a user story: 'As a user, I can enter a discount code at checkout.' With no technique you might write 'enter a code, see discount applied' and stop. Applying techniques, you partition codes into valid, expired, already-used, and malformed; you boundary-test the code length (min 6, max 12 characters); and you build a small decision table combining 'code valid?' with 'minimum order met?'. You go from 1 vague case to roughly 10 targeted, justifiable cases that actually find the bug where an expired code still applies the discount.",
+    "step_by_step": "1. Read the requirement and underline every input, output, rule, and state mentioned.\n2. Classify the requirement's shape: numeric range, discrete groups, interacting rules, multiple states, or many independent options.\n3. Pick the matching technique (range -> boundary analysis, groups -> equivalence partitioning, rules -> decision table, states -> state transition, options -> pairwise).\n4. Derive the test conditions using that technique (partitions, boundaries, rule combinations, transitions, or pairs).\n5. Turn each condition into a concrete test case with input, steps, and expected result.\n6. Review for gaps: did you cover empty, maximum, invalid, and error paths?\n7. Note which technique you used so the test set is reviewable.",
+    "common_mistakes": "Treating 'click around and see' as a technique instead of using a structured method.\nApplying only one technique when the requirement clearly needs two or three combined.\nWriting many redundant tests inside the same equivalence class while ignoring boundaries and invalid inputs.\nConfusing black-box and white-box: trying to design 'branch coverage' tests without access to the code.\nForgetting experience-based techniques and skipping exploratory testing entirely, missing bugs the spec never described.",
+    "practical_use_case": "Every time you receive a user story or requirement and must decide what to test, you reach for design techniques to convert vague acceptance criteria into a concrete, defensible set of test cases that fits a sprint's time budget.",
+    "summary": "Test design techniques turn the impossible goal of exhaustive testing into a manageable, justifiable set of cases. They fall into black-box, white-box, and experience-based families, and you choose among them based on the shape of the requirement, often combining several. Mastering them makes your testing repeatable, reviewable, and far more likely to find real defects.",
+    "example": "Requirement: 'Age field accepts whole numbers 18-65; users outside this range see an error.'\n\nTechnique selection and resulting conditions:\n- Equivalence partitioning: invalid-low (<18), valid (18-65), invalid-high (>65), non-numeric.\n- Boundary value analysis: 17, 18, 65, 66.\n\nResulting test cases:\n| ID  | Input | Technique            | Expected result            |\n|-----|-------|----------------------|----------------------------|\n| T1  | 17    | Boundary (just below)| Error: must be 18 or older |\n| T2  | 18    | Boundary (min valid) | Accepted                   |\n| T3  | 40    | Equiv class (valid)  | Accepted                   |\n| T4  | 65    | Boundary (max valid) | Accepted                   |\n| T5  | 66    | Boundary (just above)| Error: must be 65 or under |\n| T6  | abc   | Equiv class (invalid)| Error: enter a number      |",
+    "interactive": "Given this requirement: 'A username must be 3 to 20 characters; usernames already taken are rejected; usernames with spaces are rejected.' Name which test design technique(s) you would apply and list the test conditions (not full cases) you would derive.",
+    "expected_answer": "Use equivalence partitioning and boundary value analysis on length, plus a small decision table or partitioning for the rules. Conditions: lengths 2 (invalid), 3 (min valid), 20 (max valid), 21 (invalid); a unique available username (valid) vs an already-taken username (invalid); a username containing a space (invalid). A strong answer recognizes that length is a range (boundaries) while 'taken' and 'contains space' are discrete rules better handled by partitioning or a decision table.",
+    "homework": "Pick any real form you use online (a sign-up, checkout, or booking form). Choose three fields. For each field, identify the requirement's shape, state which technique you would apply and why, and derive the test conditions. Compile this into a one-page table.",
+    "expected_result": "A one-page table listing three fields, each with: the inferred requirement, the chosen technique with a one-line justification, and at least three derived test conditions covering valid, invalid, and boundary or rule-edge cases. The justification should clearly map the field's shape (range, groups, rules) to the technique.",
+    "quiz": [
+      {
+        "question": "Why do test design techniques exist?",
+        "answers": [
+          "Because exhaustive testing of all possible inputs is practically impossible, so we need a structured way to select the most valuable cases",
+          "Because automation tools require them as input files",
+          "Because they guarantee zero defects ship to production",
+          "Because regulators forbid manual testing without them"
+        ],
+        "correct_index": 0
+      },
+      {
+        "question": "Which of these is a black-box (specification-based) technique?",
+        "answers": [
+          "Statement coverage",
+          "Branch coverage",
+          "Equivalence partitioning",
+          "Path coverage"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "A checkout has discounts that depend on membership level AND order total AND coupon validity. Which technique fits best?",
+        "answers": [
+          "Boundary value analysis alone",
+          "Decision table testing",
+          "State transition testing",
+          "Error guessing"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Which statement about combining techniques is correct?",
+        "answers": [
+          "You must apply exactly one technique per feature to keep tests clean",
+          "Techniques are mutually exclusive and cannot be mixed",
+          "Real features often need several techniques combined, chosen by the shape of each requirement",
+          "White-box and black-box techniques can never appear in the same test plan"
+        ],
+        "correct_index": 2
+      }
+    ]
+  },
+  {
+    "title": "Equivalence partitioning",
+    "short_description": "How to split an input domain into classes that behave the same, so one representative test per class gives broad coverage with few cases.",
+    "learning_goals": "Divide an input domain into valid and invalid equivalence classes.\nSelect one representative value per class and explain why testing more values in the same class is redundant.\nApply partitioning to numeric ranges, sets of options, and string/format inputs.\nCombine equivalence partitioning with boundary value analysis for stronger coverage.",
+    "theory": "Equivalence partitioning (EP) is a black-box technique that divides the set of possible inputs into partitions, or classes, where the system is expected to behave the same way for every value in the class. The key assumption is that if one value in a class is processed correctly, the others probably will be too, so you only need one representative per class. This collapses a huge input space into a handful of tests.\n\nClasses come in two flavors: valid (values the system should accept) and invalid (values it should reject or error on). For an age field accepting 18-65, the valid class is 18-65 and there are at least two invalid classes: below 18 and above 65. You always test invalid classes too, because rejecting bad input correctly is part of the requirement. A common beginner error is testing only the happy path and forgetting the invalid partitions.\n\nPartitions are not only numeric ranges. For a payment-method dropdown with options Card, PayPal, and Bank transfer, each accepted option can be its own valid class, and 'an unsupported method' is an invalid class. For a string like a country code, valid might be any ISO-3166 two-letter code and invalid might be 'wrong length', 'contains digits', or 'lowercase'. The skill is identifying the rule that makes values behave the same.\n\nWhy it matters: EP gives you a defensible, minimal test set. Instead of testing ages 18, 19, 20, 21... up to 65 (48 cases that all exercise the same logic), you test one valid value plus the invalid classes, perhaps 4 cases. That frees time for boundaries and other techniques. It also makes coverage explicit: you can state 'every equivalence class has at least one test', which is a meaningful coverage goal.\n\nEP is almost always paired with boundary value analysis (BVA), because the most common defects sit at the edges of partitions, not in the middle. EP tells you the classes; BVA tells you to test the values right at the class boundaries (17/18 and 65/66). Use EP first to find the classes, then BVA to harden the edges. For a single value chosen inside a class, pick something clearly in the middle (e.g., 40 for the 18-65 range) to avoid accidentally landing on a boundary.",
+    "key_terms": "equivalence partitioning, equivalence class, valid partition, invalid partition, representative value, input domain, partition coverage, black-box testing",
+    "real_world_example": "A shipping cost calculator charges by weight: 0-1 kg = $5, 1.01-5 kg = $10, 5.01-20 kg = $20, and rejects anything over 20 kg or negative. You identify five partitions: negative (invalid), 0-1, 1.01-5, 5.01-20, and >20 (invalid). Rather than testing dozens of weights, you pick 0.5, 3, 12, plus -2 and 25. Five tests cover every pricing tier and both error paths, and you'd then add boundaries (1.00, 1.01, 5.00, 5.01, 20.00, 20.01) with BVA.",
+    "step_by_step": "1. List the input and its full domain (all possible values, including invalid ones).\n2. Identify the rules that change behavior (ranges, allowed options, format constraints).\n3. Draw the partitions: one or more valid classes and all the invalid classes.\n4. For each class, pick a single representative value clearly inside it (not on a boundary).\n5. Write one test case per class with the expected accept/reject behavior.\n6. Cross-check that every invalid class is covered, not just the happy path.\n7. Hand off the partition edges to boundary value analysis for follow-up tests.",
+    "common_mistakes": "Testing only valid partitions and forgetting the invalid classes (negative, too large, wrong format).\nPicking a representative value that accidentally sits on a boundary, mixing up EP with BVA.\nCreating multiple redundant tests inside one class, adding effort without new coverage.\nMissing hidden partitions, e.g., treating 'any non-numeric input' as one class when 'empty', 'letters', and 'symbols' may be handled differently.\nForgetting output partitions, sometimes the meaningful classes are in the result (e.g., discount tiers), not just the input.",
+    "practical_use_case": "Whenever a field accepts a range or a set of categories, login attempts, age, file size, subscription tier, you use EP to reduce dozens of candidate values to a small representative set before writing test cases.",
+    "summary": "Equivalence partitioning splits inputs into classes that behave identically, so one representative value per class covers the whole class. Always test invalid classes, not just valid ones, and pick representatives clearly inside each class. EP pairs naturally with boundary value analysis, which targets the edges where defects most often hide.",
+    "example": "Requirement: 'Password length must be 8-64 characters.'\n\nPartitions:\n- Invalid (too short): length 0-7\n- Valid: length 8-64\n- Invalid (too long): length 65+\n\nTest cases (EP representatives):\n| ID | Input length | Class            | Expected result        |\n|----|--------------|------------------|------------------------|\n| P1 | 4            | Too short (inv.) | Rejected: min 8 chars  |\n| P2 | 20           | Valid            | Accepted               |\n| P3 | 80           | Too long (inv.)  | Rejected: max 64 chars |\n\nFollow-up with BVA would add lengths 7, 8, 64, 65.",
+    "interactive": "A coupon field accepts codes of exactly 10 alphanumeric characters; anything else is rejected. List the equivalence classes (valid and invalid) and give one representative value for each.",
+    "expected_answer": "Valid class: a 10-character alphanumeric code, e.g., 'SAVE2026XY' -> accepted. Invalid classes: too short (e.g., 'ABC123' / 6 chars) -> rejected; too long (11+ chars, e.g., 'SAVE2026XYZ') -> rejected; contains disallowed characters (e.g., 'SAVE-2026!' with symbols) -> rejected; empty input -> rejected. A strong answer separates length-based invalid classes from character-based invalid classes rather than lumping all 'bad' inputs into one class.",
+    "homework": "Take a real numeric or category-based input from an app you use (e.g., quantity selector, ticket count, weight, or a plan selector). Define its full input domain, list all valid and invalid equivalence classes, choose representatives, and write the resulting test cases in a table.",
+    "expected_result": "A table with at least one valid class and two or more invalid classes, each with a representative value clearly inside the class and an expected accept/reject result. The submission should explicitly include invalid partitions and note where boundary values would be added next.",
+    "quiz": [
+      {
+        "question": "What is the core idea behind equivalence partitioning?",
+        "answers": [
+          "Test every possible input value to be safe",
+          "Group inputs that the system treats the same and test one representative per group",
+          "Only test values at the edges of each range",
+          "Test inputs in random order to avoid bias"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "For an age field accepting 18-65, which set best represents the equivalence classes to test?",
+        "answers": [
+          "Only 40, since it is a valid value",
+          "Every integer from 18 to 65",
+          "One value below 18, one within 18-65, and one above 65",
+          "Only 18 and 65"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "Which is a common mistake when applying equivalence partitioning?",
+        "answers": [
+          "Choosing a representative value in the middle of a class",
+          "Testing only valid partitions and ignoring invalid ones",
+          "Pairing it with boundary value analysis",
+          "Defining classes from the requirements"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Why pick a representative value clearly inside a class rather than at its edge?",
+        "answers": [
+          "Edge values are always invalid",
+          "To avoid accidentally turning the test into a boundary test and to truly represent the middle of the class",
+          "Because edge values cannot be entered into forms",
+          "Because the middle value runs faster"
+        ],
+        "correct_index": 1
+      }
+    ]
+  },
+  {
+    "title": "Boundary value analysis",
+    "short_description": "How to find defects at the edges of input ranges by testing values just below, on, and just above each boundary.",
+    "learning_goals": "Identify the boundaries of a partition and the values immediately around them.\nApply both the 2-value and 3-value boundary approaches and know when to use each.\nReason about off-by-one errors and why edges are the highest-risk region for defects.\nCombine boundary value analysis with equivalence partitioning to build a complete, minimal test set.",
+    "theory": "Boundary value analysis (BVA) is a black-box technique built on a simple empirical fact: defects cluster at the edges of input ranges, not in the middle. Programmers routinely confuse < with <=, start loops at 1 instead of 0, or use the wrong comparison, producing off-by-one errors that only show up at the boundary. BVA targets exactly those edges.\n\nFor any ordered range, the boundary is where one partition ends and another begins. If a field accepts 1-100, the lower boundary is 1 and the upper boundary is 100. The 2-value approach tests the boundary value and its nearest neighbor on the other side: 0 and 1 at the low end, 100 and 101 at the high end. The 3-value approach tests the value before, on, and after each boundary: 0, 1, 2 at the low end and 99, 100, 101 at the high end. The 3-value method is more thorough and is recommended when the risk or the cost of a boundary defect is high.\n\nA concrete example: an input accepting values 0 to max. The interesting BVA values are typically the minimum (0), minimum plus one (1), maximum, maximum minus one, and the just-out-of-range values minus one and max plus one. So for a quantity field allowing 0-99, you test -1, 0, 1, 98, 99, 100. Notice that 50, a middle value, is not a BVA concern, that's where equivalence partitioning's representative goes.\n\nBVA matters because boundary defects are both common and high-impact. A discount that should apply 'for orders of $100 or more' but is coded as 'more than $100' fails silently at exactly $100, a value real customers hit constantly. BVA finds that bug with a single $100 test. The same logic applies to dates (last day of the month, Feb 29), string lengths (the 50th and 51st character), pagination (page 1 and the last page), and time (23:59 to 00:00).\n\nBVA is the natural partner of equivalence partitioning. EP tells you the classes; BVA tells you to probe their edges. Always identify partitions first, then apply BVA to each boundary between them. Watch for hidden boundaries the spec doesn't state explicitly: zero, negative numbers, empty strings, maximum field length, and data-type limits like a 32-bit integer's 2147483647.",
+    "key_terms": "boundary value analysis, boundary, off-by-one error, two-value boundary, three-value boundary, lower bound, upper bound, equivalence partitioning",
+    "real_world_example": "A bank's free-transfer feature says 'transfers up to and including $1000 are free; above $1000 incurs a fee.' The developer wrote 'if amount < 1000' instead of '<= 1000'. With only equivalence partitioning you might test $500 (free) and $2000 (fee) and miss the bug. Applying BVA you test $999, $1000, and $1001, and immediately catch that $1000 is wrongly charged a fee. One boundary value exposes a defect that would otherwise hit every customer transferring exactly $1000.",
+    "step_by_step": "1. Identify the partitions of the input (use equivalence partitioning first).\n2. For each partition, find its lower and upper boundaries.\n3. Decide on the 2-value or 3-value approach based on risk.\n4. For each boundary, list the values: just below, on, and just above (3-value) or on and adjacent (2-value).\n5. Add implicit boundaries: 0, negative, empty, and maximum data-type or field limits.\n6. Write a test case for each boundary value with its expected accept/reject result.\n7. Confirm you are not duplicating middle-of-range values already covered by EP representatives.",
+    "common_mistakes": "Testing only the boundary value itself and skipping the value just outside it, missing off-by-one bugs.\nForgetting implicit boundaries like 0, empty input, or the maximum field length.\nConfusing the boundary with a middle value and testing 50 in a 1-100 range as if it were an edge.\nApplying BVA to unordered categories (like payment methods) where there is no meaningful 'next' value, EP fits those better.\nIgnoring upper data-type limits, such as integer overflow at 2147483647, on fields that accept large numbers.",
+    "practical_use_case": "Any time a requirement uses words like 'at least', 'up to', 'maximum', 'minimum', 'or more', or a numeric/date range, you apply BVA to probe the exact edges where developers most often slip a comparison operator.",
+    "summary": "Boundary value analysis targets the edges of ranges because off-by-one defects concentrate there. Test the value on the boundary plus its immediate neighbors (2-value or 3-value approach), and include implicit boundaries like 0, empty, and data-type limits. Used together with equivalence partitioning, BVA delivers a small test set that catches the most common numeric and range bugs.",
+    "example": "Requirement: 'Quantity field accepts whole numbers from 1 to 10; outside this range is rejected.'\n\nBoundaries: lower = 1, upper = 10.\n3-value BVA test cases:\n| ID | Input | Boundary           | Expected result          |\n|----|-------|--------------------|--------------------------|\n| B1 | 0     | below lower bound  | Rejected: min 1          |\n| B2 | 1     | lower bound        | Accepted                 |\n| B3 | 2     | above lower bound  | Accepted                 |\n| B4 | 9     | below upper bound  | Accepted                 |\n| B5 | 10    | upper bound        | Accepted                 |\n| B6 | 11    | above upper bound  | Rejected: max 10         |\n\nAlso add: -1 and empty input as implicit boundary checks.",
+    "interactive": "A file upload accepts files up to and including 25 MB; larger files are rejected. List the boundary values you would test using the 3-value approach and state the expected result for each.",
+    "expected_answer": "Upper boundary is 25 MB. 3-value boundary tests around it: a file at 24 MB (just below) -> accepted; a file at exactly 25 MB (on the boundary) -> accepted (because the rule says 'up to and including'); a file at 26 MB (just above) -> rejected. A strong answer also notes the lower/implicit boundary: a 0-byte/empty file, and possibly 1 byte, to check the minimum edge, and explicitly checks that 25 MB is accepted, since 'up to and including' is exactly where a < vs <= bug would appear.",
+    "homework": "Find a real feature with a numeric or date threshold (e.g., free shipping over a cart total, a character limit on a bio field, an age gate, or a date cutoff). Identify every boundary, apply the 3-value approach, and write the test cases in a table including implicit boundaries.",
+    "expected_result": "A table covering each boundary with below/on/above values and expected results, plus at least one implicit boundary (0, empty, or a data-type limit). The submission should correctly place the 'on the boundary' case according to the requirement's wording ('up to' vs 'more than') so it would catch a < vs <= defect.",
+    "quiz": [
+      {
+        "question": "Why does boundary value analysis focus on the edges of a range?",
+        "answers": [
+          "Because middle values are never used by real users",
+          "Because off-by-one and comparison-operator defects concentrate at boundaries",
+          "Because edges are easier to type",
+          "Because the specification only defines edges"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "For a field accepting 1-100 using the 3-value approach, which values cover the upper boundary?",
+        "answers": [
+          "100 only",
+          "50, 100, 150",
+          "99, 100, 101",
+          "0, 1, 2"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "A rule says 'orders of $100 or more get free shipping.' Which single boundary value most directly catches a < vs <= bug?",
+        "answers": [
+          "$50",
+          "$200",
+          "$100",
+          "$0"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "Which of these is an implicit boundary worth testing even if the spec doesn't mention it?",
+        "answers": [
+          "The exact middle of the valid range",
+          "A randomly chosen valid value",
+          "An empty input or 0",
+          "Three different valid values in a row"
+        ],
+        "correct_index": 2
+      }
+    ]
+  },
+  {
+    "title": "Decision table testing",
+    "short_description": "How to model combinations of conditions and their resulting actions in a table so you cover every important business-rule combination.",
+    "learning_goals": "Build a decision table from a set of conditions and actions described in a requirement.\nEnumerate the rule columns and calculate how many combinations exist (2^n for n binary conditions).\nCollapse impossible or redundant combinations and identify the minimal set of rules to test.\nDerive one test case per meaningful rule and explain the expected action.",
+    "theory": "Decision table testing is a black-box technique for requirements where the output depends on combinations of conditions. When business logic reads like 'if the customer is a member AND the order is over $50 AND a valid coupon is applied, then...', a single sentence hides many combinations. A decision table lays every combination out in a grid so none are forgotten.\n\nThe table has four parts: conditions (the inputs that vary), condition alternatives (usually True/False or Yes/No values for each condition), actions (the outcomes), and action entries (which actions fire for each combination). Each column is a rule, a unique combination of condition values and the action(s) it produces. With n independent binary conditions there are 2^n columns; three conditions give 8 rules, four give 16. This explicit count is exactly why the technique catches gaps: testers who reason in prose almost always miss some combinations.\n\nConsider a login policy: condition 1 'correct password?', condition 2 'account locked?', condition 3 'CAPTCHA passed?'. Three binary conditions produce 8 rules, but several collapse: if the account is locked, the password and CAPTCHA don't matter, the action is always 'deny, account locked'. Collapsing impossible or don't-care combinations turns the raw 8 into perhaps 4 meaningful rules. Marking a cell as a dash (don't care) is a normal part of simplifying the table.\n\nWhy it matters: decision tables make complex AND/OR business rules testable and reviewable. A product owner can look at the table and confirm 'yes, a locked account with the correct password should still be denied', catching requirement ambiguities before code is even written. Each remaining rule becomes exactly one test case, giving you provable coverage of the logic.\n\nThe workflow is: list conditions, list actions, build the full grid (2^n), fill in the action for each column, then simplify by removing impossible combinations and merging don't-care columns. Finally, write one test case per surviving rule. The technique shines for pricing engines, eligibility checks, permission/authorization logic, insurance underwriting, and any 'it depends on several things at once' feature.",
+    "key_terms": "decision table, condition, action, rule, condition alternatives, action entries, don't-care entry, combinatorial explosion",
+    "real_world_example": "An e-commerce checkout grants free shipping based on three conditions: is the user a Prime member? is the order $35 or more? is the item oversized (oversized items never ship free)? You build a decision table with these three conditions (8 raw rules). Filling it in reveals that whenever the item is oversized, free shipping is denied regardless of the other two, collapsing several rows. The table immediately exposes a missing requirement: what happens for a Prime member with an oversized order? The product owner clarifies, and you ship 5 clean test cases instead of vaguely 'testing free shipping'.",
+    "step_by_step": "1. Identify all the conditions that influence the outcome and list them as rows.\n2. Identify all possible actions/outcomes and list them as rows below the conditions.\n3. Calculate the number of combinations: 2^n for n binary conditions, and create that many columns.\n4. Fill each column with a unique True/False combination of the conditions.\n5. For each column, mark which action(s) occur.\n6. Simplify: delete impossible combinations and merge columns where a condition is 'don't care' (dash).\n7. Write one test case per remaining rule, using the condition values as inputs and the action as expected result.",
+    "common_mistakes": "Forgetting a condition, so whole branches of behavior go untested.\nNot enumerating all 2^n combinations and only writing the 'obvious' rows, missing edge combinations.\nFailing to simplify, producing a bloated table with redundant or impossible rules.\nMixing conditions and actions in the same rows, breaking the table's structure.\nTreating multi-valued conditions (e.g., membership = none/silver/gold) as binary, which understates the number of rules.",
+    "practical_use_case": "Use decision tables whenever a feature's outcome depends on several conditions at once, pricing and discounts, access permissions, eligibility or approval rules, feature flags combined with user roles, to guarantee every business-rule combination is covered.",
+    "summary": "Decision table testing models combinations of conditions and their resulting actions in a grid, exposing combinations that prose requirements hide. Build the full 2^n grid, fill in actions, then simplify by removing impossible rows and merging don't-care columns, and write one test per surviving rule. It is the go-to technique for complex AND/OR business logic like pricing, permissions, and eligibility.",
+    "example": "Requirement: 'A user can withdraw cash if the account is active AND has sufficient balance. If the account is active but balance is insufficient, show insufficient-funds error. If the account is inactive, deny regardless of balance.'\n\nConditions: C1 Account active? C2 Sufficient balance?\n\n| Condition / Rule      | R1  | R2  | R3  |\n|-----------------------|-----|-----|-----|\n| C1 Account active?    | Y   | Y   | N   |\n| C2 Sufficient balance?| Y   | N   | -   |\n| Action: Dispense cash | X   |     |     |\n| Action: Insuff. funds |     | X   |     |\n| Action: Deny inactive |     |     | X   |\n\nR3 uses a don't-care dash for balance because an inactive account is denied regardless. Three rules -> three test cases.",
+    "interactive": "A streaming service allows a download if: the user has an active subscription AND the title is downloadable AND the device limit (3) is not exceeded. Build a decision table with these three binary conditions and state the action for each rule, then say which rules collapse.",
+    "expected_answer": "Three binary conditions = 8 raw rules. The only rule that allows the download is subscription=Y, downloadable=Y, device-limit-exceeded=N -> Action: allow download. Every other combination denies, with the reason being whichever condition fails. Rules collapse: if subscription=N, the other two are don't-care -> deny (not subscribed); if the title is not downloadable, the others are don't-care -> deny (not downloadable); if the device limit is exceeded, deny (device limit reached). A strong answer reduces the 8 raw rules to roughly 4 meaningful ones (1 allow + 3 deny reasons) and uses dashes for don't-care conditions.",
+    "homework": "Choose a feature with at least three conditions (e.g., loan approval, a discount engine, content access by role + region + subscription). Build the full decision table: list conditions and actions, enumerate all 2^n columns, fill in actions, simplify, and write one test case per surviving rule.",
+    "expected_result": "A complete decision table showing all enumerated combinations before simplification, the simplified table with don't-care entries marked, and a test case per remaining rule mapping condition inputs to the expected action. The submission should correctly compute 2^n and explain at least one collapsed/impossible combination.",
+    "quiz": [
+      {
+        "question": "When is decision table testing the most appropriate technique?",
+        "answers": [
+          "When testing a single numeric range",
+          "When the outcome depends on combinations of several conditions",
+          "When the feature has many independent dropdowns and you want minimal pairs",
+          "When testing transitions between system states"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "How many rule columns does a decision table have for 4 independent binary conditions before simplification?",
+        "answers": [
+          "8",
+          "4",
+          "16",
+          "12"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "What does a dash ('don't care') in a decision table cell mean?",
+        "answers": [
+          "The condition's value does not affect the action for that rule",
+          "The condition was forgotten",
+          "The test is expected to fail",
+          "The condition must be both true and false simultaneously"
+        ],
+        "correct_index": 0
+      },
+      {
+        "question": "What is the main benefit of building the full table before simplifying?",
+        "answers": [
+          "It makes the table look longer",
+          "It forces you to consider every combination so none are accidentally missed",
+          "It is required by automation tools",
+          "It removes the need to write any test cases"
+        ],
+        "correct_index": 1
+      }
+    ]
+  },
+  {
+    "title": "State transition testing",
+    "short_description": "How to model a system's states, events, and transitions to test valid flows and, crucially, invalid transitions that shouldn't be allowed.",
+    "learning_goals": "Draw a state transition diagram and build the equivalent state transition table from a requirement.\nIdentify states, events, transitions, and guard conditions, and distinguish valid from invalid transitions.\nDesign tests for valid transitions, invalid transitions, and key sequences/paths.\nApply the technique to real workflows such as order status, authentication lockout, and media players.",
+    "theory": "State transition testing is a black-box technique for systems whose behavior depends on their current state and the history of events, not just the latest input. The same event can produce different results depending on where the system is: pressing 'Play' from a Paused state resumes playback, but pressing 'Play' when already Playing may do nothing. Whenever a feature has distinct statuses, this technique applies.\n\nThe model has four building blocks: states (the modes the system can be in, e.g., New, Paid, Shipped, Delivered, Cancelled), events (triggers that may cause a change, e.g., 'pay', 'ship', 'cancel'), transitions (the move from one state to another caused by an event), and guard conditions (rules that must hold for a transition to fire, e.g., 'cancel' is only allowed before 'ship'). You can represent this as a state transition diagram (bubbles and arrows) or a state transition table (rows = current state, columns = events, cells = resulting state).\n\nThe table form is especially valuable because it forces you to consider every state-event pair, including the ones the spec never mentions. Many cells are invalid transitions, for example, 'pay' an already-Shipped order, or 'ship' a Cancelled order. These invalid transitions are where serious bugs hide: if the system allows shipping a cancelled order, that's a real financial defect. State transition testing makes you test that invalid events are correctly rejected, not just that valid flows work.\n\nThere are levels of coverage. The minimum (often called 0-switch coverage) tests every valid transition once. Higher coverage (1-switch / N-switch) tests sequences of transitions, pairs of consecutive transitions, to catch defects that only appear after a specific history. You also design tests for full end-to-end paths (New -> Paid -> Shipped -> Delivered) and for attempting invalid events from each state.\n\nWhy it matters on the job: workflows are everywhere, order lifecycles, subscription billing, document approval, login lockout after N failed attempts, IoT device modes. Bugs in these systems are often about illegal transitions or lost state, which functional click-testing of the happy path will miss entirely. The technique gives you a systematic map so no state-event combination is left unexamined.",
+    "key_terms": "state, event, transition, guard condition, state transition diagram, state transition table, invalid transition, 0-switch / N-switch coverage",
+    "real_world_example": "An online order moves through New -> Paid -> Shipped -> Delivered, and can go to Cancelled only from New or Paid. You build a state transition table with 5 states and the events pay, ship, deliver, cancel. The table reveals untested combinations: what happens if 'cancel' is sent on a Shipped order? Testing it, you find the system wrongly cancels and refunds an order that already shipped, a costly defect. Without modeling the states you'd likely never have tried that sequence, because the happy-path test only walks New -> Paid -> Shipped -> Delivered.",
+    "step_by_step": "1. List all the states the feature can be in.\n2. List all the events that can occur.\n3. For each state, determine which event causes which transition (and the resulting state).\n4. Note any guard conditions that restrict a transition.\n5. Build the state transition table: rows = states, columns = events, cells = next state or 'invalid'.\n6. Design tests: one per valid transition (0-switch), plus invalid-event attempts from each state.\n7. Add sequence/path tests for important multi-step flows and at least some 1-switch pairs.",
+    "common_mistakes": "Testing only the happy-path sequence and never trying invalid transitions (e.g., cancelling a shipped order).\nForgetting guard conditions, treating a transition as always allowed when it depends on a rule.\nMissing states entirely, such as a transient 'Processing' or an error/locked state.\nConflating events with states (e.g., listing 'pay' as a state instead of an event).\nStopping at single-transition coverage and never testing sequences where the bug only appears after a specific history.",
+    "practical_use_case": "Use state transition testing for any feature with statuses or lifecycles, order/payment workflows, account states (active/suspended/locked), subscription billing, approval pipelines, media playback, and wizard/multi-step forms, to verify both valid flows and that illegal transitions are blocked.",
+    "summary": "State transition testing models states, events, transitions, and guard conditions so you can systematically test how a system moves between modes. The state transition table forces you to examine every state-event pair, including invalid transitions where the costliest bugs hide. Cover valid transitions, invalid-event rejections, and important sequences for workflows like orders, logins, and subscriptions.",
+    "example": "Requirement: 'A login allows up to 3 failed attempts. States: LoggedOut, Authenticating, LoggedIn, Locked. After 3 consecutive failures the account becomes Locked; correct credentials from LoggedOut log the user in; a locked account cannot log in.'\n\nState transition table (cell = next state):\n| Current state  | event: correct creds | event: wrong creds       | event: 3rd wrong creds |\n|----------------|----------------------|--------------------------|------------------------|\n| LoggedOut      | LoggedIn             | LoggedOut (fail count +1)| Locked                 |\n| LoggedIn       | invalid              | invalid                  | invalid                |\n| Locked         | invalid (still Locked)| invalid (still Locked)  | invalid (still Locked) |\n\nKey test cases: valid login (LoggedOut -> LoggedIn); 3 wrong attempts -> Locked; attempt login while Locked -> rejected; correct creds while Locked -> still denied (guard).",
+    "interactive": "Model a simple media player with states Stopped, Playing, Paused and events play, pause, stop. Build the state transition table (current state x event -> next state), and mark at least two invalid transitions.",
+    "expected_answer": "Table: From Stopped: play -> Playing; pause -> invalid; stop -> Stopped (or invalid). From Playing: play -> invalid/Playing; pause -> Paused; stop -> Stopped. From Paused: play -> Playing; pause -> invalid/Paused; stop -> Stopped. Invalid transitions include 'pause' from Stopped (nothing to pause) and 'play' from Playing (already playing). A strong answer covers every state-event cell, clearly labels the invalid ones, and notes that pressing pause while Paused or play while Playing should be a no-op or rejected rather than crashing.",
+    "homework": "Pick a real workflow with at least 4 states (order lifecycle, subscription billing, document approval, or a hardware device's modes). Draw the state transition diagram, build the full state transition table including invalid transitions, and write test cases covering all valid transitions plus at least three invalid-transition attempts.",
+    "expected_result": "A diagram and a complete state transition table where every state-event cell is filled (valid next state or 'invalid'), plus a set of test cases covering each valid transition and at least three invalid transitions with the expected rejection behavior. The submission should identify any guard conditions and include at least one multi-step sequence test.",
+    "quiz": [
+      {
+        "question": "What makes state transition testing different from techniques like equivalence partitioning?",
+        "answers": [
+          "It only works for numeric inputs",
+          "Behavior depends on the current state and history of events, not just the latest input",
+          "It ignores invalid inputs entirely",
+          "It requires access to source code"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "Why are invalid transitions especially important to test?",
+        "answers": [
+          "They never happen in real systems",
+          "They are the only transitions users care about",
+          "Allowing an illegal transition (e.g., shipping a cancelled order) can cause serious defects",
+          "They are easier to automate than valid transitions"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "In a state transition model, 'pay', 'ship', and 'cancel' are examples of what?",
+        "answers": [
+          "States",
+          "Events",
+          "Guard conditions",
+          "Actions in a decision table"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "What does higher (1-switch / N-switch) coverage add over basic transition coverage?",
+        "answers": [
+          "It tests sequences of consecutive transitions to catch history-dependent defects",
+          "It removes the need to test invalid transitions",
+          "It tests only the first transition from each state",
+          "It guarantees full path coverage with a single test"
+        ],
+        "correct_index": 0
+      }
+    ]
+  },
+  {
+    "title": "Pairwise testing",
+    "short_description": "How to drastically cut the number of test cases for features with many parameters by covering all pairs of values instead of every full combination.",
+    "learning_goals": "Explain the combinatorial explosion problem and why testing all combinations is infeasible.\nUnderstand the empirical basis of pairwise testing: most defects involve at most two interacting parameters.\nGenerate a pairwise (all-pairs) test set for a feature with several parameters and values.\nKnow the limits of pairwise testing and when to add specific combinations manually.",
+    "theory": "Pairwise testing (also called all-pairs testing) is a combinatorial black-box technique for features that have many independent parameters, each with several possible values. The motivating problem is the combinatorial explosion: a screen with 4 parameters that each have 3 options has 3 x 3 x 3 x 3 = 81 full combinations; add a 5th 3-value parameter and it's 243. Testing all of them is infeasible, but testing too few risks missing interaction bugs.\n\nPairwise testing rests on an empirical finding from defect studies: the large majority of defects are triggered by a single parameter or by the interaction of just two parameters, not by rare combinations of three or more. So instead of covering every full combination, you cover every possible pair of values across all parameters at least once. This collapses the 81-combination example down to roughly 9-10 test cases while still exercising every two-way interaction.\n\nHow it works: you list each parameter and its possible values, then generate a set of test cases such that for any two parameters, every pair of their values appears together in at least one test. You rarely build this table by hand for non-trivial inputs, instead you use a tool (for example, Microsoft PICT, the open-source ACTS, AllPairs, or PairWise) that produces a near-minimal covering array. The tester's real work is choosing the right parameters and values and reviewing the generated set.\n\nA classic use case is configuration and compatibility testing. Suppose you must test a web app across Browser (Chrome, Firefox, Safari), OS (Windows, macOS, Linux), Connection (WiFi, 4G, Ethernet), and Theme (Light, Dark). Full combinations = 3 x 3 x 3 x 2 = 54. A pairwise tool reduces this to about 9 test cases that still cover every browser-OS pair, every OS-connection pair, and so on. The reduction grows dramatically as parameters increase, which is why pairwise is a staple for settings pages, search filters, and cross-platform matrices.\n\nThe technique has limits you must respect. It only guarantees two-way coverage, so a bug that needs three specific values aligned (Safari AND Dark theme AND 4G) might slip through, for higher risk you can use 3-wise/n-wise coverage. Pairwise also doesn't understand business constraints: it may generate impossible combinations (e.g., Safari on Windows), so you feed the tool constraints or remove invalid rows. And you should still hand-add any known high-risk or previously-buggy combination explicitly rather than trusting the algorithm alone.",
+    "key_terms": "pairwise testing, all-pairs testing, combinatorial explosion, covering array, parameter, value, n-wise / orthogonal array, constraint",
+    "real_world_example": "You're testing a flight-search form with Trip type (one-way, round-trip), Cabin (economy, business, first), Passengers (1, 2, 4+), and Payment (card, PayPal, miles). Full combinations = 2 x 3 x 3 x 3 = 54 tests, too many for a regression run. You feed the parameters into a pairwise tool (PICT) and get ~9 test cases that cover every two-parameter interaction, e.g., round-trip + business, economy + miles, 4+ passengers + PayPal. You add one extra hand-picked case (round-trip + first + 4+ passengers + miles) because that combination caused a production bug last quarter. Regression shrinks from 54 to 10 cases without losing the important interactions.",
+    "step_by_step": "1. Identify all the independent parameters of the feature (dropdowns, toggles, modes).\n2. For each parameter, list its meaningful values (often reduced first via equivalence partitioning).\n3. Note any constraints, combinations that are impossible or invalid together.\n4. Feed parameters, values, and constraints into a pairwise tool (PICT, ACTS, AllPairs).\n5. Generate the covering array, the minimal-ish set of test cases covering all pairs.\n6. Review the output, remove or fix any invalid rows the constraints missed.\n7. Manually add any known high-risk or previously-buggy combinations the tool didn't include.",
+    "common_mistakes": "Including values that aren't really independent or meaningful, inflating the parameter set unnecessarily.\nForgetting to specify constraints, so the tool generates impossible combinations (e.g., Safari on Windows).\nAssuming pairwise covers everything, when a 3-way interaction bug can still slip through.\nUsing raw values without first reducing them via equivalence partitioning, e.g., 100 ages instead of 3 age classes.\nTrusting the generated set blindly and never adding known high-risk combinations by hand.",
+    "practical_use_case": "Use pairwise testing for configuration-heavy features, settings/preferences pages, cross-browser and cross-OS compatibility matrices, search filters with many dropdowns, and feature-flag combinations, anywhere the full combination count is too large to test exhaustively in a sprint.",
+    "summary": "Pairwise testing tackles combinatorial explosion by ensuring every pair of parameter values appears together at least once, based on the finding that most defects involve at most two interacting parameters. A tool like PICT generates a near-minimal covering array, cutting dozens or hundreds of combinations to a handful. Respect its limits: add constraints to remove impossible rows, and manually include known high-risk combinations since pairwise only guarantees two-way coverage.",
+    "example": "Feature: a report export screen with three parameters.\nFormat: PDF, CSV, XLSX\nDate range: Last 7 days, Last 30 days, Custom\nInclude charts: Yes, No\n\nFull combinations = 3 x 3 x 2 = 18. A PICT model file:\n\n```\nFormat:      PDF, CSV, XLSX\nDateRange:   Last7, Last30, Custom\nIncludeCharts: Yes, No\n\n# constraint: CSV cannot include charts\nIF [Format] = \"CSV\" THEN [IncludeCharts] = \"No\";\n```\n\nRunning PICT (pict model.txt) yields a pairwise set of ~9 cases instead of 18, for example:\n| # | Format | DateRange | IncludeCharts |\n|---|--------|-----------|---------------|\n| 1 | PDF    | Last7     | Yes           |\n| 2 | PDF    | Custom    | No            |\n| 3 | CSV    | Last30    | No            |\n| 4 | XLSX   | Last7     | No            |\n| 5 | XLSX   | Last30    | Yes           |\n| 6 | XLSX   | Custom    | No            |\n| 7 | CSV    | Last7     | No            |\n| 8 | PDF    | Last30    | No            |\n| 9 | CSV    | Custom    | No            |\n\nEvery pair (e.g., PDF+Custom, XLSX+Last30, Last7+Yes) appears at least once, and the CSV+charts constraint is respected.",
+    "interactive": "A signup form has these parameters: Plan (Free, Pro, Enterprise), Billing (Monthly, Annual), Region (US, EU, APAC). State how many full combinations exist, then explain why pairwise testing reduces the count and roughly how many tests you'd expect.",
+    "expected_answer": "Full combinations = 3 x 2 x 3 = 18. Pairwise testing reduces this because instead of covering every full triple, it only needs every pair of values across any two parameters to appear together at least once. Since the largest two parameters have 3 and 3 values, the pairwise set needs at least 3 x 3 = 9 tests to cover that pair, so you'd expect roughly 9 test cases rather than 18. A strong answer notes that the reduction grows with more parameters, mentions feeding it to a tool like PICT, and points out that pairwise only guarantees two-way coverage so a Pro+Annual+EU-specific bug could still need a manual case.",
+    "homework": "Find or design a feature with at least 4 parameters, each with 2-3 values (e.g., a settings page or a product configurator). List the parameters and values, compute the full combination count, then either use a pairwise tool (PICT/AllPairs) or construct an all-pairs set by hand and present the resulting test cases. Include at least one constraint.",
+    "expected_result": "A submission showing the parameters and values, the full combination count, and a generated pairwise test set noticeably smaller than the full set, with every pair of values covered. It should include at least one constraint that removes impossible combinations and at least one hand-added high-risk combination, plus a note on pairwise's two-way-only limitation.",
+    "quiz": [
+      {
+        "question": "What problem does pairwise testing primarily address?",
+        "answers": [
+          "Testing the boundaries of a single numeric field",
+          "The combinatorial explosion when a feature has many parameters and values",
+          "Modeling system states and transitions",
+          "Covering every line of source code"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "What is the empirical justification for pairwise testing?",
+        "answers": [
+          "All defects are caused by a single parameter",
+          "Most defects are triggered by one parameter or the interaction of just two parameters",
+          "Defects only appear when all parameters interact at once",
+          "Defects are randomly distributed regardless of parameters"
+        ],
+        "correct_index": 1
+      },
+      {
+        "question": "A feature has parameters of sizes 3, 3, and 2 values. Full combinations are 18. Roughly how many tests does a pairwise set need at minimum?",
+        "answers": [
+          "18",
+          "2",
+          "About 9 (driven by the two 3-value parameters)",
+          "About 5"
+        ],
+        "correct_index": 2
+      },
+      {
+        "question": "Which is a real limitation of pairwise testing?",
+        "answers": [
+          "It cannot be automated with any tool",
+          "It only guarantees two-way coverage, so some three-way interaction bugs can slip through",
+          "It always produces more tests than full combinatorial testing",
+          "It can only be applied to numeric inputs"
+        ],
+        "correct_index": 1
+      }
+    ]
+  }
+]

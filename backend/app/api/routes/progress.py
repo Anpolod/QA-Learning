@@ -1,10 +1,11 @@
 from datetime import datetime, timedelta
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Header
 from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app.api.routes.auth import _current_user, _require_admin
 from app.core.config import settings
 from app.database.session import get_db
 from app.models.entities import AiUsageLog, FinalProjectSubmission, Lesson, Module, User, UserProgress
@@ -15,7 +16,8 @@ router = APIRouter()
 
 
 class ProgressUpdate(BaseModel):
-    user_id: int = 1
+    # user_id is ignored; progress is always attributed to the authenticated user.
+    user_id: int | None = None
     lesson_id: int
     opened: bool | None = None
     completed: bool | None = None
@@ -35,8 +37,7 @@ class AdminProgressRow(BaseModel):
     updated_at: str
 
 
-@router.get("/dashboard/{user_id}")
-def dashboard_progress(user_id: int, db: Session = Depends(get_db)) -> dict:
+def _dashboard_payload(db: Session, user_id: int) -> dict:
     rows = db.scalars(select(UserProgress).where(UserProgress.user_id == user_id)).all()
     completed_lesson_ids = {row.lesson_id for row in rows if row.completed}
     completed = sum(1 for row in rows if row.completed)
@@ -54,6 +55,7 @@ def dashboard_progress(user_id: int, db: Session = Depends(get_db)) -> dict:
     approved_project_ids = {submission.final_project_id for submission in final_submissions if submission.status == "approved"}
     return {
         "completedLessons": completed,
+        "completedLessonIds": sorted(completed_lesson_ids),
         "openedLessons": len(rows),
         "quizCompleted": sum(1 for row in rows if row.quiz_completed),
         "homeworkSubmitted": sum(1 for row in rows if row.homework_submitted),
@@ -70,8 +72,22 @@ def dashboard_progress(user_id: int, db: Session = Depends(get_db)) -> dict:
     }
 
 
+# Declared before /dashboard/{user_id} so the literal "me" is matched first.
+@router.get("/dashboard/me")
+def dashboard_progress_me(authorization: str = Header(default=""), db: Session = Depends(get_db)) -> dict:
+    user = _current_user(authorization, db)
+    return _dashboard_payload(db, user.id)
+
+
+@router.get("/dashboard/{user_id}")
+def dashboard_progress(user_id: int, authorization: str = Header(default=""), db: Session = Depends(get_db)) -> dict:
+    _require_admin(authorization, db)
+    return _dashboard_payload(db, user_id)
+
+
 @router.get("/admin/students", response_model=list[AdminProgressRow])
-def admin_student_progress(db: Session = Depends(get_db)) -> list[AdminProgressRow]:
+def admin_student_progress(authorization: str = Header(default=""), db: Session = Depends(get_db)) -> list[AdminProgressRow]:
+    _require_admin(authorization, db)
     stmt = (
         select(UserProgress, User, Lesson)
         .join(User, User.id == UserProgress.user_id)
@@ -97,16 +113,21 @@ def admin_student_progress(db: Session = Depends(get_db)) -> list[AdminProgressR
 
 
 @router.post("/lesson")
-def update_lesson_progress(request: ProgressUpdate, db: Session = Depends(get_db)) -> dict[str, str]:
+def update_lesson_progress(
+    request: ProgressUpdate,
+    authorization: str = Header(default=""),
+    db: Session = Depends(get_db),
+) -> dict[str, str]:
+    user = _current_user(authorization, db)
     upsert_lesson_progress(
         db,
-        user_id=request.user_id,
+        user_id=user.id,
         lesson_id=request.lesson_id,
         opened=request.opened,
         completed=request.completed,
         quiz_completed=request.quiz_completed,
         homework_submitted=request.homework_submitted,
     )
-    sync_user_gamification(db, request.user_id)
+    sync_user_gamification(db, user.id)
     db.commit()
     return {"status": "saved"}

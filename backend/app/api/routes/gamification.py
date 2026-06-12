@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Header
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app.api.routes.auth import _current_user, _require_admin
 from app.database.session import get_db
 from app.models.entities import Achievement, Lesson, User, UserAchievement, UserGameStats, UserProfile, UserProgress
 from app.schemas.gamification import AchievementRead, LeaderboardRow, PlayerStatsRead, RankRead
@@ -82,56 +83,71 @@ def _player_payload(user_id: int, db: Session) -> PlayerStatsRead:
     )
 
 
+@router.get("/player/me", response_model=PlayerStatsRead)
+def player_stats_me(authorization: str = Header(default=""), db: Session = Depends(get_db)) -> PlayerStatsRead:
+    user = _current_user(authorization, db)
+    seed_achievements(db)
+    db.commit()
+    return _player_payload(user.id, db)
+
+
 @router.get("/player/{user_id}", response_model=PlayerStatsRead)
-def player_stats(user_id: int, db: Session = Depends(get_db)) -> PlayerStatsRead:
+def player_stats(user_id: int, authorization: str = Header(default=""), db: Session = Depends(get_db)) -> PlayerStatsRead:
+    _require_admin(authorization, db)
     seed_achievements(db)
     db.commit()
     return _player_payload(user_id, db)
 
 
 @router.post("/sync/{user_id}", response_model=PlayerStatsRead)
-def sync_player_stats(user_id: int, db: Session = Depends(get_db)) -> PlayerStatsRead:
+def sync_player_stats(user_id: int, authorization: str = Header(default=""), db: Session = Depends(get_db)) -> PlayerStatsRead:
+    _require_admin(authorization, db)
     return _player_payload(user_id, db)
 
 
 @router.get("/leaderboard", response_model=list[LeaderboardRow])
 def leaderboard(db: Session = Depends(get_db)) -> list[LeaderboardRow]:
-    users = db.scalars(select(User).order_by(User.id)).all()
-    for user in users:
-        sync_user_gamification(db, user.id)
-    db.commit()
-
+    # Public, read-only: stats are synced when users act (dashboard/player/progress
+    # endpoints), not here — an anonymous page view must not write to the DB.
     rows = (
         db.execute(
             select(User, UserProfile, UserGameStats)
             .join(UserGameStats, UserGameStats.user_id == User.id)
             .outerjoin(UserProfile, UserProfile.user_id == User.id)
+            # Staff/test accounts farm XP (AI usage, doc practice) without being
+            # real learners — keep them off the public board.
+            .where(User.role != "admin")
             .order_by(UserGameStats.xp.desc(), UserGameStats.level.desc(), User.id.asc())
         )
         .all()
     )
+    achievements_by_user = dict(
+        db.execute(
+            select(UserAchievement.user_id, func.count(UserAchievement.id)).group_by(UserAchievement.user_id)
+        ).all()
+    )
+    completed_by_user = dict(
+        db.execute(
+            select(UserProgress.user_id, func.count(UserProgress.id))
+            .where(UserProgress.completed == True)
+            .group_by(UserProgress.user_id)
+        ).all()
+    )
     result: list[LeaderboardRow] = []
     for index, (user, profile, stats) in enumerate(rows, start=1):
-        achievements_unlocked = int(
-            db.scalar(select(func.count(UserAchievement.id)).where(UserAchievement.user_id == user.id)) or 0
-        )
-        completed_lessons = int(
-            db.scalar(
-                select(func.count(UserProgress.id)).where(UserProgress.user_id == user.id, UserProgress.completed == True)
-            )
-            or 0
-        )
+        full_name = profile.full_name if profile else ""
+        # Never expose raw emails on a public endpoint; fall back to a masked handle.
+        display_name = full_name or f"{user.email.split('@')[0][:2]}***"
         result.append(
             LeaderboardRow(
                 position=index,
                 userId=user.id,
-                email=user.email,
-                fullName=profile.full_name if profile else "",
+                displayName=display_name,
                 xp=stats.xp,
                 level=stats.level,
                 rank=stats.rank,
-                achievementsUnlocked=achievements_unlocked,
-                completedLessons=completed_lessons,
+                achievementsUnlocked=int(achievements_by_user.get(user.id, 0)),
+                completedLessons=int(completed_by_user.get(user.id, 0)),
             )
         )
     return result

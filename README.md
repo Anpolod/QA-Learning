@@ -158,6 +158,14 @@ Seed demo content:
 docker compose exec backend python -m app.seed.seed_data
 ```
 
+Seed ISTQB CTFL content and text slides:
+
+```bash
+docker compose exec backend python -m app.seed.create_istqb_course
+docker compose exec backend python -m app.seed.apply_lesson_content
+docker compose exec backend python -m app.seed.add_istqb_slides
+```
+
 Import generated slide assets:
 
 ```bash
